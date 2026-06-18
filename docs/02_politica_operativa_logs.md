@@ -112,9 +112,53 @@ Cada tarea debera tener su log local correspondiente.
 
 Cada documento o cambio versionable debera tener commit claro y push validado.
 
+
 ---
 
-## 9. Decision final
+## 9. Backups locales por tarea
+
+Cuando una tarea modifique archivos versionables, el script debera crear backup local previo en:
+
+```text
+logs/backup/
+```
+
+Estos backups no se versionan.
+
+El objetivo del backup es permitir recuperacion rapida si una tarea falla antes del commit.
+
+El backup no reemplaza Git, pero ayuda a revisar o revertir cambios locales durante una tarea inconclusa.
+
+---
+
+## 10. Continuaciones explicitas
+
+Si una tarea falla despues de modificar archivos, generar migraciones o aplicar cambios locales, la siguiente ejecucion debera tratarse como continuacion explicita.
+
+En una continuacion explicita se permite que el working tree no este limpio, siempre que:
+
+1. El estado sucio corresponda a la tarea fallida.
+2. Se valide que los archivos esperados de la tarea estan presentes.
+3. Se deje un nuevo log local.
+4. Se haga backup antes de corregir.
+5. Se repitan las validaciones completas.
+6. No se haga commit ni push si las validaciones no pasan.
+
+Ejemplo real:
+
+```text
+Tarea 34:
+Crear ParametroSistema fallo por un test de normalizacion de clave.
+
+Continuacion:
+Se corrigio la normalizacion antes de los validadores de Django.
+Se repitieron los tests.
+Se hizo commit y push solo despues de 30 tests OK.
+```
+
+---
+
+## 11. Decision final
 
 A partir de este punto, toda tarea del ERP debera dejar log local en logs/.
 
