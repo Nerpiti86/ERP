@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from .models import (
     Auditoria,
+    EventoNegocio,
     Empresa,
     EjercicioFiscal,
     PeriodoContable,
@@ -527,4 +528,77 @@ class AuditoriaModelTests(TestCase):
 
         with self.assertRaises(ValidationError):
             auditoria.full_clean()
+
+
+class EventoNegocioModelTests(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="operador",
+            email="operador@example.com",
+            password="password-test",
+        )
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+
+    def test_crear_evento_negocio_valido(self):
+        evento = EventoNegocio.objects.create(
+            empresa=self.empresa,
+            usuario=self.usuario,
+            tipo_evento="EMPRESA_CREADA",
+            entidad_tipo="nucleo.Empresa",
+            entidad_id=str(self.empresa.id),
+            payload_json={"razon_social": "Empresa Demo SA"},
+        )
+
+        self.assertEqual(
+            str(evento),
+            f"EMPRESA_CREADA nucleo.Empresa #{self.empresa.id}",
+        )
+        self.assertEqual(evento.empresa, self.empresa)
+        self.assertEqual(evento.usuario, self.usuario)
+        self.assertEqual(evento.estado, EventoNegocio.Estado.PENDIENTE)
+        self.assertIsNotNone(evento.fecha_evento)
+        self.assertEqual(
+            evento.payload_json,
+            {"razon_social": "Empresa Demo SA"},
+        )
+
+    def test_evento_negocio_permite_empresa_y_usuario_nulos(self):
+        evento = EventoNegocio.objects.create(
+            tipo_evento="USUARIO_CREADO",
+            entidad_tipo="auth.User",
+            entidad_id="ADMIN",
+            payload_json={"username": "ADMIN"},
+        )
+
+        self.assertIsNone(evento.empresa)
+        self.assertIsNone(evento.usuario)
+        self.assertEqual(str(evento), "USUARIO_CREADO auth.User #ADMIN")
+
+    def test_evento_negocio_normaliza_tipo_evento_a_mayusculas(self):
+        evento = EventoNegocio(
+            empresa=self.empresa,
+            usuario=self.usuario,
+            tipo_evento=" periodo_cerrado ",
+            entidad_tipo="nucleo.PeriodoContable",
+            entidad_id="1",
+        )
+
+        evento.full_clean()
+
+        self.assertEqual(evento.tipo_evento, "PERIODO_CERRADO")
+
+    def test_evento_negocio_rechaza_tipo_evento_invalido(self):
+        evento = EventoNegocio(
+            empresa=self.empresa,
+            usuario=self.usuario,
+            tipo_evento="PERIODO CERRADO",
+            entidad_tipo="nucleo.PeriodoContable",
+            entidad_id="1",
+        )
+
+        with self.assertRaises(ValidationError):
+            evento.full_clean()
 

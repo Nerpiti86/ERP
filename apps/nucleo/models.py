@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import F, Q
+from django.utils import timezone
 
 
 class Empresa(models.Model):
@@ -454,6 +455,94 @@ class Auditoria(models.Model):
     def __str__(self):
         registro = f" #{self.registro_id}" if self.registro_id else ""
         return f"{self.accion} {self.tabla}{registro}"
+
+
+class EventoNegocio(models.Model):
+    class Estado(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        PROCESADO = "PROCESADO", "Procesado"
+        ERROR = "ERROR", "Error"
+        IGNORADO = "IGNORADO", "Ignorado"
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="eventos_negocio",
+        null=True,
+        blank=True,
+    )
+    tipo_evento = models.CharField(
+        max_length=80,
+        db_index=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[A-Z0-9_]+$",
+                message=(
+                    "El tipo de evento debe usar mayúsculas, números "
+                    "y guion bajo."
+                ),
+            )
+        ],
+    )
+    entidad_tipo = models.CharField(max_length=120, db_index=True)
+    entidad_id = models.CharField(max_length=80, blank=True)
+    fecha_evento = models.DateTimeField(default=timezone.now, db_index=True)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="eventos_negocio",
+        null=True,
+        blank=True,
+    )
+    payload_json = models.JSONField(default=dict, blank=True)
+    estado = models.CharField(
+        max_length=20,
+        choices=Estado.choices,
+        default=Estado.PENDIENTE,
+        db_index=True,
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_eventonegocio"
+        verbose_name = "evento de negocio"
+        verbose_name_plural = "eventos de negocio"
+        ordering = ["-fecha_evento", "-creado_en"]
+        indexes = [
+            models.Index(
+                fields=["empresa", "-fecha_evento"],
+                name="idx_evento_empresa_fecha",
+            ),
+            models.Index(
+                fields=["tipo_evento", "-fecha_evento"],
+                name="idx_evento_tipo_fecha",
+            ),
+            models.Index(
+                fields=["entidad_tipo", "entidad_id"],
+                name="idx_evento_entidad",
+            ),
+        ]
+
+    def _normalizar_tipo_evento(self):
+        if self.tipo_evento:
+            self.tipo_evento = self.tipo_evento.strip().upper()
+
+    def clean_fields(self, exclude=None):
+        self._normalizar_tipo_evento()
+        super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        super().clean()
+        self._normalizar_tipo_evento()
+
+    def save(self, *args, **kwargs):
+        self._normalizar_tipo_evento()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        registro = f" #{self.entidad_id}" if self.entidad_id else ""
+        return f"{self.tipo_evento} {self.entidad_tipo}{registro}"
 
 
 class UsuarioEmpresa(models.Model):

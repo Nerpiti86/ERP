@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Auditoria,
+    EventoNegocio,
     Empresa,
     EjercicioFiscal,
     PeriodoContable,
@@ -170,6 +171,60 @@ class AuditoriaAdmin(admin.ModelAdmin):
         "ip",
         "user_agent",
         "creado_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(EventoNegocio)
+class EventoNegocioAdmin(admin.ModelAdmin):
+    list_display = (
+        "fecha_evento",
+        "empresa",
+        "usuario",
+        "tipo_evento",
+        "entidad_tipo",
+        "entidad_id",
+        "estado",
+    )
+    list_filter = (
+        "estado",
+        "tipo_evento",
+        "empresa",
+        "fecha_evento",
+    )
+    search_fields = (
+        "tipo_evento",
+        "entidad_tipo",
+        "entidad_id",
+        "usuario__username",
+        "usuario__email",
+        "empresa__razon_social",
+        "empresa__cuit",
+    )
+    date_hierarchy = "fecha_evento"
+    list_select_related = (
+        "empresa",
+        "usuario",
+    )
+    readonly_fields = (
+        "empresa",
+        "usuario",
+        "tipo_evento",
+        "entidad_tipo",
+        "entidad_id",
+        "fecha_evento",
+        "payload_json",
+        "estado",
+        "creado_en",
+        "actualizado_en",
     )
 
     def has_add_permission(self, request):

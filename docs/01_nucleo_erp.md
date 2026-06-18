@@ -550,6 +550,7 @@ Modelos actuales del nucleo:
 - UsuarioSucursal
 - ParametroSistema
 - Auditoria
+- EventoNegocio
 
 ### 10.2. Tablas reales creadas en PostgreSQL
 
@@ -563,6 +564,7 @@ Tablas actuales del nucleo:
 - nucleo_usuariosucursal
 - nucleo_parametrosistema
 - nucleo_auditoria
+- nucleo_eventonegocio
 
 ### 10.3. Migraciones relevantes
 
@@ -574,6 +576,7 @@ Migraciones principales aplicadas:
 0003_usuarioempresa_usuariosucursal
 0004_parametrosistema
 0005_auditoria
+0006_eventonegocio
 ```
 
 ### 10.4. Estado local de datos demo
@@ -648,7 +651,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-30 tests OK
+37 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -659,11 +662,10 @@ push OK
 
 Pendientes inmediatos:
 
-1. Crear eventos de negocio.
-2. Crear base de documentos adjuntos.
-3. Definir estrategia de roles y permisos propios.
-4. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
-5. Crear pantallas propias del nucleo.
+1. Crear base de documentos adjuntos.
+2. Definir estrategia de roles y permisos propios.
+3. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
+4. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
 
@@ -716,4 +718,45 @@ Criterio inicial:
 La auditoria queda disponible como modelo base y consulta tecnica desde Django Admin.
 
 No se implementa todavia middleware global ni auditoria automatica de todas las pantallas.
+
+
+### 10.10. Eventos de negocio
+
+Al cierre de la Tarea 38 se implementa la base de eventos de negocio en el nucleo.
+
+Modelo agregado:
+
+- EventoNegocio
+
+Tabla real:
+
+- nucleo_eventonegocio
+
+Alcance inicial:
+
+- empresa opcional
+- usuario opcional
+- tipo_evento
+- entidad_tipo
+- entidad_id
+- fecha_evento
+- payload_json
+- estado
+- creado_en
+- actualizado_en
+
+Estados iniciales:
+
+- PENDIENTE
+- PROCESADO
+- ERROR
+- IGNORADO
+
+Criterio inicial:
+
+Un evento de negocio representa un hecho funcional que ya ocurrio dentro del ERP.
+
+La estructura queda disponible como base para que modulos futuros registren hechos relevantes.
+
+No se implementan todavia colas, listeners, signals automaticos ni procesamiento asincronico de eventos.
 
