@@ -4,6 +4,7 @@ from .models import (
     Empresa,
     EjercicioFiscal,
     PeriodoContable,
+    ParametroSistema,
     Sucursal,
     UsuarioEmpresa,
     UsuarioSucursal,
@@ -98,6 +99,32 @@ class PeriodoContableAdmin(admin.ModelAdmin):
         "nombre",
     )
     date_hierarchy = "fecha_inicio"
+
+
+
+@admin.register(ParametroSistema)
+class ParametroSistemaAdmin(admin.ModelAdmin):
+    list_display = (
+        "clave",
+        "ambito",
+        "empresa",
+        "tipo_valor",
+        "valor",
+        "activo",
+    )
+    list_filter = (
+        "ambito",
+        "tipo_valor",
+        "activo",
+        "empresa",
+    )
+    search_fields = (
+        "clave",
+        "valor",
+        "descripcion",
+        "empresa__razon_social",
+        "empresa__cuit",
+    )
 
 
 @admin.register(UsuarioEmpresa)

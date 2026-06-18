@@ -9,6 +9,7 @@ from .models import (
     Empresa,
     EjercicioFiscal,
     PeriodoContable,
+    ParametroSistema,
     Sucursal,
     UsuarioEmpresa,
     UsuarioSucursal,
@@ -315,3 +316,153 @@ class UsuarioSucursalModelTests(TestCase):
                     usuario=self.usuario,
                     sucursal=self.sucursal,
                 )
+
+
+
+class ParametroSistemaModelTests(TestCase):
+    def setUp(self):
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+
+    def test_crear_parametro_global_valido(self):
+        parametro = ParametroSistema(
+            ambito=ParametroSistema.Ambito.GLOBAL,
+            clave="moneda_funcional",
+            valor="ARS",
+            tipo_valor=ParametroSistema.TipoValor.TEXTO,
+            descripcion="Moneda funcional global.",
+        )
+        parametro.full_clean()
+        parametro.save()
+
+        self.assertEqual(str(parametro), "GLOBAL - moneda_funcional")
+        self.assertIsNone(parametro.empresa)
+        self.assertTrue(parametro.activo)
+
+    def test_crear_parametro_empresa_valido(self):
+        parametro = ParametroSistema(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=self.empresa,
+            clave="permite_stock_negativo",
+            valor="no",
+            tipo_valor=ParametroSistema.TipoValor.BOOLEANO,
+        )
+        parametro.full_clean()
+        parametro.save()
+
+        self.assertEqual(
+            str(parametro),
+            "Empresa Demo SA - permite_stock_negativo",
+        )
+        self.assertEqual(parametro.empresa, self.empresa)
+
+    def test_parametro_global_rechaza_empresa(self):
+        parametro = ParametroSistema(
+            ambito=ParametroSistema.Ambito.GLOBAL,
+            empresa=self.empresa,
+            clave="moneda_funcional",
+            valor="ARS",
+        )
+
+        with self.assertRaises(ValidationError):
+            parametro.full_clean()
+
+    def test_parametro_empresa_requiere_empresa(self):
+        parametro = ParametroSistema(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            clave="moneda_funcional",
+            valor="ARS",
+        )
+
+        with self.assertRaises(ValidationError):
+            parametro.full_clean()
+
+    def test_clave_global_es_unica(self):
+        ParametroSistema.objects.create(
+            ambito=ParametroSistema.Ambito.GLOBAL,
+            clave="moneda_funcional",
+            valor="ARS",
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                ParametroSistema.objects.create(
+                    ambito=ParametroSistema.Ambito.GLOBAL,
+                    clave="moneda_funcional",
+                    valor="USD",
+                )
+
+    def test_clave_empresa_es_unica_por_empresa(self):
+        ParametroSistema.objects.create(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=self.empresa,
+            clave="permite_stock_negativo",
+            valor="no",
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                ParametroSistema.objects.create(
+                    ambito=ParametroSistema.Ambito.EMPRESA,
+                    empresa=self.empresa,
+                    clave="permite_stock_negativo",
+                    valor="si",
+                )
+
+    def test_misma_clave_en_empresas_distintas_es_valida(self):
+        otra_empresa = Empresa.objects.create(
+            cuit="30712345679",
+            razon_social="Otra Empresa SA",
+        )
+
+        ParametroSistema.objects.create(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=self.empresa,
+            clave="permite_stock_negativo",
+            valor="no",
+        )
+        parametro = ParametroSistema.objects.create(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=otra_empresa,
+            clave="permite_stock_negativo",
+            valor="si",
+        )
+
+        self.assertEqual(parametro.empresa, otra_empresa)
+
+    def test_valida_valor_booleano(self):
+        parametro = ParametroSistema(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=self.empresa,
+            clave="permite_stock_negativo",
+            valor="tal vez",
+            tipo_valor=ParametroSistema.TipoValor.BOOLEANO,
+        )
+
+        with self.assertRaises(ValidationError):
+            parametro.full_clean()
+
+    def test_valida_valor_json(self):
+        parametro = ParametroSistema(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=self.empresa,
+            clave="configuracion_json",
+            valor="{invalido",
+            tipo_valor=ParametroSistema.TipoValor.JSON,
+        )
+
+        with self.assertRaises(ValidationError):
+            parametro.full_clean()
+
+    def test_normaliza_clave_a_minusculas(self):
+        parametro = ParametroSistema(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=self.empresa,
+            clave="MONEDA_FUNCIONAL",
+            valor="ARS",
+        )
+        parametro.full_clean()
+
+        self.assertEqual(parametro.clave, "moneda_funcional")

@@ -1,3 +1,6 @@
+import json
+from decimal import Decimal, InvalidOperation
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -229,6 +232,164 @@ class PeriodoContable(models.Model):
 
     def __str__(self):
         return f"{self.ejercicio} - {self.codigo}"
+
+
+
+class ParametroSistema(models.Model):
+    class Ambito(models.TextChoices):
+        GLOBAL = "GLOBAL", "Global"
+        EMPRESA = "EMPRESA", "Empresa"
+
+    class TipoValor(models.TextChoices):
+        TEXTO = "TEXTO", "Texto"
+        ENTERO = "ENTERO", "Entero"
+        DECIMAL = "DECIMAL", "Decimal"
+        BOOLEANO = "BOOLEANO", "Booleano"
+        JSON = "JSON", "JSON"
+
+    ambito = models.CharField(
+        max_length=20,
+        choices=Ambito.choices,
+        default=Ambito.EMPRESA,
+    )
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="parametros_sistema",
+        null=True,
+        blank=True,
+    )
+    clave = models.CharField(
+        max_length=100,
+        db_index=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-z0-9_.-]+$",
+                message=(
+                    "La clave debe usar minúsculas, números, punto, "
+                    "guion o guion bajo."
+                ),
+            )
+        ],
+    )
+    valor = models.TextField(blank=True)
+    tipo_valor = models.CharField(
+        max_length=20,
+        choices=TipoValor.choices,
+        default=TipoValor.TEXTO,
+    )
+    descripcion = models.TextField(blank=True)
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "parámetro del sistema"
+        verbose_name_plural = "parámetros del sistema"
+        ordering = ["ambito", "empresa__razon_social", "clave"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["clave"],
+                condition=Q(empresa__isnull=True),
+                name="uniq_parametro_global_clave",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa", "clave"],
+                condition=Q(empresa__isnull=False),
+                name="uniq_parametro_empresa_clave",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(ambito="GLOBAL", empresa__isnull=True)
+                    | Q(ambito="EMPRESA", empresa__isnull=False)
+                ),
+                name="chk_parametro_ambito_empresa",
+            ),
+        ]
+
+    def _normalizar_clave(self):
+        if self.clave:
+            self.clave = self.clave.strip().lower()
+
+    def clean_fields(self, exclude=None):
+        self._normalizar_clave()
+        super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        super().clean()
+
+        self._normalizar_clave()
+
+        if self.ambito == self.Ambito.GLOBAL and self.empresa_id:
+            raise ValidationError(
+                {"empresa": "Un parámetro global no debe tener empresa."}
+            )
+
+        if self.ambito == self.Ambito.EMPRESA and not self.empresa_id:
+            raise ValidationError(
+                {"empresa": "Un parámetro por empresa debe tener empresa."}
+            )
+
+        self._validar_valor_segun_tipo()
+
+    def _validar_valor_segun_tipo(self):
+        if self.valor == "":
+            return
+
+        if self.tipo_valor == self.TipoValor.ENTERO:
+            try:
+                int(self.valor)
+            except ValueError as exc:
+                raise ValidationError(
+                    {"valor": "El valor debe ser un número entero."}
+                ) from exc
+
+        if self.tipo_valor == self.TipoValor.DECIMAL:
+            try:
+                Decimal(self.valor.replace(",", "."))
+            except (InvalidOperation, AttributeError) as exc:
+                raise ValidationError(
+                    {"valor": "El valor debe ser un número decimal válido."}
+                ) from exc
+
+        if self.tipo_valor == self.TipoValor.BOOLEANO:
+            valores_validos = {
+                "1",
+                "0",
+                "true",
+                "false",
+                "si",
+                "sí",
+                "no",
+                "s",
+                "n",
+            }
+            if self.valor.strip().lower() not in valores_validos:
+                raise ValidationError(
+                    {
+                        "valor": (
+                            "El valor booleano debe ser true/false, "
+                            "1/0 o sí/no."
+                        )
+                    }
+                )
+
+        if self.tipo_valor == self.TipoValor.JSON:
+            try:
+                json.loads(self.valor)
+            except json.JSONDecodeError as exc:
+                raise ValidationError(
+                    {"valor": "El valor debe contener JSON válido."}
+                ) from exc
+
+    def save(self, *args, **kwargs):
+        self._normalizar_clave()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.empresa_id:
+            return f"{self.empresa} - {self.clave}"
+        return f"GLOBAL - {self.clave}"
 
 
 class UsuarioEmpresa(models.Model):
