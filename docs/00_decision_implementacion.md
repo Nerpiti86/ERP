@@ -280,6 +280,88 @@ Luego del Nucleo ERP, el orden sugerido sera:
 
 ---
 
+## 14. Estado real actual al cierre de Tarea 34
+
+Al cierre de la Tarea 34, el ERP ya cuenta con una base tecnica funcional.
+
+Estado implementado:
+
+- Repositorio Git inicializado y sincronizado con GitHub.
+- Rama de trabajo `main`.
+- Aplicacion Django base creada.
+- PostgreSQL local configurado.
+- Base de datos local `erp_local`.
+- PostgreSQL restringido a `localhost`.
+- App `core` creada.
+- App `nucleo` creada.
+- Home inicial creada.
+- Accesos desde la home al Django Admin.
+- Superusuario local `ADMIN` creado.
+- Datos demo locales cargados.
+- Migraciones aplicadas.
+- Tests automatizados activos.
+
+Datos tecnicos actuales:
+
+```text
+Proyecto local: D:\NeriSoft2\ERP
+Base de datos: erp_local
+Host PostgreSQL: 127.0.0.1
+Puerto PostgreSQL: 5432
+Motor: PostgreSQL 18.4
+Servicio Windows: postgresql-x64-18
+```
+
+Datos demo locales:
+
+```text
+Empresa Demo SA
+CUIT: 30712345678
+Sucursal: Casa central
+Codigo sucursal: CASA
+Ejercicio fiscal: 2026
+Periodo contable: 2026-01
+Usuario: ADMIN
+```
+
+Modelos principales implementados en `apps.nucleo`:
+
+- Empresa
+- Sucursal
+- EjercicioFiscal
+- PeriodoContable
+- UsuarioEmpresa
+- UsuarioSucursal
+- ParametroSistema
+
+Tablas principales creadas en PostgreSQL:
+
+- nucleo_empresa
+- nucleo_sucursal
+- nucleo_ejerciciofiscal
+- nucleo_periodocontable
+- nucleo_usuarioempresa
+- nucleo_usuariosucursal
+- nucleo_parametrosistema
+
+Uso actual del Django Admin:
+
+El Django Admin se utiliza como backoffice tecnico inicial para cargar datos, validar modelos y operar la base mientras se construyen pantallas propias.
+
+El Django Admin no sera la interfaz final del ERP.
+
+Las pantallas propias futuras se construiran con:
+
+- Django Templates
+- Bootstrap
+- HTMX cuando corresponda
+
+Decision operativa:
+
+La base de datos se extendera desde modelos Django y migraciones, no modificando tablas manualmente.
+
+---
+
 ## 13. Decision final
 
 La implementacion elegida para comenzar sera:
