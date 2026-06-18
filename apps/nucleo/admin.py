@@ -1,6 +1,10 @@
 from django.contrib import admin
 
 from .models import (
+    UsuarioRolEmpresa,
+    RolPermiso,
+    RolFuncional,
+    PermisoFuncional,
     Auditoria,
     DocumentoAdjunto,
     EventoNegocio,
@@ -296,6 +300,48 @@ class DocumentoAdjuntoAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(RolFuncional)
+class RolFuncionalAdmin(admin.ModelAdmin):
+    list_display = ("codigo", "nombre", "activo", "sistema")
+    list_filter = ("activo", "sistema")
+    search_fields = ("codigo", "nombre", "descripcion")
+
+
+@admin.register(PermisoFuncional)
+class PermisoFuncionalAdmin(admin.ModelAdmin):
+    list_display = ("codigo", "modulo", "accion", "activo")
+    list_filter = ("activo", "modulo")
+    search_fields = ("codigo", "modulo", "accion", "descripcion")
+
+
+@admin.register(RolPermiso)
+class RolPermisoAdmin(admin.ModelAdmin):
+    list_display = ("rol", "permiso", "activo")
+    list_filter = ("activo", "rol", "permiso__modulo")
+    search_fields = (
+        "rol__codigo",
+        "rol__nombre",
+        "permiso__codigo",
+        "permiso__descripcion",
+    )
+    list_select_related = ("rol", "permiso")
+
+
+@admin.register(UsuarioRolEmpresa)
+class UsuarioRolEmpresaAdmin(admin.ModelAdmin):
+    list_display = ("usuario", "empresa", "rol", "activo")
+    list_filter = ("activo", "empresa", "rol")
+    search_fields = (
+        "usuario__username",
+        "usuario__email",
+        "empresa__razon_social",
+        "empresa__cuit",
+        "rol__codigo",
+        "rol__nombre",
+    )
+    list_select_related = ("usuario", "empresa", "rol")
 
 
 @admin.register(UsuarioEmpresa)

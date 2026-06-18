@@ -6,6 +6,10 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 
 from .models import (
+    UsuarioRolEmpresa,
+    RolPermiso,
+    RolFuncional,
+    PermisoFuncional,
     Auditoria,
     DocumentoAdjunto,
     EventoNegocio,
@@ -17,6 +21,7 @@ from .models import (
     UsuarioEmpresa,
     UsuarioSucursal,
 )
+from .permisos import usuario_tiene_permiso
 
 
 User = get_user_model()
@@ -674,4 +679,112 @@ class DocumentoAdjuntoModelTests(TestCase):
 
         with self.assertRaises(ValidationError):
             documento.full_clean()
+
+
+class RolesPermisosFuncionalesTests(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="operador",
+            email="operador@example.com",
+            password="password-test",
+        )
+        self.superusuario = User.objects.create_superuser(
+            username="admin_tecnico",
+            email="admin@example.com",
+            password="password-test",
+        )
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+
+    def test_rol_funcional_normaliza_codigo(self):
+        rol = RolFuncional(codigo=" contador ", nombre="Contador")
+
+        rol.full_clean()
+
+        self.assertEqual(rol.codigo, "CONTADOR")
+
+    def test_permiso_funcional_normaliza_y_sincroniza_codigo(self):
+        permiso = PermisoFuncional(
+            codigo=" Empresas.Ver ",
+            descripcion="Ver empresas",
+        )
+
+        permiso.full_clean()
+
+        self.assertEqual(permiso.codigo, "empresas.ver")
+        self.assertEqual(permiso.modulo, "empresas")
+        self.assertEqual(permiso.accion, "ver")
+
+    def test_rol_permiso_crea_relacion_valida(self):
+        rol = RolFuncional.objects.create(codigo="ADMIN", nombre="Administrador")
+        permiso = PermisoFuncional.objects.create(codigo="empresas.ver")
+
+        relacion = RolPermiso.objects.create(rol=rol, permiso=permiso)
+
+        self.assertTrue(relacion.activo)
+        self.assertEqual(str(relacion), "ADMIN -> empresas.ver")
+
+    def test_rol_permiso_rechaza_duplicado(self):
+        rol = RolFuncional.objects.create(codigo="ADMIN", nombre="Administrador")
+        permiso = PermisoFuncional.objects.create(codigo="empresas.ver")
+        RolPermiso.objects.create(rol=rol, permiso=permiso)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                RolPermiso.objects.create(rol=rol, permiso=permiso)
+
+    def test_usuario_rol_empresa_requiere_acceso_empresa(self):
+        rol = RolFuncional.objects.create(codigo="OPERADOR", nombre="Operador")
+        asignacion = UsuarioRolEmpresa(
+            usuario=self.usuario,
+            empresa=self.empresa,
+            rol=rol,
+        )
+
+        with self.assertRaises(ValidationError):
+            asignacion.full_clean()
+
+    def test_usuario_tiene_permiso_con_rol_activo(self):
+        rol = RolFuncional.objects.create(codigo="ADMIN", nombre="Administrador")
+        permiso = PermisoFuncional.objects.create(codigo="empresas.ver")
+        RolPermiso.objects.create(rol=rol, permiso=permiso)
+        UsuarioEmpresa.objects.create(usuario=self.usuario, empresa=self.empresa)
+        UsuarioRolEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa,
+            rol=rol,
+        )
+
+        self.assertTrue(
+            usuario_tiene_permiso(self.usuario, self.empresa, " EMPRESAS.VER ")
+        )
+
+    def test_usuario_tiene_permiso_rechaza_permiso_inactivo(self):
+        rol = RolFuncional.objects.create(codigo="ADMIN", nombre="Administrador")
+        permiso = PermisoFuncional.objects.create(codigo="empresas.ver")
+        RolPermiso.objects.create(rol=rol, permiso=permiso)
+        UsuarioEmpresa.objects.create(usuario=self.usuario, empresa=self.empresa)
+        UsuarioRolEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa,
+            rol=rol,
+        )
+
+        permiso.activo = False
+        permiso.save()
+
+        self.assertFalse(
+            usuario_tiene_permiso(self.usuario, self.empresa, "empresas.ver")
+        )
+
+    def test_superusuario_activo_tiene_permiso_funcional(self):
+        self.assertTrue(
+            usuario_tiene_permiso(
+                self.superusuario,
+                self.empresa,
+                "empresas.ver",
+            )
+        )
 

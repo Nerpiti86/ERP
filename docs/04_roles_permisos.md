@@ -260,7 +260,7 @@ No se implementa:
 Tarea siguiente:
 
 ```text
-TAREA 42 — Implementar roles y permisos funcionales
+TAREA 43 — Cargar roles y permisos iniciales
 ```
 
 ## 13. Estado de cierre
@@ -268,3 +268,24 @@ TAREA 42 — Implementar roles y permisos funcionales
 Tarea 40 deja definida la estrategia.
 
 La decision de usuario custom queda resuelta en `docs/05_usuario_custom.md`. La implementacion de roles y permisos funcionales puede avanzar en una tarea posterior.
+
+
+## 14. Implementacion inicial
+
+Al cierre de la Tarea 42 se implementan los modelos definidos en esta estrategia:
+
+- RolFuncional
+- PermisoFuncional
+- RolPermiso
+- UsuarioRolEmpresa
+
+Tambien se agrega el helper backend:
+
+```text
+usuario_tiene_permiso(usuario, empresa, codigo_permiso) -> bool
+```
+
+La implementacion inicial no carga datos por defecto.
+
+Los roles y permisos iniciales se cargaran en una tarea separada.
+

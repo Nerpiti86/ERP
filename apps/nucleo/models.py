@@ -626,6 +626,264 @@ class DocumentoAdjunto(models.Model):
         return f"{self.nombre_original} ({self.entidad_tipo} #{self.entidad_id})"
 
 
+class RolFuncional(models.Model):
+    codigo = models.CharField(
+        max_length=50,
+        unique=True,
+        db_index=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[A-Z0-9_]+$",
+                message=(
+                    "El código del rol debe usar mayúsculas, números "
+                    "y guion bajo."
+                ),
+            )
+        ],
+    )
+    nombre = models.CharField(max_length=120)
+    descripcion = models.TextField(blank=True)
+    activo = models.BooleanField(default=True)
+    sistema = models.BooleanField(default=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_rolfuncional"
+        verbose_name = "rol funcional"
+        verbose_name_plural = "roles funcionales"
+        ordering = ["codigo"]
+
+    def _normalizar_codigo(self):
+        if self.codigo:
+            self.codigo = self.codigo.strip().upper()
+
+    def clean_fields(self, exclude=None):
+        self._normalizar_codigo()
+        super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        super().clean()
+        self._normalizar_codigo()
+
+    def save(self, *args, **kwargs):
+        self._normalizar_codigo()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.codigo
+
+
+class PermisoFuncional(models.Model):
+    codigo = models.CharField(
+        max_length=120,
+        unique=True,
+        db_index=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-z0-9_]+\.[a-z0-9_]+$",
+                message=(
+                    "El código del permiso debe usar el formato "
+                    "modulo.accion en minúsculas."
+                ),
+            )
+        ],
+    )
+    modulo = models.CharField(
+        max_length=60,
+        db_index=True,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-z0-9_]+$",
+                message="El módulo debe usar minúsculas, números y guion bajo.",
+            )
+        ],
+    )
+    accion = models.CharField(
+        max_length=60,
+        db_index=True,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-z0-9_]+$",
+                message="La acción debe usar minúsculas, números y guion bajo.",
+            )
+        ],
+    )
+    descripcion = models.TextField(blank=True)
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_permisofuncional"
+        verbose_name = "permiso funcional"
+        verbose_name_plural = "permisos funcionales"
+        ordering = ["modulo", "accion", "codigo"]
+
+    def _normalizar_codigo_modulo_accion(self):
+        if self.codigo:
+            self.codigo = self.codigo.strip().lower()
+
+        if self.modulo:
+            self.modulo = self.modulo.strip().lower()
+
+        if self.accion:
+            self.accion = self.accion.strip().lower()
+
+        if self.codigo and "." in self.codigo:
+            modulo, accion = self.codigo.split(".", 1)
+            if not self.modulo:
+                self.modulo = modulo
+            if not self.accion:
+                self.accion = accion
+
+        if self.modulo and self.accion and not self.codigo:
+            self.codigo = f"{self.modulo}.{self.accion}"
+
+    def clean_fields(self, exclude=None):
+        self._normalizar_codigo_modulo_accion()
+        super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        super().clean()
+        self._normalizar_codigo_modulo_accion()
+
+        if self.modulo and self.accion:
+            codigo_esperado = f"{self.modulo}.{self.accion}"
+            if self.codigo != codigo_esperado:
+                raise ValidationError(
+                    {"codigo": f"El código debe ser {codigo_esperado}."}
+                )
+
+    def save(self, *args, **kwargs):
+        self._normalizar_codigo_modulo_accion()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.codigo
+
+
+class RolPermiso(models.Model):
+    rol = models.ForeignKey(
+        RolFuncional,
+        on_delete=models.PROTECT,
+        related_name="permisos_asignados",
+    )
+    permiso = models.ForeignKey(
+        PermisoFuncional,
+        on_delete=models.PROTECT,
+        related_name="roles_asignados",
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_rolpermiso"
+        verbose_name = "permiso por rol"
+        verbose_name_plural = "permisos por rol"
+        ordering = ["rol__codigo", "permiso__codigo"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["rol", "permiso"],
+                name="uniq_rol_permiso",
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+
+        try:
+            rol = self.rol
+            permiso = self.permiso
+        except (RolFuncional.DoesNotExist, PermisoFuncional.DoesNotExist):
+            return
+
+        if rol and not rol.activo:
+            raise ValidationError({"rol": "No se puede asignar un rol inactivo."})
+
+        if permiso and not permiso.activo:
+            raise ValidationError(
+                {"permiso": "No se puede asignar un permiso inactivo."}
+            )
+
+    def __str__(self):
+        return f"{self.rol.codigo} -> {self.permiso.codigo}"
+
+
+class UsuarioRolEmpresa(models.Model):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="roles_empresas",
+    )
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="usuarios_roles",
+    )
+    rol = models.ForeignKey(
+        RolFuncional,
+        on_delete=models.PROTECT,
+        related_name="usuarios_empresa",
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_usuariorolempresa"
+        verbose_name = "rol de usuario por empresa"
+        verbose_name_plural = "roles de usuario por empresa"
+        ordering = ["usuario__username", "empresa__razon_social", "rol__codigo"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "empresa", "rol"],
+                name="uniq_usuario_rol_empresa",
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+
+        try:
+            usuario = self.usuario
+            empresa = self.empresa
+            rol = self.rol
+        except (Empresa.DoesNotExist, RolFuncional.DoesNotExist):
+            return
+
+        if not usuario or not empresa or not rol:
+            return
+
+        if not rol.activo:
+            raise ValidationError({"rol": "No se puede asignar un rol inactivo."})
+
+        if usuario.is_superuser:
+            return
+
+        existe_acceso_empresa = UsuarioEmpresa.objects.filter(
+            usuario=usuario,
+            empresa=empresa,
+            activo=True,
+        ).exists()
+
+        if not existe_acceso_empresa:
+            raise ValidationError(
+                {
+                    "empresa": (
+                        "El usuario debe tener acceso activo a la empresa "
+                        "antes de recibir un rol funcional."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"{self.usuario} - {self.empresa} - {self.rol.codigo}"
+
+
 class UsuarioEmpresa(models.Model):
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,

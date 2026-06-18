@@ -567,6 +567,10 @@ Tablas actuales del nucleo:
 - nucleo_auditoria
 - nucleo_eventonegocio
 - nucleo_documentoadjunto
+- nucleo_rolfuncional
+- nucleo_permisofuncional
+- nucleo_rolpermiso
+- nucleo_usuariorolempresa
 
 ### 10.3. Migraciones relevantes
 
@@ -580,6 +584,7 @@ Migraciones principales aplicadas:
 0005_auditoria
 0006_eventonegocio
 0007_documentoadjunto
+0008_roles_permisos_funcionales
 ```
 
 ### 10.4. Estado local de datos demo
@@ -654,7 +659,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-40 tests OK
+48 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -665,7 +670,7 @@ push OK
 
 Pendientes inmediatos:
 
-1. Implementar roles y permisos funcionales.
+1. Cargar roles y permisos iniciales.
 2. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
@@ -852,4 +857,48 @@ El proyecto ya tiene migraciones aplicadas y varias relaciones a usuario mediant
 Cambiar a usuario custom despues de crear tablas puede afectar claves foraneas, relaciones y migraciones.
 
 La estrategia queda desbloqueada para implementar roles y permisos funcionales propios.
+
+
+### 10.14. Roles y permisos funcionales
+
+Al cierre de la Tarea 42 se implementa la base de roles y permisos funcionales.
+
+Modelos agregados:
+
+- RolFuncional
+- PermisoFuncional
+- RolPermiso
+- UsuarioRolEmpresa
+
+Tablas reales:
+
+- nucleo_rolfuncional
+- nucleo_permisofuncional
+- nucleo_rolpermiso
+- nucleo_usuariorolempresa
+
+Helper agregado:
+
+- apps/nucleo/permisos.py
+- usuario_tiene_permiso(usuario, empresa, codigo_permiso)
+
+Alcance inicial:
+
+- roles funcionales configurables
+- permisos funcionales configurables
+- permisos asignados a roles
+- roles asignados a usuarios por empresa
+- calculo backend de permiso efectivo
+
+Reglas iniciales:
+
+- Los roles usan codigo en mayusculas.
+- Los permisos usan codigo `modulo.accion` en minusculas.
+- Un usuario debe tener acceso activo a una empresa antes de recibir rol funcional en esa empresa.
+- Los permisos efectivos se calculan desde roles activos, permisos activos y asignaciones activas.
+- Un superusuario activo puede operar tecnicamente sobre una empresa activa.
+
+No se cargan todavia roles ni permisos iniciales.
+
+No se implementan todavia middleware, decoradores, pantallas ni restricciones de UI.
 
