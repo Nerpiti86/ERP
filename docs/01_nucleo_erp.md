@@ -531,3 +531,144 @@ Este modulo debe construirse antes de ventas, compras, stock, tesoreria o contab
 El Nucleo ERP sera el primer modulo funcional despues de la base tecnica.
 
 Su implementacion debe dejar preparada la estructura para que todos los modulos futuros compartan empresa, usuario, permisos, periodos, auditoria y eventos.
+
+---
+
+## 10. Estado real actual al cierre de Tarea 34
+
+Al cierre de la Tarea 34, el modulo `apps.nucleo` ya existe y tiene modelos reales, migraciones aplicadas, tests y administracion inicial mediante Django Admin.
+
+### 10.1. Modelos implementados
+
+Modelos actuales del nucleo:
+
+- Empresa
+- Sucursal
+- EjercicioFiscal
+- PeriodoContable
+- UsuarioEmpresa
+- UsuarioSucursal
+- ParametroSistema
+
+### 10.2. Tablas reales creadas en PostgreSQL
+
+Tablas actuales del nucleo:
+
+- nucleo_empresa
+- nucleo_sucursal
+- nucleo_ejerciciofiscal
+- nucleo_periodocontable
+- nucleo_usuarioempresa
+- nucleo_usuariosucursal
+- nucleo_parametrosistema
+
+### 10.3. Migraciones relevantes
+
+Migraciones principales aplicadas:
+
+```text
+0001_initial
+0002_ejerciciofiscal_periodocontable_and_more
+0003_usuarioempresa_usuariosucursal
+0004_parametrosistema
+```
+
+### 10.4. Estado local de datos demo
+
+Datos demo locales cargados en PostgreSQL:
+
+```text
+Empresa Demo SA
+CUIT: 30712345678
+Sucursal: Casa central
+Codigo sucursal: CASA
+Ejercicio fiscal: 2026
+Periodo contable: 2026-01
+Usuario: ADMIN
+```
+
+Relaciones de acceso cargadas localmente:
+
+```text
+ADMIN -> Empresa Demo SA
+ADMIN -> Empresa Demo SA - Casa central
+```
+
+Estos datos son locales y no forman parte del repositorio.
+
+### 10.5. ParametroSistema
+
+El modelo `ParametroSistema` permite guardar configuraciones modificables sin tocar codigo.
+
+Ambitos implementados:
+
+- GLOBAL
+- EMPRESA
+
+Tipos de valor implementados:
+
+- TEXTO
+- ENTERO
+- DECIMAL
+- BOOLEANO
+- JSON
+
+Reglas implementadas:
+
+- Un parametro GLOBAL no debe tener empresa.
+- Un parametro EMPRESA debe tener empresa.
+- La clave se normaliza a minusculas.
+- La clave global es unica.
+- La clave por empresa es unica.
+- Se validan valores enteros, decimales, booleanos y JSON segun `tipo_valor`.
+
+### 10.6. Uso actual del Django Admin
+
+El Django Admin se usa como backoffice tecnico inicial para:
+
+- cargar datos
+- validar modelos
+- probar relaciones
+- administrar configuraciones iniciales
+- detectar errores antes de crear pantallas propias
+
+El Django Admin no sera la interfaz final del ERP.
+
+Las pantallas propias del nucleo se construiran luego con:
+
+- Django Templates
+- Bootstrap
+- HTMX cuando corresponda
+
+### 10.7. Validacion reciente
+
+Ultima validacion funcional documentada:
+
+```text
+30 tests OK
+manage.py check OK
+compileall OK
+makemigrations --check --dry-run: No changes detected
+push OK
+```
+
+### 10.8. Pendientes inmediatos del nucleo
+
+Pendientes inmediatos:
+
+1. Cargar parametros iniciales para Empresa Demo SA.
+2. Crear auditoria basica.
+3. Crear eventos de negocio.
+4. Crear base de documentos adjuntos.
+5. Definir estrategia de roles y permisos propios.
+6. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
+7. Crear pantallas propias del nucleo.
+
+Pendientes de reglas de consistencia:
+
+1. Evitar ejercicios fiscales superpuestos por empresa.
+2. Evitar periodos contables superpuestos dentro de un ejercicio.
+3. Definir seleccion de empresa activa para la sesion.
+4. Definir seleccion de sucursal activa para la sesion.
+5. Definir comportamiento final para superusuarios versus usuarios normales.
+
