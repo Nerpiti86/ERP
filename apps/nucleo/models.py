@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -228,3 +229,102 @@ class PeriodoContable(models.Model):
 
     def __str__(self):
         return f"{self.ejercicio} - {self.codigo}"
+
+
+class UsuarioEmpresa(models.Model):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="empresas_asignadas",
+    )
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="usuarios_asignados",
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "usuario por empresa"
+        verbose_name_plural = "usuarios por empresa"
+        ordering = ["usuario__username", "empresa__razon_social"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "empresa"],
+                name="uniq_usuario_empresa",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.usuario} - {self.empresa}"
+
+
+class UsuarioSucursal(models.Model):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="sucursales_asignadas",
+    )
+    sucursal = models.ForeignKey(
+        Sucursal,
+        on_delete=models.PROTECT,
+        related_name="usuarios_asignados",
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "usuario por sucursal"
+        verbose_name_plural = "usuarios por sucursal"
+        ordering = [
+            "usuario__username",
+            "sucursal__empresa__razon_social",
+            "sucursal__codigo",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "sucursal"],
+                name="uniq_usuario_sucursal",
+            )
+        ]
+
+    @property
+    def empresa(self):
+        return self.sucursal.empresa
+
+    def clean(self):
+        super().clean()
+
+        try:
+            usuario = self.usuario
+            sucursal = self.sucursal
+        except Sucursal.DoesNotExist:
+            return
+
+        if not usuario or not sucursal:
+            return
+
+        if usuario.is_superuser:
+            return
+
+        existe_acceso_empresa = UsuarioEmpresa.objects.filter(
+            usuario=usuario,
+            empresa=sucursal.empresa,
+            activo=True,
+        ).exists()
+
+        if not existe_acceso_empresa:
+            raise ValidationError(
+                {
+                    "sucursal": (
+                        "El usuario debe tener acceso activo a la empresa "
+                        "de la sucursal antes de ser asignado a la sucursal."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"{self.usuario} - {self.sucursal}"

@@ -1,10 +1,21 @@
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
-from .models import Empresa, EjercicioFiscal, PeriodoContable, Sucursal
+from .models import (
+    Empresa,
+    EjercicioFiscal,
+    PeriodoContable,
+    Sucursal,
+    UsuarioEmpresa,
+    UsuarioSucursal,
+)
+
+
+User = get_user_model()
 
 
 class EmpresaModelTests(TestCase):
@@ -189,4 +200,118 @@ class PeriodoContableModelTests(TestCase):
                     nombre="Enero duplicado",
                     fecha_inicio=date(2026, 1, 1),
                     fecha_cierre=date(2026, 1, 31),
+                )
+
+
+class UsuarioEmpresaModelTests(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="operador",
+            email="operador@example.com",
+            password="password-test",
+        )
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+
+    def test_crear_usuario_empresa_valido(self):
+        acceso = UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa,
+        )
+
+        self.assertEqual(str(acceso), "operador - Empresa Demo SA")
+        self.assertTrue(acceso.activo)
+
+    def test_usuario_empresa_es_unico(self):
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa,
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                UsuarioEmpresa.objects.create(
+                    usuario=self.usuario,
+                    empresa=self.empresa,
+                )
+
+
+class UsuarioSucursalModelTests(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="operador",
+            email="operador@example.com",
+            password="password-test",
+        )
+        self.superusuario = User.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="password-test",
+        )
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+        self.sucursal = Sucursal.objects.create(
+            empresa=self.empresa,
+            codigo="CASA",
+            nombre="Casa central",
+        )
+
+    def test_crear_usuario_sucursal_valido_si_tiene_empresa_asignada(self):
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa,
+        )
+
+        acceso = UsuarioSucursal(
+            usuario=self.usuario,
+            sucursal=self.sucursal,
+        )
+        acceso.full_clean()
+        acceso.save()
+
+        self.assertEqual(
+            str(acceso),
+            "operador - Empresa Demo SA - Casa central",
+        )
+        self.assertEqual(acceso.empresa, self.empresa)
+        self.assertTrue(acceso.activo)
+
+    def test_usuario_sucursal_rechaza_usuario_sin_empresa_asignada(self):
+        acceso = UsuarioSucursal(
+            usuario=self.usuario,
+            sucursal=self.sucursal,
+        )
+
+        with self.assertRaises(ValidationError):
+            acceso.full_clean()
+
+    def test_superusuario_puede_tener_sucursal_sin_asignacion_empresa(self):
+        acceso = UsuarioSucursal(
+            usuario=self.superusuario,
+            sucursal=self.sucursal,
+        )
+        acceso.full_clean()
+        acceso.save()
+
+        self.assertEqual(acceso.empresa, self.empresa)
+
+    def test_usuario_sucursal_es_unico(self):
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa,
+        )
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal,
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                UsuarioSucursal.objects.create(
+                    usuario=self.usuario,
+                    sucursal=self.sucursal,
                 )

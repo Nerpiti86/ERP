@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Empresa, EjercicioFiscal, PeriodoContable, Sucursal
+from .models import (
+    Empresa,
+    EjercicioFiscal,
+    PeriodoContable,
+    Sucursal,
+    UsuarioEmpresa,
+    UsuarioSucursal,
+)
 
 
 @admin.register(Empresa)
@@ -91,3 +98,43 @@ class PeriodoContableAdmin(admin.ModelAdmin):
         "nombre",
     )
     date_hierarchy = "fecha_inicio"
+
+
+@admin.register(UsuarioEmpresa)
+class UsuarioEmpresaAdmin(admin.ModelAdmin):
+    list_display = (
+        "usuario",
+        "empresa",
+        "activo",
+    )
+    list_filter = (
+        "activo",
+        "empresa",
+    )
+    search_fields = (
+        "usuario__username",
+        "usuario__email",
+        "empresa__razon_social",
+        "empresa__cuit",
+    )
+
+
+@admin.register(UsuarioSucursal)
+class UsuarioSucursalAdmin(admin.ModelAdmin):
+    list_display = (
+        "usuario",
+        "sucursal",
+        "empresa",
+        "activo",
+    )
+    list_filter = (
+        "activo",
+        "sucursal__empresa",
+    )
+    search_fields = (
+        "usuario__username",
+        "usuario__email",
+        "sucursal__nombre",
+        "sucursal__codigo",
+        "sucursal__empresa__razon_social",
+    )
