@@ -276,3 +276,24 @@ A partir de este documento, cada avance debera respetar:
 - commits especificos
 - push validado
 - no versionar informacion sensible
+
+---
+
+## 17. Commit y push automatico si todo sale bien
+
+Cuando una tarea modifique archivos versionables y todas las validaciones sean correctas, el mismo script podra realizar automaticamente:
+
+1. git add de los archivos modificados.
+2. git commit con mensaje especifico.
+3. git push a origin/main.
+4. validacion final de sincronizacion local/remoto.
+
+El estado final esperado sera:
+
+0 0
+
+Si una validacion falla, no se debera hacer commit ni push.
+
+Si hay errores de compilacion, migracion, tests, sincronizacion o working tree sucio no esperado, el script debera detener la tarea operativa, dejar log local y evitar subir cambios incorrectos.
+
+Esta regla busca reducir pasos manuales sin perder trazabilidad.
