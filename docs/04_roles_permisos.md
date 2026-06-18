@@ -260,12 +260,6 @@ No se implementa:
 Tarea siguiente:
 
 ```text
-TAREA 41 — Evaluar usuario custom antes de avanzar seguridad propia
-```
-
-Luego:
-
-```text
 TAREA 42 — Implementar roles y permisos funcionales
 ```
 
@@ -273,4 +267,4 @@ TAREA 42 — Implementar roles y permisos funcionales
 
 Tarea 40 deja definida la estrategia.
 
-La implementacion queda bloqueada hasta resolver la decision de usuario custom.
+La decision de usuario custom queda resuelta en `docs/05_usuario_custom.md`. La implementacion de roles y permisos funcionales puede avanzar en una tarea posterior.

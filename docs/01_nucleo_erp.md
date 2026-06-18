@@ -665,7 +665,7 @@ push OK
 
 Pendientes inmediatos:
 
-1. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
+1. Implementar roles y permisos funcionales.
 2. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
@@ -826,4 +826,30 @@ Modelos futuros propuestos:
 - UsuarioRolEmpresa
 
 Esta tarea no crea tablas, migraciones, middleware, pantallas ni validadores de permisos.
+
+
+### 10.13. Evaluacion de usuario custom
+
+Al cierre de la Tarea 41 se evalua la conveniencia de crear un usuario custom.
+
+Documento rector agregado:
+
+- docs/05_usuario_custom.md
+
+Decision principal:
+
+- No cambiar `AUTH_USER_MODEL` en esta etapa.
+- Mantener `auth.User` estandar de Django como usuario base.
+- Continuar usando `settings.AUTH_USER_MODEL` en ForeignKey y `get_user_model()` en codigo runtime.
+- No referenciar `django.contrib.auth.models.User` directamente en modelos propios.
+- Usar modelos propios del ERP para empresa, sucursal, roles, permisos y datos funcionales.
+- Crear un perfil de usuario propio solo si aparece informacion no autenticadora que lo justifique.
+
+Motivo:
+
+El proyecto ya tiene migraciones aplicadas y varias relaciones a usuario mediante `settings.AUTH_USER_MODEL`.
+
+Cambiar a usuario custom despues de crear tablas puede afectar claves foraneas, relaciones y migraciones.
+
+La estrategia queda desbloqueada para implementar roles y permisos funcionales propios.
 
