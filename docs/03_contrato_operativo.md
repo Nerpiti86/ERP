@@ -277,6 +277,112 @@ A partir de este documento, cada avance debera respetar:
 - push validado
 - no versionar informacion sensible
 
+
+---
+
+## 18. Continuacion explicita de tarea fallida
+
+Si una tarea falla despues de modificar archivos, crear migraciones o aplicar cambios locales de base de datos, la siguiente ejecucion debera declararse como continuacion explicita.
+
+En una continuacion explicita se permite que el working tree no este limpio, siempre que el estado sucio corresponda a la tarea fallida.
+
+La continuacion explicita debera:
+
+1. Validar rama `main`.
+2. Validar sincronizacion `origin/main...HEAD = 0 0`.
+3. Mostrar el working tree sucio esperado.
+4. Validar que los archivos esperados de la tarea inconclusa existen.
+5. Crear un nuevo log local.
+6. Crear backup local antes de corregir.
+7. Repetir validaciones completas.
+8. Hacer commit y push solo si todo pasa.
+9. Validar estado final `0 0`.
+
+Ejemplo real:
+
+```text
+Tarea 34:
+Crear ParametroSistema fallo por un test de normalizacion de clave.
+
+Continuacion:
+Se corrigio la normalizacion antes de validadores de Django.
+Se repitieron 30 tests.
+Se hizo commit y push solo despues de validar todo.
+```
+
+---
+
+## 19. Backups locales obligatorios
+
+Toda tarea que modifique archivos versionables debera crear backup local previo en:
+
+```text
+logs/backup/
+```
+
+Los backups locales no se versionan.
+
+El backup local no reemplaza Git, pero permite recuperar rapidamente el estado anterior si una tarea falla antes del commit.
+
+---
+
+## 20. Validaciones minimas para tareas Django
+
+Cuando una tarea modifique codigo Django, debera ejecutar segun corresponda:
+
+```bash
+.venv/Scripts/python.exe manage.py check
+.venv/Scripts/python.exe manage.py makemigrations --check --dry-run
+.venv/Scripts/python.exe manage.py test apps.core apps.nucleo
+.venv/Scripts/python.exe -m compileall config apps
+```
+
+Cuando una tarea cree o modifique modelos, debera ejecutar ademas:
+
+```bash
+.venv/Scripts/python.exe manage.py makemigrations <app>
+.venv/Scripts/python.exe manage.py migrate
+```
+
+Si una validacion falla, no se debera hacer commit ni push.
+
+---
+
+## 21. Django Admin e interfaz final
+
+El Django Admin se usara como backoffice tecnico inicial.
+
+Su objetivo es cargar datos maestros, validar modelos, probar relaciones y administrar datos iniciales mientras se construye el ERP.
+
+El Django Admin no sera la interfaz final del ERP.
+
+Las pantallas propias del ERP se construiran sobre:
+
+- Django Templates
+- Bootstrap
+- HTMX cuando corresponda
+
+---
+
+## 22. Base de datos actual
+
+La base local actual es:
+
+```text
+erp_local
+```
+
+La conexion local esperada es:
+
+```text
+127.0.0.1:5432
+```
+
+PostgreSQL no debera exponerse directamente a la red.
+
+El archivo `.env` contiene la configuracion real de conexion y no debe versionarse.
+
+
 ---
 
 ## 17. Commit y push automatico si todo sale bien
