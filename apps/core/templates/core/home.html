@@ -1,8 +1,74 @@
 {% extends "base.html" %}
 
-{% block title %}ERP{% endblock %}
+{% block title %}ERP | Inicio{% endblock %}
 
 {% block content %}
-  <h1>ERP</h1>
-  <p>Base técnica Django inicial funcionando.</p>
+  <section class="mb-4">
+    <div class="p-4 p-md-5 bg-white border rounded-3 shadow-sm">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+        <div>
+          <p class="text-uppercase text-secondary small fw-semibold mb-2">Sistema de gestión</p>
+          <h1 class="display-6 fw-bold mb-2">ERP</h1>
+          <p class="lead mb-0">
+            Base operativa inicial con Django, PostgreSQL y módulo núcleo.
+          </p>
+        </div>
+        <div class="align-self-md-center">
+          <span class="badge text-bg-success fs-6">Sistema activo</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="h4 mb-3">Núcleo</h2>
+
+    <div class="row g-3">
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="text-secondary small text-uppercase fw-semibold">Empresas</div>
+            <div class="display-6 fw-bold">{{ metricas.empresas }}</div>
+            <p class="mb-0 text-secondary">Entidades legales cargadas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="text-secondary small text-uppercase fw-semibold">Sucursales</div>
+            <div class="display-6 fw-bold">{{ metricas.sucursales }}</div>
+            <p class="mb-0 text-secondary">Puntos operativos por empresa.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="text-secondary small text-uppercase fw-semibold">Ejercicios fiscales</div>
+            <div class="display-6 fw-bold">{{ metricas.ejercicios }}</div>
+            <p class="mb-0 text-secondary">Ejercicios contables definidos.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="text-secondary small text-uppercase fw-semibold">Períodos contables</div>
+            <div class="display-6 fw-bold">{{ metricas.periodos }}</div>
+            <p class="mb-0 text-secondary">Períodos disponibles para operar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="alert alert-info mb-0">
+      Próximo paso funcional: crear pantallas de administración propias para empresas, sucursales, ejercicios y períodos.
+    </div>
+  </section>
 {% endblock %}
