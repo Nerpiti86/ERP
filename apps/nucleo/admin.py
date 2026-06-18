@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    Auditoria,
     Empresa,
     EjercicioFiscal,
     PeriodoContable,
@@ -125,6 +126,60 @@ class ParametroSistemaAdmin(admin.ModelAdmin):
         "empresa__razon_social",
         "empresa__cuit",
     )
+
+
+@admin.register(Auditoria)
+class AuditoriaAdmin(admin.ModelAdmin):
+    list_display = (
+        "creado_en",
+        "empresa",
+        "usuario",
+        "accion",
+        "tabla",
+        "registro_id",
+        "ip",
+    )
+    list_filter = (
+        "accion",
+        "empresa",
+        "creado_en",
+    )
+    search_fields = (
+        "tabla",
+        "registro_id",
+        "usuario__username",
+        "usuario__email",
+        "empresa__razon_social",
+        "empresa__cuit",
+        "ip",
+        "user_agent",
+    )
+    date_hierarchy = "creado_en"
+    list_select_related = (
+        "empresa",
+        "usuario",
+    )
+    readonly_fields = (
+        "empresa",
+        "usuario",
+        "accion",
+        "tabla",
+        "registro_id",
+        "datos_anteriores",
+        "datos_nuevos",
+        "ip",
+        "user_agent",
+        "creado_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(UsuarioEmpresa)

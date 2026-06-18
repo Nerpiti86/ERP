@@ -392,6 +392,70 @@ class ParametroSistema(models.Model):
         return f"GLOBAL - {self.clave}"
 
 
+class Auditoria(models.Model):
+    class Accion(models.TextChoices):
+        INSERT = "INSERT", "Insertar"
+        UPDATE = "UPDATE", "Actualizar"
+        DELETE = "DELETE", "Eliminar"
+        LOGIN = "LOGIN", "Login"
+        LOGOUT = "LOGOUT", "Logout"
+        ANULAR = "ANULAR", "Anular"
+        CONFIRMAR = "CONFIRMAR", "Confirmar"
+        CERRAR_PERIODO = "CERRAR_PERIODO", "Cerrar periodo"
+        ABRIR_PERIODO = "ABRIR_PERIODO", "Abrir periodo"
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="auditorias",
+        null=True,
+        blank=True,
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="auditorias",
+        null=True,
+        blank=True,
+    )
+    accion = models.CharField(
+        max_length=30,
+        choices=Accion.choices,
+        db_index=True,
+    )
+    tabla = models.CharField(max_length=120, db_index=True)
+    registro_id = models.CharField(max_length=80, blank=True)
+    datos_anteriores = models.JSONField(null=True, blank=True)
+    datos_nuevos = models.JSONField(null=True, blank=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "nucleo_auditoria"
+        verbose_name = "auditoría"
+        verbose_name_plural = "auditoría"
+        ordering = ["-creado_en"]
+        indexes = [
+            models.Index(
+                fields=["empresa", "-creado_en"],
+                name="idx_auditoria_empresa_fecha",
+            ),
+            models.Index(
+                fields=["accion", "-creado_en"],
+                name="idx_auditoria_accion_fecha",
+            ),
+            models.Index(
+                fields=["tabla", "registro_id"],
+                name="idx_auditoria_tabla_registro",
+            ),
+        ]
+
+    def __str__(self):
+        registro = f" #{self.registro_id}" if self.registro_id else ""
+        return f"{self.accion} {self.tabla}{registro}"
+
+
 class UsuarioEmpresa(models.Model):
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,

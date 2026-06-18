@@ -549,6 +549,7 @@ Modelos actuales del nucleo:
 - UsuarioEmpresa
 - UsuarioSucursal
 - ParametroSistema
+- Auditoria
 
 ### 10.2. Tablas reales creadas en PostgreSQL
 
@@ -561,6 +562,7 @@ Tablas actuales del nucleo:
 - nucleo_usuarioempresa
 - nucleo_usuariosucursal
 - nucleo_parametrosistema
+- nucleo_auditoria
 
 ### 10.3. Migraciones relevantes
 
@@ -571,6 +573,7 @@ Migraciones principales aplicadas:
 0002_ejerciciofiscal_periodocontable_and_more
 0003_usuarioempresa_usuariosucursal
 0004_parametrosistema
+0005_auditoria
 ```
 
 ### 10.4. Estado local de datos demo
@@ -656,13 +659,11 @@ push OK
 
 Pendientes inmediatos:
 
-1. Cargar parametros iniciales para Empresa Demo SA.
-2. Crear auditoria basica.
-3. Crear eventos de negocio.
-4. Crear base de documentos adjuntos.
-5. Definir estrategia de roles y permisos propios.
-6. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
-7. Crear pantallas propias del nucleo.
+1. Crear eventos de negocio.
+2. Crear base de documentos adjuntos.
+3. Definir estrategia de roles y permisos propios.
+4. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
+5. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
 
@@ -671,4 +672,48 @@ Pendientes de reglas de consistencia:
 3. Definir seleccion de empresa activa para la sesion.
 4. Definir seleccion de sucursal activa para la sesion.
 5. Definir comportamiento final para superusuarios versus usuarios normales.
+
+
+### 10.9. Auditoria basica
+
+Al cierre de la Tarea 37 se implementa auditoria basica en el nucleo.
+
+Modelo agregado:
+
+- Auditoria
+
+Tabla real:
+
+- nucleo_auditoria
+
+Alcance inicial:
+
+- empresa opcional
+- usuario opcional
+- accion
+- tabla
+- registro_id
+- datos_anteriores en JSON
+- datos_nuevos en JSON
+- ip
+- user_agent
+- fecha/hora de creacion
+
+Acciones iniciales:
+
+- INSERT
+- UPDATE
+- DELETE
+- LOGIN
+- LOGOUT
+- ANULAR
+- CONFIRMAR
+- CERRAR_PERIODO
+- ABRIR_PERIODO
+
+Criterio inicial:
+
+La auditoria queda disponible como modelo base y consulta tecnica desde Django Admin.
+
+No se implementa todavia middleware global ni auditoria automatica de todas las pantallas.
 

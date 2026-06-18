@@ -6,6 +6,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 
 from .models import (
+    Auditoria,
     Empresa,
     EjercicioFiscal,
     PeriodoContable,
@@ -466,3 +467,64 @@ class ParametroSistemaModelTests(TestCase):
         parametro.full_clean()
 
         self.assertEqual(parametro.clave, "moneda_funcional")
+
+class AuditoriaModelTests(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="operador",
+            email="operador@example.com",
+            password="password-test",
+        )
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+
+    def test_crear_auditoria_valida(self):
+        auditoria = Auditoria.objects.create(
+            empresa=self.empresa,
+            usuario=self.usuario,
+            accion=Auditoria.Accion.INSERT,
+            tabla="nucleo_empresa",
+            registro_id=str(self.empresa.id),
+            datos_anteriores=None,
+            datos_nuevos={"razon_social": "Empresa Demo SA"},
+            ip="127.0.0.1",
+            user_agent="pytest",
+        )
+
+        self.assertEqual(
+            str(auditoria),
+            f"INSERT nucleo_empresa #{self.empresa.id}",
+        )
+        self.assertEqual(auditoria.empresa, self.empresa)
+        self.assertEqual(auditoria.usuario, self.usuario)
+        self.assertEqual(
+            auditoria.datos_nuevos,
+            {"razon_social": "Empresa Demo SA"},
+        )
+
+    def test_auditoria_permite_empresa_y_usuario_nulos(self):
+        auditoria = Auditoria.objects.create(
+            accion=Auditoria.Accion.LOGIN,
+            tabla="auth_user",
+            registro_id="ADMIN",
+            datos_nuevos={"resultado": "ok"},
+        )
+
+        self.assertIsNone(auditoria.empresa)
+        self.assertIsNone(auditoria.usuario)
+        self.assertEqual(str(auditoria), "LOGIN auth_user #ADMIN")
+
+    def test_auditoria_rechaza_accion_invalida(self):
+        auditoria = Auditoria(
+            empresa=self.empresa,
+            usuario=self.usuario,
+            accion="ACCION_INVALIDA",
+            tabla="nucleo_empresa",
+            registro_id=str(self.empresa.id),
+        )
+
+        with self.assertRaises(ValidationError):
+            auditoria.full_clean()
+
