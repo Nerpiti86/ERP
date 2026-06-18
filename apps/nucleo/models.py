@@ -1,5 +1,7 @@
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import F, Q
 
 
 class Empresa(models.Model):
@@ -70,3 +72,159 @@ class Sucursal(models.Model):
 
     def __str__(self):
         return f"{self.empresa} - {self.nombre}"
+
+
+class EjercicioFiscal(models.Model):
+    class Estado(models.TextChoices):
+        ABIERTO = "ABIERTO", "Abierto"
+        CERRADO = "CERRADO", "Cerrado"
+        BLOQUEADO = "BLOQUEADO", "Bloqueado"
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="ejercicios_fiscales",
+    )
+    codigo = models.CharField(max_length=20)
+    nombre = models.CharField(max_length=120)
+    fecha_inicio = models.DateField()
+    fecha_cierre = models.DateField()
+    estado = models.CharField(
+        max_length=20,
+        choices=Estado.choices,
+        default=Estado.ABIERTO,
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "ejercicio fiscal"
+        verbose_name_plural = "ejercicios fiscales"
+        ordering = ["empresa__razon_social", "-fecha_inicio"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["empresa", "codigo"],
+                name="uniq_ejercicio_empresa_codigo",
+            ),
+            models.CheckConstraint(
+                condition=Q(fecha_cierre__gte=F("fecha_inicio")),
+                name="chk_ejercicio_fecha_cierre_gte_inicio",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+
+        if (
+            self.fecha_inicio
+            and self.fecha_cierre
+            and self.fecha_cierre < self.fecha_inicio
+        ):
+            raise ValidationError(
+                {
+                    "fecha_cierre": (
+                        "La fecha de cierre no puede ser anterior "
+                        "a la fecha de inicio."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"{self.empresa} - {self.codigo}"
+
+
+class PeriodoContable(models.Model):
+    class Estado(models.TextChoices):
+        ABIERTO = "ABIERTO", "Abierto"
+        CERRADO = "CERRADO", "Cerrado"
+        BLOQUEADO = "BLOQUEADO", "Bloqueado"
+
+    ejercicio = models.ForeignKey(
+        EjercicioFiscal,
+        on_delete=models.PROTECT,
+        related_name="periodos",
+    )
+    codigo = models.CharField(max_length=20)
+    nombre = models.CharField(max_length=120)
+    fecha_inicio = models.DateField()
+    fecha_cierre = models.DateField()
+    estado = models.CharField(
+        max_length=20,
+        choices=Estado.choices,
+        default=Estado.ABIERTO,
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "periodo contable"
+        verbose_name_plural = "periodos contables"
+        ordering = [
+            "ejercicio__empresa__razon_social",
+            "ejercicio__fecha_inicio",
+            "fecha_inicio",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ejercicio", "codigo"],
+                name="uniq_periodo_ejercicio_codigo",
+            ),
+            models.CheckConstraint(
+                condition=Q(fecha_cierre__gte=F("fecha_inicio")),
+                name="chk_periodo_fecha_cierre_gte_inicio",
+            ),
+        ]
+
+    @property
+    def empresa(self):
+        return self.ejercicio.empresa
+
+    def clean(self):
+        super().clean()
+
+        if (
+            self.fecha_inicio
+            and self.fecha_cierre
+            and self.fecha_cierre < self.fecha_inicio
+        ):
+            raise ValidationError(
+                {
+                    "fecha_cierre": (
+                        "La fecha de cierre no puede ser anterior "
+                        "a la fecha de inicio."
+                    )
+                }
+            )
+
+        try:
+            ejercicio = self.ejercicio
+        except EjercicioFiscal.DoesNotExist:
+            return
+
+        if not ejercicio or not self.fecha_inicio or not self.fecha_cierre:
+            return
+
+        if self.fecha_inicio < ejercicio.fecha_inicio:
+            raise ValidationError(
+                {
+                    "fecha_inicio": (
+                        "La fecha de inicio del periodo no puede ser anterior "
+                        "al inicio del ejercicio fiscal."
+                    )
+                }
+            )
+
+        if self.fecha_cierre > ejercicio.fecha_cierre:
+            raise ValidationError(
+                {
+                    "fecha_cierre": (
+                        "La fecha de cierre del periodo no puede ser posterior "
+                        "al cierre del ejercicio fiscal."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"{self.ejercicio} - {self.codigo}"

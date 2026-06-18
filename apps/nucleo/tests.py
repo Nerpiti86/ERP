@@ -1,8 +1,10 @@
+from datetime import date
+
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
-from .models import Empresa, Sucursal
+from .models import Empresa, EjercicioFiscal, PeriodoContable, Sucursal
 
 
 class EmpresaModelTests(TestCase):
@@ -63,4 +65,128 @@ class SucursalModelTests(TestCase):
                     empresa=self.empresa,
                     codigo="CASA",
                     nombre="Otra sucursal",
+                )
+
+
+class EjercicioFiscalModelTests(TestCase):
+    def setUp(self):
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+
+    def test_crear_ejercicio_fiscal_valido(self):
+        ejercicio = EjercicioFiscal.objects.create(
+            empresa=self.empresa,
+            codigo="2026",
+            nombre="Ejercicio fiscal 2026",
+            fecha_inicio=date(2026, 1, 1),
+            fecha_cierre=date(2026, 12, 31),
+        )
+
+        self.assertEqual(str(ejercicio), "Empresa Demo SA - 2026")
+        self.assertEqual(ejercicio.estado, EjercicioFiscal.Estado.ABIERTO)
+        self.assertTrue(ejercicio.activo)
+
+    def test_ejercicio_rechaza_fecha_cierre_anterior_a_inicio(self):
+        ejercicio = EjercicioFiscal(
+            empresa=self.empresa,
+            codigo="2026",
+            nombre="Ejercicio fiscal 2026",
+            fecha_inicio=date(2026, 12, 31),
+            fecha_cierre=date(2026, 1, 1),
+        )
+
+        with self.assertRaises(ValidationError):
+            ejercicio.full_clean()
+
+    def test_codigo_ejercicio_es_unico_por_empresa(self):
+        EjercicioFiscal.objects.create(
+            empresa=self.empresa,
+            codigo="2026",
+            nombre="Ejercicio fiscal 2026",
+            fecha_inicio=date(2026, 1, 1),
+            fecha_cierre=date(2026, 12, 31),
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                EjercicioFiscal.objects.create(
+                    empresa=self.empresa,
+                    codigo="2026",
+                    nombre="Ejercicio fiscal duplicado",
+                    fecha_inicio=date(2026, 1, 1),
+                    fecha_cierre=date(2026, 12, 31),
+                )
+
+
+class PeriodoContableModelTests(TestCase):
+    def setUp(self):
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+        self.ejercicio = EjercicioFiscal.objects.create(
+            empresa=self.empresa,
+            codigo="2026",
+            nombre="Ejercicio fiscal 2026",
+            fecha_inicio=date(2026, 1, 1),
+            fecha_cierre=date(2026, 12, 31),
+        )
+
+    def test_crear_periodo_contable_valido(self):
+        periodo = PeriodoContable.objects.create(
+            ejercicio=self.ejercicio,
+            codigo="2026-01",
+            nombre="Enero 2026",
+            fecha_inicio=date(2026, 1, 1),
+            fecha_cierre=date(2026, 1, 31),
+        )
+
+        self.assertEqual(str(periodo), "Empresa Demo SA - 2026 - 2026-01")
+        self.assertEqual(periodo.empresa, self.empresa)
+        self.assertEqual(periodo.estado, PeriodoContable.Estado.ABIERTO)
+        self.assertTrue(periodo.activo)
+
+    def test_periodo_rechaza_fecha_cierre_anterior_a_inicio(self):
+        periodo = PeriodoContable(
+            ejercicio=self.ejercicio,
+            codigo="2026-01",
+            nombre="Enero 2026",
+            fecha_inicio=date(2026, 1, 31),
+            fecha_cierre=date(2026, 1, 1),
+        )
+
+        with self.assertRaises(ValidationError):
+            periodo.full_clean()
+
+    def test_periodo_rechaza_fecha_fuera_del_ejercicio(self):
+        periodo = PeriodoContable(
+            ejercicio=self.ejercicio,
+            codigo="2027-01",
+            nombre="Enero 2027",
+            fecha_inicio=date(2027, 1, 1),
+            fecha_cierre=date(2027, 1, 31),
+        )
+
+        with self.assertRaises(ValidationError):
+            periodo.full_clean()
+
+    def test_codigo_periodo_es_unico_por_ejercicio(self):
+        PeriodoContable.objects.create(
+            ejercicio=self.ejercicio,
+            codigo="2026-01",
+            nombre="Enero 2026",
+            fecha_inicio=date(2026, 1, 1),
+            fecha_cierre=date(2026, 1, 31),
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                PeriodoContable.objects.create(
+                    ejercicio=self.ejercicio,
+                    codigo="2026-01",
+                    nombre="Enero duplicado",
+                    fecha_inicio=date(2026, 1, 1),
+                    fecha_cierre=date(2026, 1, 31),
                 )
