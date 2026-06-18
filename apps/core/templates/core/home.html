@@ -13,53 +13,75 @@
             Base operativa inicial con Django, PostgreSQL y módulo núcleo.
           </p>
         </div>
-        <div class="align-self-md-center">
-          <span class="badge text-bg-success fs-6">Sistema activo</span>
+        <div class="align-self-md-center d-flex flex-column flex-sm-row gap-2">
+          <span class="badge text-bg-success fs-6 align-self-center">Sistema activo</span>
+          <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:index' %}">
+            Panel admin
+          </a>
         </div>
       </div>
     </div>
   </section>
 
   <section class="mb-4">
-    <h2 class="h4 mb-3">Núcleo</h2>
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+      <h2 class="h4 mb-0">Núcleo</h2>
+      <div>
+        <a class="btn btn-dark btn-sm" href="{% url 'admin:index' %}">
+          Ir al panel de administración
+        </a>
+      </div>
+    </div>
 
     <div class="row g-3">
       <div class="col-12 col-md-6 col-xl-3">
         <div class="card h-100 shadow-sm">
-          <div class="card-body">
+          <div class="card-body d-flex flex-column">
             <div class="text-secondary small text-uppercase fw-semibold">Empresas</div>
             <div class="display-6 fw-bold">{{ metricas.empresas }}</div>
-            <p class="mb-0 text-secondary">Entidades legales cargadas.</p>
+            <p class="text-secondary">Entidades legales cargadas.</p>
+            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_empresa_changelist' %}">
+              Ver empresas
+            </a>
           </div>
         </div>
       </div>
 
       <div class="col-12 col-md-6 col-xl-3">
         <div class="card h-100 shadow-sm">
-          <div class="card-body">
+          <div class="card-body d-flex flex-column">
             <div class="text-secondary small text-uppercase fw-semibold">Sucursales</div>
             <div class="display-6 fw-bold">{{ metricas.sucursales }}</div>
-            <p class="mb-0 text-secondary">Puntos operativos por empresa.</p>
+            <p class="text-secondary">Puntos operativos por empresa.</p>
+            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_sucursal_changelist' %}">
+              Ver sucursales
+            </a>
           </div>
         </div>
       </div>
 
       <div class="col-12 col-md-6 col-xl-3">
         <div class="card h-100 shadow-sm">
-          <div class="card-body">
+          <div class="card-body d-flex flex-column">
             <div class="text-secondary small text-uppercase fw-semibold">Ejercicios fiscales</div>
             <div class="display-6 fw-bold">{{ metricas.ejercicios }}</div>
-            <p class="mb-0 text-secondary">Ejercicios contables definidos.</p>
+            <p class="text-secondary">Ejercicios contables definidos.</p>
+            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_ejerciciofiscal_changelist' %}">
+              Ver ejercicios
+            </a>
           </div>
         </div>
       </div>
 
       <div class="col-12 col-md-6 col-xl-3">
         <div class="card h-100 shadow-sm">
-          <div class="card-body">
+          <div class="card-body d-flex flex-column">
             <div class="text-secondary small text-uppercase fw-semibold">Períodos contables</div>
             <div class="display-6 fw-bold">{{ metricas.periodos }}</div>
-            <p class="mb-0 text-secondary">Períodos disponibles para operar.</p>
+            <p class="text-secondary">Períodos disponibles para operar.</p>
+            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_periodocontable_changelist' %}">
+              Ver períodos
+            </a>
           </div>
         </div>
       </div>
@@ -68,7 +90,8 @@
 
   <section>
     <div class="alert alert-info mb-0">
-      Próximo paso funcional: crear pantallas de administración propias para empresas, sucursales, ejercicios y períodos.
+      Ya podés administrar los datos iniciales del núcleo desde el panel admin.
+      Las pantallas propias del ERP se crearán en la próxima etapa funcional.
     </div>
   </section>
 {% endblock %}
