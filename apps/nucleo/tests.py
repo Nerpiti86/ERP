@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from .models import (
     Auditoria,
+    DocumentoAdjunto,
     EventoNegocio,
     Empresa,
     EjercicioFiscal,
@@ -601,4 +602,76 @@ class EventoNegocioModelTests(TestCase):
 
         with self.assertRaises(ValidationError):
             evento.full_clean()
+
+
+class DocumentoAdjuntoModelTests(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="operador",
+            email="operador@example.com",
+            password="password-test",
+        )
+        self.empresa = Empresa.objects.create(
+            cuit="30712345678",
+            razon_social="Empresa Demo SA",
+        )
+
+    def test_crear_documento_adjunto_valido(self):
+        documento = DocumentoAdjunto.objects.create(
+            empresa=self.empresa,
+            entidad_tipo="nucleo.Empresa",
+            entidad_id=str(self.empresa.id),
+            nombre_original="constancia.pdf",
+            nombre_archivo="empresa_demo_constancia.pdf",
+            tipo_mime="application/pdf",
+            ruta="documentos/empresa_demo_constancia.pdf",
+            tamanio_bytes=1024,
+            usuario=self.usuario,
+        )
+
+        self.assertEqual(documento.empresa, self.empresa)
+        self.assertEqual(documento.usuario, self.usuario)
+        self.assertTrue(documento.activo)
+        self.assertEqual(
+            str(documento),
+            f"constancia.pdf (nucleo.Empresa #{self.empresa.id})",
+        )
+
+    def test_documento_adjunto_normaliza_textos(self):
+        documento = DocumentoAdjunto(
+            empresa=self.empresa,
+            entidad_tipo=" nucleo.Empresa ",
+            entidad_id=f" {self.empresa.id} ",
+            nombre_original=" constancia.pdf ",
+            nombre_archivo=" empresa_demo_constancia.pdf ",
+            tipo_mime=" application/pdf ",
+            ruta=" documentos/empresa_demo_constancia.pdf ",
+            tamanio_bytes=1024,
+            usuario=self.usuario,
+        )
+
+        documento.full_clean()
+
+        self.assertEqual(documento.entidad_tipo, "nucleo.Empresa")
+        self.assertEqual(documento.entidad_id, str(self.empresa.id))
+        self.assertEqual(documento.nombre_original, "constancia.pdf")
+        self.assertEqual(documento.nombre_archivo, "empresa_demo_constancia.pdf")
+        self.assertEqual(documento.tipo_mime, "application/pdf")
+        self.assertEqual(documento.ruta, "documentos/empresa_demo_constancia.pdf")
+
+    def test_documento_adjunto_rechaza_tamanio_cero(self):
+        documento = DocumentoAdjunto(
+            empresa=self.empresa,
+            entidad_tipo="nucleo.Empresa",
+            entidad_id=str(self.empresa.id),
+            nombre_original="constancia.pdf",
+            nombre_archivo="empresa_demo_constancia.pdf",
+            tipo_mime="application/pdf",
+            ruta="documentos/empresa_demo_constancia.pdf",
+            tamanio_bytes=0,
+            usuario=self.usuario,
+        )
+
+        with self.assertRaises(ValidationError):
+            documento.full_clean()
 

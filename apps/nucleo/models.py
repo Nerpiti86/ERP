@@ -545,6 +545,87 @@ class EventoNegocio(models.Model):
         return f"{self.tipo_evento} {self.entidad_tipo}{registro}"
 
 
+class DocumentoAdjunto(models.Model):
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="documentos_adjuntos",
+    )
+    entidad_tipo = models.CharField(max_length=120, db_index=True)
+    entidad_id = models.CharField(max_length=80, db_index=True)
+    nombre_original = models.CharField(max_length=255)
+    nombre_archivo = models.CharField(max_length=255)
+    tipo_mime = models.CharField(max_length=120)
+    ruta = models.CharField(
+        max_length=500,
+        help_text="Ruta relativa dentro del almacenamiento local media/.",
+    )
+    tamanio_bytes = models.PositiveBigIntegerField()
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="documentos_adjuntos",
+        null=True,
+        blank=True,
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_documentoadjunto"
+        verbose_name = "documento adjunto"
+        verbose_name_plural = "documentos adjuntos"
+        ordering = ["-creado_en"]
+        indexes = [
+            models.Index(
+                fields=["empresa", "-creado_en"],
+                name="idx_documento_empresa_fecha",
+            ),
+            models.Index(
+                fields=["entidad_tipo", "entidad_id"],
+                name="idx_documento_entidad",
+            ),
+            models.Index(
+                fields=["activo", "-creado_en"],
+                name="idx_documento_activo_fecha",
+            ),
+        ]
+
+    def _normalizar_textos(self):
+        for campo in (
+            "entidad_tipo",
+            "entidad_id",
+            "nombre_original",
+            "nombre_archivo",
+            "tipo_mime",
+            "ruta",
+        ):
+            valor = getattr(self, campo, None)
+            if isinstance(valor, str):
+                setattr(self, campo, valor.strip())
+
+    def clean_fields(self, exclude=None):
+        self._normalizar_textos()
+        super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        super().clean()
+        self._normalizar_textos()
+
+        if self.tamanio_bytes is not None and self.tamanio_bytes <= 0:
+            raise ValidationError(
+                {"tamanio_bytes": "El tamaño del documento debe ser mayor a cero."}
+            )
+
+    def save(self, *args, **kwargs):
+        self._normalizar_textos()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.nombre_original} ({self.entidad_tipo} #{self.entidad_id})"
+
+
 class UsuarioEmpresa(models.Model):
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,

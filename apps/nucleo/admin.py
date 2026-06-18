@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Auditoria,
+    DocumentoAdjunto,
     EventoNegocio,
     Empresa,
     EjercicioFiscal,
@@ -223,6 +224,66 @@ class EventoNegocioAdmin(admin.ModelAdmin):
         "fecha_evento",
         "payload_json",
         "estado",
+        "creado_en",
+        "actualizado_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(DocumentoAdjunto)
+class DocumentoAdjuntoAdmin(admin.ModelAdmin):
+    list_display = (
+        "creado_en",
+        "empresa",
+        "entidad_tipo",
+        "entidad_id",
+        "nombre_original",
+        "tipo_mime",
+        "tamanio_bytes",
+        "activo",
+    )
+    list_filter = (
+        "activo",
+        "empresa",
+        "tipo_mime",
+        "creado_en",
+    )
+    search_fields = (
+        "nombre_original",
+        "nombre_archivo",
+        "ruta",
+        "tipo_mime",
+        "entidad_tipo",
+        "entidad_id",
+        "empresa__razon_social",
+        "empresa__cuit",
+        "usuario__username",
+        "usuario__email",
+    )
+    date_hierarchy = "creado_en"
+    list_select_related = (
+        "empresa",
+        "usuario",
+    )
+    readonly_fields = (
+        "empresa",
+        "entidad_tipo",
+        "entidad_id",
+        "nombre_original",
+        "nombre_archivo",
+        "tipo_mime",
+        "ruta",
+        "tamanio_bytes",
+        "usuario",
+        "activo",
         "creado_en",
         "actualizado_en",
     )

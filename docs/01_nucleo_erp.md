@@ -551,6 +551,7 @@ Modelos actuales del nucleo:
 - ParametroSistema
 - Auditoria
 - EventoNegocio
+- DocumentoAdjunto
 
 ### 10.2. Tablas reales creadas en PostgreSQL
 
@@ -565,6 +566,7 @@ Tablas actuales del nucleo:
 - nucleo_parametrosistema
 - nucleo_auditoria
 - nucleo_eventonegocio
+- nucleo_documentoadjunto
 
 ### 10.3. Migraciones relevantes
 
@@ -577,6 +579,7 @@ Migraciones principales aplicadas:
 0004_parametrosistema
 0005_auditoria
 0006_eventonegocio
+0007_documentoadjunto
 ```
 
 ### 10.4. Estado local de datos demo
@@ -651,7 +654,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-37 tests OK
+40 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -662,10 +665,9 @@ push OK
 
 Pendientes inmediatos:
 
-1. Crear base de documentos adjuntos.
-2. Definir estrategia de roles y permisos propios.
-3. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
-4. Crear pantallas propias del nucleo.
+1. Definir estrategia de roles y permisos propios.
+2. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
+3. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
 
@@ -759,4 +761,42 @@ Un evento de negocio representa un hecho funcional que ya ocurrio dentro del ERP
 La estructura queda disponible como base para que modulos futuros registren hechos relevantes.
 
 No se implementan todavia colas, listeners, signals automaticos ni procesamiento asincronico de eventos.
+
+
+### 10.11. Documentos adjuntos
+
+Al cierre de la Tarea 39 se implementa la base de documentos adjuntos en el nucleo.
+
+Modelo agregado:
+
+- DocumentoAdjunto
+
+Tabla real:
+
+- nucleo_documentoadjunto
+
+Alcance inicial:
+
+- empresa
+- entidad_tipo
+- entidad_id
+- nombre_original
+- nombre_archivo
+- tipo_mime
+- ruta
+- tamanio_bytes
+- usuario opcional
+- activo
+- creado_en
+- actualizado_en
+
+Criterio inicial:
+
+La base de datos guarda referencias a archivos adjuntos, no el binario del archivo.
+
+Los archivos fisicos se guardaran inicialmente bajo media/.
+
+Cada documento queda asociado a una entidad del sistema mediante entidad_tipo y entidad_id.
+
+No se implementan todavia carga desde pantalla, descarga, visor, borrado fisico, OCR, antivirus ni versionado de archivos.
 
