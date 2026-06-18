@@ -665,9 +665,8 @@ push OK
 
 Pendientes inmediatos:
 
-1. Definir estrategia de roles y permisos propios.
-2. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
-3. Crear pantallas propias del nucleo.
+1. Evaluar usuario custom antes de avanzar demasiado en seguridad propia.
+2. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
 
@@ -799,4 +798,32 @@ Los archivos fisicos se guardaran inicialmente bajo media/.
 Cada documento queda asociado a una entidad del sistema mediante entidad_tipo y entidad_id.
 
 No se implementan todavia carga desde pantalla, descarga, visor, borrado fisico, OCR, antivirus ni versionado de archivos.
+
+
+### 10.12. Estrategia de roles y permisos propios
+
+Al cierre de la Tarea 40 se define la estrategia documental de roles y permisos propios.
+
+Documento rector agregado:
+
+- docs/04_roles_permisos.md
+
+Decision principal:
+
+- Usar Django Auth como base tecnica inicial.
+- Mantener `settings.AUTH_USER_MODEL` como referencia en modelos propios.
+- No cambiar `AUTH_USER_MODEL` en esta tarea.
+- Evaluar usuario custom en una tarea separada antes de implementar tablas de seguridad propias.
+- Implementar permisos funcionales propios del ERP, independientes de la interfaz.
+- Resolver permisos efectivos desde roles asignados por empresa.
+- Validar permisos en backend, no solo en la interfaz.
+
+Modelos futuros propuestos:
+
+- RolFuncional
+- PermisoFuncional
+- RolPermiso
+- UsuarioRolEmpresa
+
+Esta tarea no crea tablas, migraciones, middleware, pantallas ni validadores de permisos.
 
