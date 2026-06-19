@@ -260,7 +260,7 @@ No se implementa:
 Tarea siguiente:
 
 ```text
-TAREA 45 — Definir sucursal activa para la sesion
+TAREA 46 — Definir autenticacion propia del ERP
 ```
 
 ## 13. Estado de cierre
@@ -334,4 +334,23 @@ usuario_tiene_permiso(
 La empresa activa no reemplaza la validacion de pertenencia de cada objeto operado.
 
 La siguiente etapa define la sucursal activa.
+
+
+## 17. Sucursal activa como contexto operativo
+
+Al cierre de la Tarea 45 la sesion dispone de una sucursal activa validada dentro de la empresa activa.
+
+La evaluacion inicial de roles y permisos continúa siendo por empresa:
+
+```text
+usuario_tiene_permiso(
+    request.user,
+    request.empresa_activa,
+    codigo_permiso,
+)
+```
+
+La sucursal activa se utilizará para acotar operaciones y objetos cuando corresponda.
+
+No se implementan todavía roles ni permisos específicos por sucursal.
 

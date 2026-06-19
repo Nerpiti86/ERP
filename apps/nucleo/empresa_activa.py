@@ -3,6 +3,7 @@
 from django.core.exceptions import PermissionDenied
 
 from .models import Empresa
+from .sucursal_activa import SESSION_SUCURSAL_ACTIVA_ID
 
 
 SESSION_EMPRESA_ACTIVA_ID = "nucleo_empresa_activa_id"
@@ -53,6 +54,7 @@ def obtener_empresa_activa(
             return empresa
 
         request.session.pop(SESSION_EMPRESA_ACTIVA_ID, None)
+        request.session.pop(SESSION_SUCURSAL_ACTIVA_ID, None)
         request.session.modified = True
 
     if auto_seleccionar_unica:
@@ -62,6 +64,7 @@ def obtener_empresa_activa(
 
         if len(ids_disponibles) == 1:
             empresa = empresas_disponibles.get(pk=ids_disponibles[0])
+            request.session.pop(SESSION_SUCURSAL_ACTIVA_ID, None)
             request.session[SESSION_EMPRESA_ACTIVA_ID] = empresa.pk
             request.session.modified = True
             return empresa
@@ -81,13 +84,22 @@ def seleccionar_empresa_para_sesion(request, empresa_id):
             "El usuario no puede seleccionar la empresa solicitada."
         ) from exc
 
+    empresa_anterior_id = request.session.get(SESSION_EMPRESA_ACTIVA_ID)
+
+    if (
+        empresa_anterior_id is None
+        or str(empresa_anterior_id) != str(empresa.pk)
+    ):
+        request.session.pop(SESSION_SUCURSAL_ACTIVA_ID, None)
+
     request.session[SESSION_EMPRESA_ACTIVA_ID] = empresa.pk
     request.session.modified = True
     return empresa
 
 
 def limpiar_empresa_activa(request):
-    """Elimina la empresa activa de la sesión."""
+    """Elimina empresa y sucursal activas de la sesión."""
 
     request.session.pop(SESSION_EMPRESA_ACTIVA_ID, None)
+    request.session.pop(SESSION_SUCURSAL_ACTIVA_ID, None)
     request.session.modified = True

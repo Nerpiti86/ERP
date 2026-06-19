@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Seleccionar sucursal{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+        <div>
+          <p class="text-uppercase text-secondary small fw-semibold mb-1">Contexto de trabajo</p>
+          <h1 class="h3 mb-1">Seleccionar sucursal</h1>
+          <p class="text-secondary mb-0">
+            Empresa activa: <strong>{{ empresa_activa.razon_social }}</strong>
+          </p>
+        </div>
+        <div class="align-self-md-center d-flex gap-2">
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'core:seleccionar_empresa' %}">
+            Cambiar empresa
+          </a>
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'core:home' %}">
+            Volver al inicio
+          </a>
+        </div>
+      </div>
+
+      {% if sucursales %}
+        <form method="post" class="card shadow-sm">
+          {% csrf_token %}
+          {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+          {% endif %}
+
+          <div class="list-group list-group-flush">
+            {% for sucursal in sucursales %}
+              <label class="list-group-item p-3">
+                <div class="d-flex gap-3 align-items-start">
+                  <input
+                    class="form-check-input mt-1"
+                    type="radio"
+                    name="sucursal_id"
+                    value="{{ sucursal.pk }}"
+                    required
+                    {% if sucursal_activa and sucursal.pk == sucursal_activa.pk %}checked{% endif %}
+                  >
+                  <span>
+                    <span class="d-block fw-semibold">
+                      {{ sucursal.codigo }} — {{ sucursal.nombre }}
+                    </span>
+                    {% if sucursal.domicilio %}
+                      <span class="d-block text-secondary">{{ sucursal.domicilio }}</span>
+                    {% endif %}
+                    {% if sucursal.localidad %}
+                      <span class="d-block small text-secondary">
+                        {{ sucursal.localidad }}, {{ sucursal.provincia }}
+                      </span>
+                    {% endif %}
+                  </span>
+                </div>
+              </label>
+            {% endfor %}
+          </div>
+
+          <div class="card-footer bg-white p-3 d-flex justify-content-end">
+            <button class="btn btn-dark" type="submit">
+              Usar sucursal seleccionada
+            </button>
+          </div>
+        </form>
+      {% else %}
+        <div class="alert alert-warning shadow-sm">
+          No tenés sucursales activas habilitadas para
+          {{ empresa_activa.razon_social }}.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

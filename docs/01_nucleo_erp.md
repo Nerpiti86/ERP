@@ -663,7 +663,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-61 tests OK
+73 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -674,7 +674,7 @@ push OK
 
 Pendientes inmediatos:
 
-1. Definir seleccion de sucursal activa para la sesion.
+1. Definir autenticacion propia del ERP.
 2. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
@@ -987,4 +987,39 @@ request.empresas_disponibles
 ```
 
 No se implementa todavia sucursal activa, login propio, obligatoriedad global de empresa activa ni filtrado automatico de todos los modulos.
+
+
+### 10.17. Sucursal activa para la sesion
+
+Al cierre de la Tarea 45 se implementa la sucursal activa dentro de la empresa activa.
+
+Documento rector agregado:
+
+- docs/07_sucursal_activa_sesion.md
+
+Componentes agregados:
+
+- apps/nucleo/sucursal_activa.py
+- selector propio en /sucursal/seleccionar/
+- integracion con middleware y context processor existentes
+
+Reglas iniciales:
+
+- La sesion guarda solo el ID de la sucursal activa.
+- La sucursal debe pertenecer a la empresa activa.
+- Un usuario normal necesita UsuarioSucursal activo.
+- El acceso UsuarioEmpresa debe continuar activo.
+- Un superusuario puede usar cualquier sucursal activa de la empresa activa.
+- Si existe una sola sucursal disponible se selecciona automaticamente.
+- Una seleccion invalida se elimina automaticamente.
+- Cambiar de empresa elimina inmediatamente la sucursal anterior.
+
+Atributos disponibles:
+
+```text
+request.sucursal_activa
+request.sucursales_disponibles
+```
+
+No se implementan todavia permisos por sucursal, obligatoriedad global, filtrado automatico de modulos ni login propio.
 

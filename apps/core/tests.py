@@ -3,7 +3,13 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.nucleo.empresa_activa import SESSION_EMPRESA_ACTIVA_ID
-from apps.nucleo.models import Empresa, Sucursal, UsuarioEmpresa
+from apps.nucleo.sucursal_activa import SESSION_SUCURSAL_ACTIVA_ID
+from apps.nucleo.models import (
+    Empresa,
+    Sucursal,
+    UsuarioEmpresa,
+    UsuarioSucursal,
+)
 
 
 class HomeTests(TestCase):
@@ -210,4 +216,267 @@ class EmpresaActivaSesionTests(TestCase):
         self.assertContains(response, "Empresa:")
         self.assertContains(response, "Empresa A SA")
         self.assertContains(response, "Cambiar empresa")
+
+
+class SucursalActivaSesionTests(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.usuario = self.User.objects.create_user(
+            username="operador_sucursal",
+            email="operador_sucursal@example.com",
+            password="password-test",
+        )
+        self.empresa_a = Empresa.objects.create(
+            cuit="30755555558",
+            razon_social="Empresa Sucursales A SA",
+        )
+        self.empresa_b = Empresa.objects.create(
+            cuit="30766666668",
+            razon_social="Empresa Sucursales B SA",
+        )
+        self.sucursal_a1 = Sucursal.objects.create(
+            empresa=self.empresa_a,
+            codigo="A1",
+            nombre="Sucursal A1",
+            localidad="Rosario",
+        )
+        self.sucursal_a2 = Sucursal.objects.create(
+            empresa=self.empresa_a,
+            codigo="A2",
+            nombre="Sucursal A2",
+            localidad="Rosario",
+        )
+        self.sucursal_a_inactiva = Sucursal.objects.create(
+            empresa=self.empresa_a,
+            codigo="A0",
+            nombre="Sucursal A inactiva",
+            activa=False,
+        )
+        self.sucursal_b1 = Sucursal.objects.create(
+            empresa=self.empresa_b,
+            codigo="B1",
+            nombre="Sucursal B1",
+            localidad="Santa Fe",
+        )
+        self.acceso_empresa_a = UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa_a,
+        )
+        self.acceso_sucursal_a1 = UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_a1,
+        )
+
+    def test_usuario_con_una_sucursal_la_selecciona_automaticamente(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("core:home"))
+
+        self.assertEqual(
+            self.client.session[SESSION_EMPRESA_ACTIVA_ID],
+            self.empresa_a.pk,
+        )
+        self.assertEqual(
+            self.client.session[SESSION_SUCURSAL_ACTIVA_ID],
+            self.sucursal_a1.pk,
+        )
+        self.assertEqual(response.context["sucursal_activa"], self.sucursal_a1)
+
+    def test_usuario_con_varias_sucursales_debe_elegir(self):
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_a2,
+        )
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("core:home"))
+
+        self.assertNotIn(
+            SESSION_SUCURSAL_ACTIVA_ID,
+            self.client.session,
+        )
+        self.assertIsNone(response.context["sucursal_activa"])
+
+    def test_selector_lista_solo_sucursales_autorizadas_activas_de_empresa(self):
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_a2,
+        )
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_a_inactiva,
+        )
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_b1,
+        )
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("core:seleccionar_sucursal"))
+
+        self.assertContains(response, "Sucursal A1")
+        self.assertContains(response, "Sucursal A2")
+        self.assertNotContains(response, "Sucursal A inactiva")
+        self.assertNotContains(response, "Sucursal B1")
+
+    def test_post_selecciona_sucursal_autorizada(self):
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_a2,
+        )
+        self.client.force_login(self.usuario)
+
+        response = self.client.post(
+            reverse("core:seleccionar_sucursal"),
+            {"sucursal_id": self.sucursal_a2.pk},
+        )
+
+        self.assertRedirects(response, reverse("core:home"))
+        self.assertEqual(
+            self.client.session[SESSION_SUCURSAL_ACTIVA_ID],
+            self.sucursal_a2.pk,
+        )
+
+    def test_post_rechaza_sucursal_no_autorizada(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.post(
+            reverse("core:seleccionar_sucursal"),
+            {"sucursal_id": self.sucursal_a2.pk},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertNotEqual(
+            self.client.session.get(SESSION_SUCURSAL_ACTIVA_ID),
+            self.sucursal_a2.pk,
+        )
+
+    def test_post_rechaza_sucursal_de_otra_empresa(self):
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa_b,
+        )
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_b1,
+        )
+        self.client.force_login(self.usuario)
+        session = self.client.session
+        session[SESSION_EMPRESA_ACTIVA_ID] = self.empresa_a.pk
+        session.save()
+
+        response = self.client.post(
+            reverse("core:seleccionar_sucursal"),
+            {"sucursal_id": self.sucursal_b1.pk},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_superusuario_puede_seleccionar_sucursal_activa_de_empresa(self):
+        superusuario = self.User.objects.create_superuser(
+            username="admin_sucursal",
+            email="admin_sucursal@example.com",
+            password="password-test",
+        )
+        self.client.force_login(superusuario)
+        session = self.client.session
+        session[SESSION_EMPRESA_ACTIVA_ID] = self.empresa_a.pk
+        session.save()
+
+        response = self.client.post(
+            reverse("core:seleccionar_sucursal"),
+            {"sucursal_id": self.sucursal_a2.pk},
+        )
+
+        self.assertRedirects(response, reverse("core:home"))
+        self.assertEqual(
+            self.client.session[SESSION_SUCURSAL_ACTIVA_ID],
+            self.sucursal_a2.pk,
+        )
+
+    def test_superusuario_no_puede_seleccionar_sucursal_inactiva(self):
+        superusuario = self.User.objects.create_superuser(
+            username="admin_sucursal_inactiva",
+            email="admin_sucursal_inactiva@example.com",
+            password="password-test",
+        )
+        self.client.force_login(superusuario)
+        session = self.client.session
+        session[SESSION_EMPRESA_ACTIVA_ID] = self.empresa_a.pk
+        session.save()
+
+        response = self.client.post(
+            reverse("core:seleccionar_sucursal"),
+            {"sucursal_id": self.sucursal_a_inactiva.pk},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_sesion_se_limpia_si_usuario_pierde_acceso_sucursal(self):
+        self.client.force_login(self.usuario)
+        self.client.get(reverse("core:home"))
+
+        self.acceso_sucursal_a1.activo = False
+        self.acceso_sucursal_a1.save()
+
+        response = self.client.get(reverse("core:home"))
+
+        self.assertNotIn(
+            SESSION_SUCURSAL_ACTIVA_ID,
+            self.client.session,
+        )
+        self.assertIsNone(response.context["sucursal_activa"])
+
+    def test_cambiar_empresa_limpia_sucursal_anterior(self):
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa_b,
+        )
+        UsuarioSucursal.objects.create(
+            usuario=self.usuario,
+            sucursal=self.sucursal_b1,
+        )
+        self.client.force_login(self.usuario)
+
+        session = self.client.session
+        session[SESSION_EMPRESA_ACTIVA_ID] = self.empresa_a.pk
+        session[SESSION_SUCURSAL_ACTIVA_ID] = self.sucursal_a1.pk
+        session.save()
+
+        response = self.client.post(
+            reverse("core:seleccionar_empresa"),
+            {"empresa_id": self.empresa_b.pk},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("core:home"))
+        self.assertNotIn(
+            SESSION_SUCURSAL_ACTIVA_ID,
+            self.client.session,
+        )
+
+    def test_navbar_muestra_sucursal_activa(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("core:home"))
+
+        self.assertContains(response, "Sucursal:")
+        self.assertContains(response, "A1")
+        self.assertContains(response, "Sucursal A1")
+        self.assertContains(response, "Cambiar sucursal")
+
+    def test_selector_sucursal_sin_empresa_redirige_a_selector_empresa(self):
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=self.empresa_b,
+        )
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("core:seleccionar_sucursal"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            response.url.startswith(reverse("core:seleccionar_empresa"))
+        )
+        self.assertIn("next=", response.url)
 

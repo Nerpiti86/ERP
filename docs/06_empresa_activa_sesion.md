@@ -123,8 +123,6 @@ Esta tarea no implementa:
 
 - login propio del ERP
 - empresa activa obligatoria para todas las vistas
-- sucursal activa
-- cambio automático de sucursal
 - filtrado de todos los modelos por empresa
 - permisos de pantalla
 - auditoría del cambio de empresa
@@ -134,5 +132,17 @@ Esta tarea no implementa:
 ## 11. Próximo paso
 
 ```text
-TAREA 45 — Definir sucursal activa para la sesión
+TAREA 46 — Definir autenticación propia del ERP
 ```
+
+
+## 12. Integración con sucursal activa
+
+Al cierre de la Tarea 45, cambiar de empresa elimina la sucursal anterior.
+
+La sucursal activa se documenta en:
+
+```text
+docs/07_sucursal_activa_sesion.md
+```
+

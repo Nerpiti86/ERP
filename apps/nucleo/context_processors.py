@@ -1,8 +1,8 @@
-from .models import Empresa
+from .models import Empresa, Sucursal
 
 
 def empresa_activa(request):
-    """Expone la empresa activa y las empresas disponibles en plantillas."""
+    """Expone empresa y sucursal activas en las plantillas."""
 
     return {
         "empresa_activa": getattr(request, "empresa_activa", None),
@@ -10,5 +10,11 @@ def empresa_activa(request):
             request,
             "empresas_disponibles",
             Empresa.objects.none(),
+        ),
+        "sucursal_activa": getattr(request, "sucursal_activa", None),
+        "sucursales_disponibles": getattr(
+            request,
+            "sucursales_disponibles",
+            Sucursal.objects.none(),
         ),
     }

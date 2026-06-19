@@ -11,4 +11,9 @@ urlpatterns = [
         views.seleccionar_empresa,
         name="seleccionar_empresa",
     ),
+    path(
+        "sucursal/seleccionar/",
+        views.seleccionar_sucursal,
+        name="seleccionar_sucursal",
+    ),
 ]

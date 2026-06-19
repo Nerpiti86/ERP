@@ -12,7 +12,7 @@
       <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">ERP</a>
       <span class="navbar-text small">NeriSoft</span>
 
-      <div class="ms-auto d-flex align-items-center gap-2">
+      <div class="ms-auto d-flex flex-wrap justify-content-end align-items-center gap-2">
         {% if user.is_authenticated %}
           {% if empresa_activa %}
             <span class="navbar-text small">
@@ -21,6 +21,23 @@
             <a class="btn btn-outline-light btn-sm" href="{% url 'core:seleccionar_empresa' %}">
               Cambiar empresa
             </a>
+
+            {% if sucursal_activa %}
+              <span class="navbar-text small">
+                Sucursal:
+                <strong class="text-white">
+                  {{ sucursal_activa.codigo }} — {{ sucursal_activa.nombre }}
+                </strong>
+              </span>
+              <a class="btn btn-outline-light btn-sm" href="{% url 'core:seleccionar_sucursal' %}">
+                Cambiar sucursal
+              </a>
+            {% else %}
+              <span class="navbar-text small">Sin sucursal activa</span>
+              <a class="btn btn-warning btn-sm" href="{% url 'core:seleccionar_sucursal' %}">
+                Seleccionar sucursal
+              </a>
+            {% endif %}
           {% else %}
             <span class="navbar-text small">Sin empresa activa</span>
             <a class="btn btn-warning btn-sm" href="{% url 'core:seleccionar_empresa' %}">
