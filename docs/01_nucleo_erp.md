@@ -663,7 +663,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-122 tests OK
+142 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -1122,3 +1122,35 @@ Reglas:
 Las vistas de autenticación, selección de empresa y selección de
 sucursal continúan siendo infraestructura de sesión y no reciben
 permisos funcionales de negocio en esta tarea.
+
+
+### 10.21. Contexto operativo obligatorio
+
+Al cierre de TAREA 49 se formaliza y prueba el contrato transversal
+que deberán cumplir los módulos operativos.
+
+Documento rector:
+
+- `docs/12_contexto_operativo.md`
+
+Componentes:
+
+- `contexto_operativo_requerido`
+- `sucursal_activa_requerida`
+- `filtrar_queryset_por_empresa_activa`
+- `filtrar_queryset_por_contexto_operativo`
+- `validar_objeto_en_empresa_activa`
+- `validar_objeto_en_contexto_operativo`
+
+Reglas:
+
+- las pantallas de configuración general pueden requerir solo empresa
+- las operaciones normales requieren empresa y sucursal
+- el contexto se valida antes del permiso funcional
+- toda consulta debe filtrarse por contexto
+- todo objeto recuperado por ID debe validar pertenencia
+- sin contexto válido los helpers fallan de forma cerrada
+- el navegador no decide libremente empresa ni sucursal de una alta
+
+Configuración de empresa queda declarada explícitamente como vista
+por empresa y no requiere sucursal.

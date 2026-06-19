@@ -7,9 +7,9 @@ Base verificada:
 ```text
 Repositorio: Nerpiti86/ERP
 Rama: main
-Último cierre funcional: TAREA 48
-Mensaje: Aplicar permisos funcionales a vistas del ERP
-Tests: 122 OK
+Último cierre funcional: TAREA 49
+Mensaje: Definir contexto operativo obligatorio
+Tests: 142 OK
 ```
 
 ## 1. Resumen ejecutivo
@@ -31,7 +31,7 @@ Actualmente existe un núcleo Django/PostgreSQL funcional con:
 
 Todavía no existe un circuito operativo completo de ventas, compras, tesorería o contabilidad dentro de este nuevo ERP.
 
-La prioridad inmediata es aplicar autorización funcional a las vistas antes de crear pantallas operativas.
+La base transversal está cerrada para comenzar el diseño del primer módulo operativo.
 
 ## 2. Arquitectura vigente
 
@@ -152,9 +152,7 @@ Usuarios reales: ADMIN y Laura
 Empresas activas: Empresa Demo SA y ESREQUIS LAURA
 ```
 
-Laura posee acceso activo a `ESREQUIS LAURA` y a su sucursal `Consultorio Pasco`.
-
-Todavía no posee un rol funcional asignado por empresa. Esa asignación deberá realizarse manualmente antes de validar restricciones de TAREA 48.
+Laura posee acceso activo a `ESREQUIS LAURA`, a su sucursal `Consultorio Pasco` y tiene asignado el rol funcional `OPERADOR`.
 
 ## 7. Tareas recientes cerradas
 
@@ -170,33 +168,34 @@ Todavía no posee un rol funcional asignado por empresa. Esa asignación deberá
 | 44 | Empresa activa por sesión | `2d1e6ee32498b13b6955d7cfaf6c364ddab10f8f` |
 | 45 | Sucursal activa por sesión | `4e47a55b443085f4dda33bd8c2fe778f2a89d39d` |
 | 46 | Autenticación propia del ERP | `8e35e36ec3565affba379378aa818ac4cab4d1ba` |
-| 47 | Configuración amigable de parámetros por empresa | ver historial de `main` |
+| 47 | Configuración amigable de parámetros por empresa | `9d798937895df04e4f50b89924abc25754ee86b4` |
+| 48 | Permisos funcionales aplicados a vistas | `1e8b6199833f0a698fa7e914ccf433503fca099a` |
+| 49 | Contexto operativo obligatorio | ver historial de `main` |
 
 ## 8. Próxima tarea
 
 ```text
-TAREA 49 — Definir obligatoriedad del contexto operativo
+TAREA 50 — Diseñar maestro de terceros
 Estado: PENDIENTE DE DISEÑO
 ```
 
 Objetivo esperado:
 
-- reemplazar restricciones temporales de `is_staff`
-- separar autenticación de autorización
-- reutilizar `usuario_tiene_permiso`
-- proteger vistas en backend
-- responder de forma coherente ante falta de empresa o permiso
-- ocultar acciones no disponibles sin depender solo de la interfaz
+- definir un maestro único para clientes y proveedores
+- establecer identificación fiscal y datos de contacto
+- permitir que un tercero sea cliente, proveedor o ambos
+- aplicar empresa activa, permisos y auditoría desde el diseño
+- preparar la base para ventas, compras y cuentas corrientes
 
 ## 9. Próximos pasos recomendados
 
 ### Inmediatos
 
-1. Diseñar TAREA 49.
-2. Definir requisito de empresa y sucursal activas para vistas operativas.
-3. Crear gestión propia de usuarios y asignaciones mínimas.
-4. Extender autorización funcional a cada módulo nuevo.
-5. Elegir el primer módulo operativo.
+1. Diseñar TAREA 50: maestro de terceros.
+2. Definir el modelo funcional de clientes y proveedores.
+3. Implementar altas, edición, consulta y baja lógica.
+4. Aplicar el contrato de contexto y permisos desde el inicio.
+5. Continuar luego con productos y servicios.
 
 ### Consistencia pendiente
 
@@ -241,11 +240,12 @@ autenticación
 → configuración amigable por empresa
 → permisos en vistas
 → contexto obligatorio
-→ gestión propia de usuarios
-→ módulos operativos
+→ maestro de terceros
+→ productos y servicios
+→ primer circuito transaccional
 ```
 
-La autenticación y la configuración amigable ya están cerradas. El próximo bloqueo estructural es la autorización funcional en backend.
+Autenticación, permisos y contexto obligatorio ya están cerrados. El próximo paso es el primer diseño funcional operativo.
 
 ## 12. Actualización posterior al corte D01: TAREA 47
 
@@ -305,3 +305,22 @@ ESREQUIS LAURA: ocho parámetros estándar activos
 
 La próxima tarea funcional es TAREA 49: definir obligatoriedad del
 contexto operativo.
+
+
+## 14. Actualización posterior: TAREA 49
+
+Se implementa el contrato de contexto operativo obligatorio.
+
+Resultado:
+
+- vistas por empresa con empresa activa obligatoria
+- vistas operativas con empresa y sucursal activas
+- redirecciones a selectores conservando `next`
+- filtrado reutilizable de querysets por contexto
+- validación de pertenencia de objetos recuperados por ID
+- rechazo de sucursales pertenecientes a otra empresa
+- pruebas de aislamiento y manipulación de sesión
+- Configuración declarada como pantalla por empresa
+
+El núcleo transversal queda listo para iniciar un módulo funcional.
+La próxima tarea es TAREA 50: diseñar el maestro de terceros.

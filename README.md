@@ -46,9 +46,9 @@ Corte documental: 19/06/2026.
 Último cierre funcional:
 
 ```text
-TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
-Mensaje: Aplicar permisos funcionales a vistas del ERP
-Tests: 122 OK
+TAREA 49 — Definir obligatoriedad del contexto operativo
+Mensaje: Definir contexto operativo obligatorio
+Tests: 142 OK
 Sincronización final: origin/main...HEAD = 0 0
 ```
 
@@ -77,6 +77,8 @@ El ERP ya cuenta con:
 - edición amigable sin exponer claves ni tipos técnicos
 - autorización funcional backend para consulta y edición de parámetros
 - navegación condicionada por permisos efectivos en la empresa activa
+- contrato obligatorio de contexto para vistas por empresa y por sucursal
+- aislamiento reutilizable de querysets y objetos por contexto activo
 - Django Admin visible únicamente para usuarios `staff`
 
 Estado operativo local relevado el 19/06/2026:
@@ -91,7 +93,7 @@ Laura: acceso activo y rol OPERADOR en ESREQUIS LAURA
 Próxima tarea funcional:
 
 ```text
-TAREA 49 — Definir obligatoriedad del contexto operativo
+TAREA 50 — Diseñar maestro de terceros
 Estado: pendiente de diseño
 ```
 
@@ -117,6 +119,7 @@ Documentos rectores principales:
 - `docs/09_mecanica_trabajo_tareas_txt.md`
 - `docs/10_estado_actual_y_hoja_ruta.md`
 - `docs/11_parametros_empresa.md`
+- `docs/12_contexto_operativo.md`
 
 ## Mecánica de trabajo
 

@@ -433,3 +433,38 @@ Próxima tarea:
 ```text
 TAREA 49 — Definir obligatoriedad del contexto operativo
 ```
+
+
+## 21. Relación entre contexto y permiso
+
+Desde TAREA 49 el orden obligatorio para vistas funcionales es:
+
+```text
+login_required
+→ contexto_operativo_requerido
+→ permiso_funcional_requerido
+→ vista
+```
+
+El contexto debe resolverse antes del permiso porque los roles son
+asignados por empresa. El permiso no reemplaza el aislamiento de
+datos: cada queryset y cada objeto deben validarse contra empresa y
+sucursal activas.
+
+Una pantalla por empresa usa:
+
+```python
+@contexto_operativo_requerido(requiere_sucursal=False)
+```
+
+Una pantalla operativa usa:
+
+```python
+@contexto_operativo_requerido
+```
+
+Próxima tarea:
+
+```text
+TAREA 50 — Diseñar maestro de terceros
+```

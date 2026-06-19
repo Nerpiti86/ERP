@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from .autorizacion import (
-    empresa_activa_requerida,
+    contexto_operativo_requerido,
     permiso_funcional_alguno_requerido,
     permiso_funcional_requerido,
 )
@@ -27,7 +27,7 @@ PERMISOS_CONSULTA_CONFIGURACION = (
 
 
 @login_required
-@empresa_activa_requerida
+@contexto_operativo_requerido(requiere_sucursal=False)
 @permiso_funcional_alguno_requerido(
     *PERMISOS_CONSULTA_CONFIGURACION
 )
@@ -100,7 +100,7 @@ def configuracion_empresa(request):
 
 
 @login_required
-@empresa_activa_requerida
+@contexto_operativo_requerido(requiere_sucursal=False)
 @permiso_funcional_requerido("parametros.editar")
 @require_POST
 def inicializar_configuracion_empresa(request):

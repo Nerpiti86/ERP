@@ -18,6 +18,7 @@ Estado del índice: 19/06/2026.
 | `09_mecanica_trabajo_tareas_txt.md` | Mecánica acordada de tareas ejecutables `.txt` | Vigente |
 | `10_estado_actual_y_hoja_ruta.md` | Foto del estado actual y próximos pasos | Vigente; actualización por cortes |
 | `11_parametros_empresa.md` | Inicialización y edición amigable de parámetros por empresa | Implementado |
+| `12_contexto_operativo.md` | Contrato obligatorio de empresa y sucursal para operaciones | Implementado |
 
 ## Jerarquía documental
 
