@@ -260,7 +260,7 @@ No se implementa:
 Tarea siguiente:
 
 ```text
-TAREA 43 — Cargar roles y permisos iniciales
+TAREA 44 — Definir empresa activa para la sesion
 ```
 
 ## 13. Estado de cierre
@@ -288,4 +288,31 @@ usuario_tiene_permiso(usuario, empresa, codigo_permiso) -> bool
 La implementacion inicial no carga datos por defecto.
 
 Los roles y permisos iniciales se cargaran en una tarea separada.
+
+
+## 15. Carga inicial implementada
+
+Al cierre de la Tarea 43 se agrega una carga idempotente mediante:
+
+```text
+python manage.py cargar_roles_permisos_iniciales
+```
+
+Matriz inicial:
+
+- ADMIN: 25 permisos
+- CONTADOR: 10 permisos
+- OPERADOR: 10 permisos
+- AUDITOR: 11 permisos
+- SOLO_LECTURA: 8 permisos
+
+Total:
+
+- 5 roles
+- 25 permisos
+- 64 relaciones rol-permiso
+
+Los roles iniciales quedan marcados como roles de sistema.
+
+La carga no elimina extensiones posteriores ni asigna roles a usuarios concretos.
 

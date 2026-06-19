@@ -552,6 +552,10 @@ Modelos actuales del nucleo:
 - Auditoria
 - EventoNegocio
 - DocumentoAdjunto
+- RolFuncional
+- PermisoFuncional
+- RolPermiso
+- UsuarioRolEmpresa
 
 ### 10.2. Tablas reales creadas en PostgreSQL
 
@@ -659,7 +663,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-48 tests OK
+52 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -670,16 +674,15 @@ push OK
 
 Pendientes inmediatos:
 
-1. Cargar roles y permisos iniciales.
-2. Crear pantallas propias del nucleo.
+1. Definir seleccion de empresa activa para la sesion.
+2. Definir seleccion de sucursal activa para la sesion.
+3. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
 
 1. Evitar ejercicios fiscales superpuestos por empresa.
 2. Evitar periodos contables superpuestos dentro de un ejercicio.
-3. Definir seleccion de empresa activa para la sesion.
-4. Definir seleccion de sucursal activa para la sesion.
-5. Definir comportamiento final para superusuarios versus usuarios normales.
+3. Definir comportamiento final para superusuarios versus usuarios normales.
 
 
 ### 10.9. Auditoria basica
@@ -901,4 +904,53 @@ Reglas iniciales:
 No se cargan todavia roles ni permisos iniciales.
 
 No se implementan todavia middleware, decoradores, pantallas ni restricciones de UI.
+
+
+### 10.15. Roles y permisos iniciales
+
+Al cierre de la Tarea 43 se versiona y ejecuta una carga inicial idempotente.
+
+Comando agregado:
+
+```text
+python manage.py cargar_roles_permisos_iniciales
+```
+
+Definiciones versionadas:
+
+- apps/nucleo/roles_iniciales.py
+
+Roles iniciales:
+
+- ADMIN
+- CONTADOR
+- OPERADOR
+- AUDITOR
+- SOLO_LECTURA
+
+Cantidad inicial:
+
+- 5 roles
+- 25 permisos
+- 64 relaciones rol-permiso
+
+Criterio de asignacion:
+
+- ADMIN recibe todos los permisos iniciales.
+- CONTADOR recibe acceso contable, documental y consultas operativas.
+- OPERADOR recibe permisos de carga operativa.
+- AUDITOR recibe consultas ampliadas de auditoria y eventos.
+- SOLO_LECTURA recibe consultas generales sin escritura.
+
+La carga:
+
+- crea los datos faltantes
+- actualiza definiciones iniciales
+- reactiva relaciones iniciales inactivas
+- puede ejecutarse mas de una vez sin duplicar datos
+- no elimina roles, permisos ni relaciones adicionales creadas por el usuario
+
+La tarea no asigna roles a usuarios concretos.
+
+No se crea migracion porque los roles y permisos son datos configurables, no estructura de base de datos.
 

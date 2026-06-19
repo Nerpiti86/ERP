@@ -1,7 +1,9 @@
 from datetime import date
+from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
@@ -22,6 +24,11 @@ from .models import (
     UsuarioSucursal,
 )
 from .permisos import usuario_tiene_permiso
+from .roles_iniciales import (
+    PERMISOS_INICIALES,
+    PERMISOS_POR_ROL,
+    ROLES_INICIALES,
+)
 
 
 User = get_user_model()
@@ -785,6 +792,89 @@ class RolesPermisosFuncionalesTests(TestCase):
                 self.superusuario,
                 self.empresa,
                 "empresas.ver",
+            )
+        )
+
+
+class CargaRolesPermisosInicialesTests(TestCase):
+    def ejecutar_comando(self):
+        salida = StringIO()
+        call_command(
+            "cargar_roles_permisos_iniciales",
+            stdout=salida,
+        )
+        return salida.getvalue()
+
+    def test_comando_carga_matriz_inicial_completa(self):
+        salida = self.ejecutar_comando()
+
+        relaciones_esperadas = sum(
+            len(permisos) for permisos in PERMISOS_POR_ROL.values()
+        )
+
+        self.assertEqual(RolFuncional.objects.count(), len(ROLES_INICIALES))
+        self.assertEqual(
+            PermisoFuncional.objects.count(),
+            len(PERMISOS_INICIALES),
+        )
+        self.assertEqual(RolPermiso.objects.count(), relaciones_esperadas)
+        self.assertIn("Roles y permisos iniciales cargados", salida)
+
+    def test_comando_es_idempotente(self):
+        self.ejecutar_comando()
+        self.ejecutar_comando()
+
+        relaciones_esperadas = sum(
+            len(permisos) for permisos in PERMISOS_POR_ROL.values()
+        )
+
+        self.assertEqual(RolFuncional.objects.count(), len(ROLES_INICIALES))
+        self.assertEqual(
+            PermisoFuncional.objects.count(),
+            len(PERMISOS_INICIALES),
+        )
+        self.assertEqual(RolPermiso.objects.count(), relaciones_esperadas)
+
+    def test_admin_recibe_todos_los_permisos_iniciales(self):
+        self.ejecutar_comando()
+
+        permisos_admin = set(
+            RolPermiso.objects.filter(
+                rol__codigo="ADMIN",
+                activo=True,
+            ).values_list("permiso__codigo", flat=True)
+        )
+
+        self.assertEqual(permisos_admin, set(PERMISOS_INICIALES))
+
+    def test_roles_restringidos_no_reciben_escritura_indebida(self):
+        self.ejecutar_comando()
+
+        permisos_auditor = set(
+            RolPermiso.objects.filter(
+                rol__codigo="AUDITOR",
+                activo=True,
+            ).values_list("permiso__codigo", flat=True)
+        )
+        permisos_lectura = set(
+            RolPermiso.objects.filter(
+                rol__codigo="SOLO_LECTURA",
+                activo=True,
+            ).values_list("permiso__codigo", flat=True)
+        )
+
+        self.assertIn("auditoria.ver", permisos_auditor)
+        self.assertIn("eventos.ver", permisos_auditor)
+        self.assertNotIn("ventas.crear", permisos_auditor)
+        self.assertNotIn("compras.crear", permisos_auditor)
+        self.assertNotIn("auditoria.ver", permisos_lectura)
+        self.assertNotIn("eventos.ver", permisos_lectura)
+        self.assertFalse(
+            any(
+                permiso.endswith(
+                    (".crear", ".editar", ".desactivar", ".operar", ".adjuntar")
+                )
+                for permiso in permisos_lectura
             )
         )
 
