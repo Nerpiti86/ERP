@@ -260,7 +260,7 @@ No se implementa:
 Tarea siguiente:
 
 ```text
-TAREA 44 — Definir empresa activa para la sesion
+TAREA 45 — Definir sucursal activa para la sesion
 ```
 
 ## 13. Estado de cierre
@@ -315,4 +315,23 @@ Total:
 Los roles iniciales quedan marcados como roles de sistema.
 
 La carga no elimina extensiones posteriores ni asigna roles a usuarios concretos.
+
+
+## 16. Empresa activa para evaluar permisos
+
+Al cierre de la Tarea 44 la sesion dispone de una empresa activa validada.
+
+Los modulos futuros podran evaluar permisos con:
+
+```text
+usuario_tiene_permiso(
+    request.user,
+    request.empresa_activa,
+    codigo_permiso,
+)
+```
+
+La empresa activa no reemplaza la validacion de pertenencia de cada objeto operado.
+
+La siguiente etapa define la sucursal activa.
 

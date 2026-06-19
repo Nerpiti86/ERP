@@ -663,7 +663,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-52 tests OK
+61 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -674,9 +674,8 @@ push OK
 
 Pendientes inmediatos:
 
-1. Definir seleccion de empresa activa para la sesion.
-2. Definir seleccion de sucursal activa para la sesion.
-3. Crear pantallas propias del nucleo.
+1. Definir seleccion de sucursal activa para la sesion.
+2. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
 
@@ -953,4 +952,39 @@ La carga:
 La tarea no asigna roles a usuarios concretos.
 
 No se crea migracion porque los roles y permisos son datos configurables, no estructura de base de datos.
+
+
+### 10.16. Empresa activa para la sesion
+
+Al cierre de la Tarea 44 se implementa la empresa activa por sesion.
+
+Documento rector agregado:
+
+- docs/06_empresa_activa_sesion.md
+
+Componentes agregados:
+
+- apps/nucleo/empresa_activa.py
+- apps/nucleo/middleware.py
+- apps/nucleo/context_processors.py
+- selector propio en /empresa/seleccionar/
+
+Reglas iniciales:
+
+- La sesion guarda solo el ID de la empresa activa.
+- Un usuario normal puede elegir empresas activas con acceso UsuarioEmpresa activo.
+- Un superusuario puede elegir cualquier empresa activa.
+- Si hay una sola empresa disponible se selecciona automaticamente.
+- Si hay varias empresas, el usuario debe elegir una.
+- Una seleccion invalida se elimina automaticamente.
+- El backend vuelve a validar el acceso al cambiar de empresa.
+
+Atributos disponibles:
+
+```text
+request.empresa_activa
+request.empresas_disponibles
+```
+
+No se implementa todavia sucursal activa, login propio, obligatoriedad global de empresa activa ni filtrado automatico de todos los modulos.
 

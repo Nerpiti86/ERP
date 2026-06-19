@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Seleccionar empresa{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+        <div>
+          <p class="text-uppercase text-secondary small fw-semibold mb-1">Contexto de trabajo</p>
+          <h1 class="h3 mb-1">Seleccionar empresa</h1>
+          <p class="text-secondary mb-0">
+            La empresa elegida quedará activa durante esta sesión.
+          </p>
+        </div>
+        <div class="align-self-md-center">
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'core:home' %}">
+            Volver al inicio
+          </a>
+        </div>
+      </div>
+
+      {% if empresas %}
+        <form method="post" class="card shadow-sm">
+          {% csrf_token %}
+          {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+          {% endif %}
+
+          <div class="list-group list-group-flush">
+            {% for empresa in empresas %}
+              <label class="list-group-item p-3">
+                <div class="d-flex gap-3 align-items-start">
+                  <input
+                    class="form-check-input mt-1"
+                    type="radio"
+                    name="empresa_id"
+                    value="{{ empresa.pk }}"
+                    required
+                    {% if empresa_activa and empresa.pk == empresa_activa.pk %}checked{% endif %}
+                  >
+                  <span>
+                    <span class="d-block fw-semibold">{{ empresa.razon_social }}</span>
+                    {% if empresa.nombre_fantasia %}
+                      <span class="d-block text-secondary">{{ empresa.nombre_fantasia }}</span>
+                    {% endif %}
+                    <span class="d-block small text-secondary">CUIT {{ empresa.cuit }}</span>
+                  </span>
+                </div>
+              </label>
+            {% endfor %}
+          </div>
+
+          <div class="card-footer bg-white p-3 d-flex justify-content-end">
+            <button class="btn btn-dark" type="submit">
+              Usar empresa seleccionada
+            </button>
+          </div>
+        </form>
+      {% else %}
+        <div class="alert alert-warning shadow-sm">
+          No tenés empresas activas habilitadas para trabajar.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
