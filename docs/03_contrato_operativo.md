@@ -403,3 +403,66 @@ Si una validacion falla, no se debera hacer commit ni push.
 Si hay errores de compilacion, migracion, tests, sincronizacion o working tree sucio no esperado, el script debera detener la tarea operativa, dejar log local y evitar subir cambios incorrectos.
 
 Esta regla busca reducir pasos manuales sin perder trazabilidad.
+
+---
+
+## 23. Mecánica acordada de tareas TXT
+
+La mecánica oficial entre el usuario y el asistente queda documentada en:
+
+```text
+docs/09_mecanica_trabajo_tareas_txt.md
+```
+
+Resumen obligatorio:
+
+1. El usuario define una tarea.
+2. El asistente revisa `main` remoto y los documentos relevantes.
+3. El asistente entrega un script Bash con extensión `.txt` y un resumen operativo.
+4. El usuario ejecuta el archivo desde Git Bash.
+5. El script genera log y backup local.
+6. El script hace commit y push únicamente si todo pasa.
+7. El usuario devuelve el log completo.
+8. El asistente verifica el commit contra GitHub.
+9. Solo entonces se declara la tarea cerrada.
+
+Los scripts de tareas no forman parte del código fuente del ERP y no se copiarán al repositorio salvo decisión explícita.
+
+## 24. Estados formales de una tarea
+
+Estados posibles:
+
+```text
+PREPARADA
+EN EJECUCION
+DETENIDA
+EN CONTINUACION
+CERRADA Y VERIFICADA
+```
+
+Una tarea preparada puede tener un script completo y todavía no formar parte de `main`.
+
+Solo el estado `CERRADA Y VERIFICADA` implica:
+
+- commit existente
+- push realizado
+- sincronización final `0 0`
+- verificación remota
+
+## 25. Cortes documentales
+
+Los cortes documentales utilizan numeración independiente:
+
+```text
+CORTE DOCUMENTAL DNN
+```
+
+Su objetivo es:
+
+- actualizar el estado general
+- consolidar la hoja de ruta
+- revisar contradicciones documentales
+- actualizar la mecánica de trabajo
+- evitar alterar la numeración de tareas funcionales
+
+Los cortes documentales también deben generar log, backup, commit y push.

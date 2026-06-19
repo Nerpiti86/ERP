@@ -4,124 +4,173 @@ ERP administrativo, contable, fiscal, financiero y operativo orientado a empresa
 
 ## Objetivo
 
-Construir un sistema ERP modular para gestionar operaciones comerciales, compras, stock, tesoreria, cuentas corrientes, contabilidad, impuestos, documentos, auditoria y reportes.
+Construir un sistema ERP modular para gestionar operaciones comerciales, compras, stock, tesorería, cuentas corrientes, contabilidad, impuestos, documentos, auditoría y reportes.
 
-La implementacion inicial esta pensada para ejecutarse en una PC Windows local, que funcionara como equipo de desarrollo y servidor interno inicial.
+La implementación inicial se ejecuta en una PC Windows local que funciona como equipo de desarrollo y servidor interno. El acceso remoto previsto es mediante Tailscale y navegador web, sin exponer PostgreSQL ni abrir puertos públicos del router.
 
-El acceso remoto previsto sera mediante Tailscale, permitiendo que otra persona autorizada use el sistema desde un navegador web sin exponer la base de datos ni abrir puertos publicos del router.
+## Arquitectura
 
----
+```text
+Monolito modular local
++ Django
++ PostgreSQL
++ Django Templates
++ Bootstrap
++ HTMX cuando corresponda
++ servidor WSGI compatible con Windows
++ acceso remoto privado por Tailscale
+```
 
-## Stack tecnico elegido
+Decisiones vigentes:
 
-- Python
-- Django
-- PostgreSQL local
-- Django Templates
-- HTMX
-- Bootstrap
-- Waitress u otro servidor WSGI compatible con Windows
-- Tailscale para acceso remoto privado
-
----
-
-## Tipo de arquitectura
-
-El proyecto se implementara como:
-
-Monolito modular local con acceso remoto privado por Tailscale.
-
-Esto significa que sera una sola aplicacion principal, organizada internamente por modulos funcionales.
-
-No se usaran microservicios en la etapa inicial.
-
-No se usara Docker en la primera etapa.
-
-No se usara SQLite como base principal.
-
-No se expondra PostgreSQL directamente a la red.
-
----
+- una aplicación principal organizada por módulos
+- sin microservicios en la etapa inicial
+- sin Docker en la etapa inicial
+- PostgreSQL como base principal
+- Django Admin como backoffice técnico, no como interfaz final
+- seguridad y permisos validados en backend
+- autenticación propia del ERP sobre Django Auth
 
 ## Repositorio
 
-Repositorio local principal:
-
-D:\NeriSoft2\ERP
-
-Repositorio remoto:
-
-https://github.com/Nerpiti86/ERP.git
-
-Rama de trabajo:
-
-main
-
----
-
-## Documentacion
-
-La documentacion del proyecto se encuentra en la carpeta docs/.
-
-Documentos iniciales:
-
-- docs/00_decision_implementacion.md
-- docs/01_nucleo_erp.md
-- docs/02_politica_operativa_logs.md
-- docs/03_contrato_operativo.md
-
----
-
-## Politica operativa
-
-Reglas principales del proyecto:
-
-- Se trabaja una tarea a la vez.
-- Se trabaja siempre sobre la rama main.
-- Se valida sincronizacion local/remoto antes y despues de cada tarea.
-- El estado esperado de sincronizacion es 0 0.
-- Toda tarea tecnica debe dejar log local en logs/.
-- La carpeta logs/ no se versiona.
-- No se deben commitear secretos, .env, backups, dumps ni archivos locales sensibles.
-- Cada commit debe representar una sola tarea logica.
-- Despues de cada commit versionable se debe hacer push y validar sincronizacion final.
-
----
-
-## Logs locales
-
-Los logs de trabajo se guardan localmente en:
-
-logs/
-
-Esta carpeta esta ignorada por Git.
-
-Los logs sirven para registrar comandos ejecutados, resultados, errores, validaciones y estado final de cada tarea.
-
----
-
-## Seguridad inicial
-
-Reglas iniciales:
-
-- Cada persona debe tener su propio usuario dentro del ERP.
-- No se usaran usuarios compartidos.
-- PostgreSQL no debe exponerse directamente a la red.
-- El acceso remoto sera mediante Tailscale.
-- No se abriran puertos publicos del router.
-- Los permisos deben validarse en backend.
-- Las acciones criticas deberan auditarse.
-
----
+```text
+Local:  D:\NeriSoft2\ERP
+Remoto: https://github.com/Nerpiti86/ERP.git
+Rama:   main
+```
 
 ## Estado actual
 
-El proyecto se encuentra en etapa documental y preparacion de base tecnica.
+Corte documental: 19/06/2026.
 
-Proxima etapa prevista:
+Último cierre funcional verificado:
 
-- Crear base tecnica Django.
-- Crear entorno virtual local.
-- Instalar dependencias iniciales.
-- Conectar Django con PostgreSQL.
-- Crear estructura modular inicial.
+```text
+TAREA 46 — Definir autenticación propia del ERP
+Commit: 8e35e36ec3565affba379378aa818ac4cab4d1ba
+Tests: 85 OK
+Sincronización final: origin/main...HEAD = 0 0
+```
+
+El ERP ya cuenta con:
+
+- proyecto Django conectado a PostgreSQL
+- apps `core` y `nucleo`
+- Empresa y Sucursal
+- EjercicioFiscal y PeriodoContable
+- accesos UsuarioEmpresa y UsuarioSucursal
+- ParametroSistema
+- Auditoria
+- EventoNegocio
+- DocumentoAdjunto
+- roles y permisos funcionales propios
+- cinco roles iniciales y veinticinco permisos
+- empresa activa por sesión
+- sucursal activa por sesión
+- selección automática o manual según accesos
+- autenticación propia mediante `/ingresar/`
+- cierre de sesión mediante POST en `/salir/`
+- portada protegida
+- métricas acotadas al contexto del usuario
+- Django Admin visible únicamente para usuarios `staff`
+
+Estado operativo local conocido:
+
+```text
+Usuario real creado: ADMIN
+Otros usuarios observados en tests: temporales y eliminados con la base de prueba
+```
+
+Próxima tarea funcional:
+
+```text
+TAREA 47 — Aplicar permisos funcionales a las vistas del ERP
+Estado: pendiente de diseño
+```
+
+## Documentación
+
+Índice documental:
+
+```text
+docs/README.md
+```
+
+Documentos rectores principales:
+
+- `docs/00_decision_implementacion.md`
+- `docs/01_nucleo_erp.md`
+- `docs/02_politica_operativa_logs.md`
+- `docs/03_contrato_operativo.md`
+- `docs/04_roles_permisos.md`
+- `docs/05_usuario_custom.md`
+- `docs/06_empresa_activa_sesion.md`
+- `docs/07_sucursal_activa_sesion.md`
+- `docs/08_autenticacion_erp.md`
+- `docs/09_mecanica_trabajo_tareas_txt.md`
+- `docs/10_estado_actual_y_hoja_ruta.md`
+
+## Mecánica de trabajo
+
+Se trabaja mediante tareas ejecutables `.txt`:
+
+```text
+tareaNN_descripcion.txt
+tareaNN_resumen_operativo.txt
+```
+
+Flujo:
+
+1. Se define una sola tarea.
+2. Se revisa `main` remoto antes de diseñarla.
+3. Se entrega un script `.txt` ejecutable desde Git Bash.
+4. El script valida Git, crea log y backup, realiza el cambio y ejecuta validaciones.
+5. Solo si todo pasa hace commit y push.
+6. Se devuelve el log completo.
+7. Se verifica el commit contra GitHub.
+8. Recién entonces la tarea se considera cerrada.
+
+La mecánica completa está documentada en:
+
+```text
+docs/09_mecanica_trabajo_tareas_txt.md
+```
+
+## Reglas operativas esenciales
+
+- una tarea lógica por vez
+- rama única `main`
+- working tree limpio al iniciar, salvo continuación explícita
+- sincronización esperada `0 0` antes y después
+- logs locales obligatorios en `logs/`
+- backups locales por tarea en `logs/backup/`
+- no versionar `.env`, secretos, logs, backups, dumps ni `.venv`
+- commit claro y específico
+- push automático únicamente después de validar
+- si algo falla, no hacer commit ni push
+- una continuación trabaja sobre el estado local dejado por la tarea fallida
+
+## Validaciones Django mínimas
+
+```bash
+.venv/Scripts/python.exe manage.py check
+.venv/Scripts/python.exe manage.py makemigrations --check --dry-run
+.venv/Scripts/python.exe manage.py test apps.core apps.nucleo
+.venv/Scripts/python.exe -m compileall config apps
+```
+
+Las tareas documentales ejecutan además:
+
+```bash
+git diff --check
+```
+
+## Logs
+
+Los logs locales se guardan en:
+
+```text
+D:\NeriSoft2\ERP\logs
+```
+
+No se versionan. Cada log debe permitir reconstruir qué se hizo, qué se validó y si la tarea terminó sincronizada con `origin/main`.

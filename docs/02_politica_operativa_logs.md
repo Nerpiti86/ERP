@@ -165,3 +165,54 @@ A partir de este punto, toda tarea del ERP debera dejar log local en logs/.
 La carpeta logs/ seguira ignorada por Git.
 
 Los documentos de politica y arquitectura si se versionaran dentro de docs/.
+
+---
+
+## 12. Relación entre tarea, script y log
+
+La mecánica operativa habitual usa:
+
+```text
+tareaNN_descripcion.txt
+tareaNN_resumen_operativo.txt
+```
+
+El primer archivo es Bash ejecutable aunque tenga extensión `.txt`.
+
+El script:
+
+- no se versiona dentro del ERP
+- se posiciona por sí mismo en el repositorio
+- crea el log local oficial de la ejecución
+- crea backup local cuando modifica archivos
+- realiza commit y push solo si todas las validaciones pasan
+
+El archivo de resumen no reemplaza el log. Describe el alcance previsto antes de ejecutar.
+
+## 13. Devolución del log completo
+
+Al finalizar una tarea, el usuario deberá copiar o adjuntar el log completo.
+
+El log permite:
+
+- confirmar cada validación
+- identificar el punto exacto de un fallo
+- preparar una continuación específica
+- comprobar commit y push
+- registrar la ruta del backup
+- verificar el resultado final contra GitHub
+
+Una captura parcial o una frase como “salió bien” no reemplaza el log cuando la tarea modifica el repositorio.
+
+## 14. Diferencia entre script preparado y tarea cerrada
+
+Un script preparado no significa que la tarea esté implementada.
+
+La tarea solo queda cerrada cuando:
+
+1. el script fue ejecutado
+2. las validaciones pasaron
+3. se creó el commit
+4. se hizo push
+5. el repositorio terminó limpio y sincronizado
+6. el commit fue verificado contra GitHub
