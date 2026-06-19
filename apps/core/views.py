@@ -1,42 +1,151 @@
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
-from apps.nucleo.empresa_activa import seleccionar_empresa_para_sesion
+from apps.nucleo.empresa_activa import (
+    empresas_disponibles_para_usuario,
+    limpiar_empresa_activa,
+    seleccionar_empresa_para_sesion,
+)
 from apps.nucleo.models import Empresa, EjercicioFiscal, PeriodoContable, Sucursal
-from apps.nucleo.sucursal_activa import seleccionar_sucursal_para_sesion
+from apps.nucleo.sucursal_activa import (
+    seleccionar_sucursal_para_sesion,
+    sucursales_disponibles_para_usuario,
+)
+
+from .forms import ERPAuthenticationForm
 
 
-def home(request):
-    contexto = {
-        "metricas": {
-            "empresas": Empresa.objects.count(),
-            "sucursales": Sucursal.objects.count(),
-            "ejercicios": EjercicioFiscal.objects.count(),
-            "periodos": PeriodoContable.objects.count(),
-        }
-    }
-
-    return render(request, "core/home.html", contexto)
+def _url_interna_segura(request, url):
+    return bool(
+        url
+        and url_has_allowed_host_and_scheme(
+            url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        )
+    )
 
 
 def _redireccion_segura_o_inicio(request, next_url):
-    if next_url and url_has_allowed_host_and_scheme(
-        next_url,
-        allowed_hosts={request.get_host()},
-        require_https=request.is_secure(),
-    ):
+    if _url_interna_segura(request, next_url):
         return redirect(next_url)
 
     return redirect("core:home")
 
 
-@login_required(login_url="/admin/login/")
+def _destino_inicial_usuario(request, usuario):
+    empresas = empresas_disponibles_para_usuario(usuario)
+    empresa_ids = list(empresas.values_list("pk", flat=True)[:2])
+
+    if len(empresa_ids) == 0:
+        return "core:home"
+
+    if len(empresa_ids) > 1:
+        return "core:seleccionar_empresa"
+
+    empresa = seleccionar_empresa_para_sesion(
+        request,
+        empresa_ids[0],
+    )
+    request.empresa_activa = empresa
+
+    sucursales = sucursales_disponibles_para_usuario(
+        usuario,
+        empresa,
+    )
+    sucursal_ids = list(sucursales.values_list("pk", flat=True)[:2])
+
+    if len(sucursal_ids) > 1:
+        return "core:seleccionar_sucursal"
+
+    return "core:home"
+
+
+def iniciar_sesion(request):
+    if request.user.is_authenticated:
+        return redirect("core:home")
+
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    form = ERPAuthenticationForm(
+        request=request,
+        data=request.POST if request.method == "POST" else None,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        usuario = form.get_user()
+        auth_login(request, usuario)
+        limpiar_empresa_activa(request)
+
+        messages.success(
+            request,
+            f"Bienvenido, {usuario.get_username()}.",
+        )
+
+        if _url_interna_segura(request, next_url):
+            return redirect(next_url)
+
+        return redirect(_destino_inicial_usuario(request, usuario))
+
+    return render(
+        request,
+        "core/login.html",
+        {
+            "form": form,
+            "next": next_url,
+        },
+    )
+
+
+@login_required
+@require_POST
+def cerrar_sesion(request):
+    auth_logout(request)
+    messages.success(request, "La sesión se cerró correctamente.")
+    return redirect("core:login")
+
+
+@login_required
+def home(request):
+    empresa = request.empresa_activa
+
+    if empresa is None:
+        metricas = {
+            "empresas": request.empresas_disponibles.count(),
+            "sucursales": 0,
+            "ejercicios": 0,
+            "periodos": 0,
+        }
+    else:
+        metricas = {
+            "empresas": 1,
+            "sucursales": request.sucursales_disponibles.count(),
+            "ejercicios": EjercicioFiscal.objects.filter(
+                empresa=empresa,
+            ).count(),
+            "periodos": PeriodoContable.objects.filter(
+                ejercicio__empresa=empresa,
+            ).count(),
+        }
+
+    return render(
+        request,
+        "core/home.html",
+        {
+            "metricas": metricas,
+        },
+    )
+
+
+@login_required
 def seleccionar_empresa(request):
     empresas = list(request.empresas_disponibles)
     next_url = request.POST.get("next") or request.GET.get("next") or ""
@@ -71,7 +180,7 @@ def seleccionar_empresa(request):
     )
 
 
-@login_required(login_url="/admin/login/")
+@login_required
 def seleccionar_sucursal(request):
     if request.empresa_activa is None:
         messages.warning(

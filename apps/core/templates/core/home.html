@@ -10,39 +10,73 @@
           <p class="text-uppercase text-secondary small fw-semibold mb-2">Sistema de gestión</p>
           <h1 class="display-6 fw-bold mb-2">ERP</h1>
           <p class="lead mb-0">
-            Base operativa inicial con Django, PostgreSQL y módulo núcleo.
+            Base operativa con contexto de empresa, sucursal y usuario autenticado.
           </p>
         </div>
         <div class="align-self-md-center d-flex flex-column flex-sm-row gap-2">
           <span class="badge text-bg-success fs-6 align-self-center">Sistema activo</span>
-          <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:index' %}">
-            Panel admin
-          </a>
+          {% if user.is_staff %}
+            <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:index' %}">
+              Panel admin
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
   </section>
 
+  {% if not empresa_activa %}
+    <section class="mb-4">
+      <div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center">
+        <div>
+          <strong>Falta seleccionar una empresa.</strong>
+          Elegí el contexto de trabajo antes de comenzar a operar.
+        </div>
+        <a class="btn btn-warning" href="{% url 'core:seleccionar_empresa' %}">
+          Seleccionar empresa
+        </a>
+      </div>
+    </section>
+  {% elif not sucursal_activa %}
+    <section class="mb-4">
+      <div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center">
+        <div>
+          <strong>Falta seleccionar una sucursal.</strong>
+          Elegí el punto operativo para esta sesión.
+        </div>
+        <a class="btn btn-warning" href="{% url 'core:seleccionar_sucursal' %}">
+          Seleccionar sucursal
+        </a>
+      </div>
+    </section>
+  {% endif %}
+
   <section class="mb-4">
     <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
       <h2 class="h4 mb-0">Núcleo</h2>
-      <div>
-        <a class="btn btn-dark btn-sm" href="{% url 'admin:index' %}">
-          Ir al panel de administración
-        </a>
-      </div>
+      {% if user.is_staff %}
+        <div>
+          <a class="btn btn-dark btn-sm" href="{% url 'admin:index' %}">
+            Ir al panel de administración
+          </a>
+        </div>
+      {% endif %}
     </div>
 
     <div class="row g-3">
       <div class="col-12 col-md-6 col-xl-3">
         <div class="card h-100 shadow-sm">
           <div class="card-body d-flex flex-column">
-            <div class="text-secondary small text-uppercase fw-semibold">Empresas</div>
+            <div class="text-secondary small text-uppercase fw-semibold">
+              Empresas disponibles
+            </div>
             <div class="display-6 fw-bold">{{ metricas.empresas }}</div>
-            <p class="text-secondary">Entidades legales cargadas.</p>
-            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_empresa_changelist' %}">
-              Ver empresas
-            </a>
+            <p class="text-secondary">Entidades habilitadas para el usuario.</p>
+            {% if user.is_staff %}
+              <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_empresa_changelist' %}">
+                Ver empresas
+              </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -50,12 +84,16 @@
       <div class="col-12 col-md-6 col-xl-3">
         <div class="card h-100 shadow-sm">
           <div class="card-body d-flex flex-column">
-            <div class="text-secondary small text-uppercase fw-semibold">Sucursales</div>
+            <div class="text-secondary small text-uppercase fw-semibold">
+              Sucursales disponibles
+            </div>
             <div class="display-6 fw-bold">{{ metricas.sucursales }}</div>
-            <p class="text-secondary">Puntos operativos por empresa.</p>
-            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_sucursal_changelist' %}">
-              Ver sucursales
-            </a>
+            <p class="text-secondary">Puntos operativos de la empresa activa.</p>
+            {% if user.is_staff %}
+              <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_sucursal_changelist' %}">
+                Ver sucursales
+              </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -65,10 +103,12 @@
           <div class="card-body d-flex flex-column">
             <div class="text-secondary small text-uppercase fw-semibold">Ejercicios fiscales</div>
             <div class="display-6 fw-bold">{{ metricas.ejercicios }}</div>
-            <p class="text-secondary">Ejercicios contables definidos.</p>
-            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_ejerciciofiscal_changelist' %}">
-              Ver ejercicios
-            </a>
+            <p class="text-secondary">Ejercicios de la empresa activa.</p>
+            {% if user.is_staff %}
+              <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_ejerciciofiscal_changelist' %}">
+                Ver ejercicios
+              </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -78,10 +118,12 @@
           <div class="card-body d-flex flex-column">
             <div class="text-secondary small text-uppercase fw-semibold">Períodos contables</div>
             <div class="display-6 fw-bold">{{ metricas.periodos }}</div>
-            <p class="text-secondary">Períodos disponibles para operar.</p>
-            <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_periodocontable_changelist' %}">
-              Ver períodos
-            </a>
+            <p class="text-secondary">Períodos de la empresa activa.</p>
+            {% if user.is_staff %}
+              <a class="btn btn-outline-primary btn-sm mt-auto" href="{% url 'admin:nucleo_periodocontable_changelist' %}">
+                Ver períodos
+              </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -90,8 +132,8 @@
 
   <section>
     <div class="alert alert-info mb-0">
-      Ya podés administrar los datos iniciales del núcleo desde el panel admin.
-      Las pantallas propias del ERP se crearán en la próxima etapa funcional.
+      La autenticación propia del ERP está activa.
+      Las operaciones futuras deberán validar empresa, sucursal y permisos funcionales.
     </div>
   </section>
 {% endblock %}

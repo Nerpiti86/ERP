@@ -260,7 +260,7 @@ No se implementa:
 Tarea siguiente:
 
 ```text
-TAREA 46 — Definir autenticacion propia del ERP
+TAREA 47 — Aplicar permisos funcionales a las vistas del ERP
 ```
 
 ## 13. Estado de cierre
@@ -353,4 +353,23 @@ usuario_tiene_permiso(
 La sucursal activa se utilizará para acotar operaciones y objetos cuando corresponda.
 
 No se implementan todavía roles ni permisos específicos por sucursal.
+
+
+## 18. Autenticacion propia del ERP
+
+Al cierre de la Tarea 46, las vistas propias utilizan sesiones autenticadas de Django.
+
+La autenticacion confirma identidad y estado activo del usuario.
+
+La autorizacion funcional continúa siendo una capa separada y deberá resolverse mediante:
+
+```text
+usuario_tiene_permiso(
+    request.user,
+    request.empresa_activa,
+    codigo_permiso,
+)
+```
+
+Ser usuario autenticado no implica tener permiso funcional para operar.
 

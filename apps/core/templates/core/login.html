@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Ingresar{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center py-4 py-md-5">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+          <div class="text-center mb-4">
+            <p class="text-uppercase text-secondary small fw-semibold mb-2">
+              NeriSoft
+            </p>
+            <h1 class="h3 mb-2">Ingresar al ERP</h1>
+            <p class="text-secondary mb-0">
+              Usá las credenciales asignadas por el administrador.
+            </p>
+          </div>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if next %}
+              <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.username.id_for_label }}">
+                {{ form.username.label }}
+              </label>
+              {{ form.username }}
+              {% for error in form.username.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label" for="{{ form.password.id_for_label }}">
+                {{ form.password.label }}
+              </label>
+              {{ form.password }}
+              {% for error in form.password.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <button class="btn btn-dark w-100" type="submit">
+              Ingresar
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <p class="text-center text-secondary small mt-3 mb-0">
+        El acceso se valida con el sistema de usuarios de Django.
+      </p>
+    </div>
+  </div>
+{% endblock %}

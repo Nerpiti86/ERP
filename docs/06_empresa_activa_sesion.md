@@ -57,7 +57,7 @@ La selección manual:
 - guarda el ID en la sesión
 - permite regresar a una URL interna segura mediante `next`
 
-Mientras no exista login propio del ERP, el acceso no autenticado se redirige al login técnico de Django Admin.
+El acceso no autenticado se redirige al login propio del ERP en `/ingresar/`.
 
 ## 6. Invalidación automática
 
@@ -121,7 +121,6 @@ Los módulos futuros deberán usar `request.empresa_activa` y validar que cada o
 
 Esta tarea no implementa:
 
-- login propio del ERP
 - empresa activa obligatoria para todas las vistas
 - filtrado de todos los modelos por empresa
 - permisos de pantalla
@@ -132,7 +131,7 @@ Esta tarea no implementa:
 ## 11. Próximo paso
 
 ```text
-TAREA 46 — Definir autenticación propia del ERP
+TAREA 47 — Aplicar permisos funcionales a las vistas del ERP
 ```
 
 
@@ -145,4 +144,11 @@ La sucursal activa se documenta en:
 ```text
 docs/07_sucursal_activa_sesion.md
 ```
+
+
+## 13. Integración con autenticación propia
+
+Al cierre de la Tarea 46, los selectores de empresa y sucursal utilizan `LOGIN_URL` y el login propio del ERP.
+
+El ingreso limpia cualquier contexto operativo previo antes de resolver una nueva empresa y sucursal.
 

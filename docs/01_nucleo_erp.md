@@ -663,7 +663,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-73 tests OK
+85 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -674,7 +674,7 @@ push OK
 
 Pendientes inmediatos:
 
-1. Definir autenticacion propia del ERP.
+1. Aplicar permisos funcionales a las vistas del ERP.
 2. Crear pantallas propias del nucleo.
 
 Pendientes de reglas de consistencia:
@@ -1022,4 +1022,33 @@ request.sucursales_disponibles
 ```
 
 No se implementan todavia permisos por sucursal, obligatoriedad global, filtrado automatico de modulos ni login propio.
+
+
+### 10.18. Autenticacion propia del ERP
+
+Al cierre de la Tarea 46 se implementa el ingreso y la salida propios del ERP.
+
+Documento rector agregado:
+
+- docs/08_autenticacion_erp.md
+
+Componentes agregados:
+
+- apps/core/forms.py
+- pantalla /ingresar/
+- salida POST /salir/
+- configuracion LOGIN_URL, LOGIN_REDIRECT_URL y LOGOUT_REDIRECT_URL
+
+Reglas iniciales:
+
+- Se conserva auth.User estandar de Django.
+- La portada y los selectores requieren autenticacion.
+- Solo usuarios activos pueden ingresar.
+- El parametro next acepta unicamente URLs internas seguras.
+- El login limpia empresa y sucursal anteriores.
+- El logout elimina completamente la sesion.
+- Los enlaces al Admin solo se muestran a usuarios staff.
+- Las metricas de portada se limitan al contexto del usuario.
+
+No se implementan todavia recuperacion de contraseña, segundo factor, bloqueo por intentos ni permisos funcionales aplicados a cada vista.
 

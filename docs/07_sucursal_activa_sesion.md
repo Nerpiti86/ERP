@@ -134,7 +134,6 @@ La sucursal activa no modifica todavía el modelo de permisos, que continúa def
 
 Esta tarea no implementa:
 
-- login propio del ERP
 - obligatoriedad global de sucursal activa
 - permisos específicos por sucursal
 - `UsuarioRolSucursal`
@@ -146,5 +145,12 @@ Esta tarea no implementa:
 ## 13. Próximo paso
 
 ```text
-TAREA 46 — Definir autenticación propia del ERP
+TAREA 47 — Aplicar permisos funcionales a las vistas del ERP
 ```
+
+
+## 14. Integración con autenticación propia
+
+Al cierre de la Tarea 46, el selector de sucursal exige una sesión iniciada desde `/ingresar/`.
+
+Cerrar sesión elimina también la empresa y la sucursal activas.

@@ -13,6 +13,15 @@ from apps.nucleo.models import (
 
 
 class HomeTests(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.admin = self.User.objects.create_superuser(
+            username="admin_home",
+            email="admin_home@example.com",
+            password="password-test",
+        )
+        self.client.force_login(self.admin)
+
     def test_home_status_code(self):
         response = self.client.get(reverse("core:home"))
         self.assertEqual(response.status_code, 200)
@@ -47,6 +56,22 @@ class HomeTests(TestCase):
         self.assertContains(response, reverse("admin:nucleo_sucursal_changelist"))
         self.assertContains(response, reverse("admin:nucleo_ejerciciofiscal_changelist"))
         self.assertContains(response, reverse("admin:nucleo_periodocontable_changelist"))
+
+    def test_home_usuario_normal_no_ve_enlaces_admin(self):
+        usuario = self.User.objects.create_user(
+            username="usuario_sin_admin",
+            email="usuario_sin_admin@example.com",
+            password="password-test",
+        )
+        self.client.force_login(usuario)
+
+        response = self.client.get(reverse("core:home"))
+
+        self.assertContains(response, "usuario_sin_admin")
+        self.assertContains(response, "Cerrar sesión")
+        self.assertNotContains(response, "Panel admin")
+        self.assertNotContains(response, "Ver empresas")
+        self.assertNotContains(response, reverse("admin:index"))
 
 
 class EmpresaActivaSesionTests(TestCase):
@@ -479,4 +504,166 @@ class SucursalActivaSesionTests(TestCase):
             response.url.startswith(reverse("core:seleccionar_empresa"))
         )
         self.assertIn("next=", response.url)
+
+
+class AutenticacionERPTests(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.password = "password-test"
+        self.usuario = self.User.objects.create_user(
+            username="usuario_erp",
+            email="usuario_erp@example.com",
+            password=self.password,
+        )
+
+    def test_home_anonimo_redirige_al_login_propio(self):
+        response = self.client.get(reverse("core:home"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('core:login')}?next={reverse('core:home')}",
+        )
+
+    def test_login_get_muestra_formulario_propio(self):
+        response = self.client.get(reverse("core:login"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Ingresar al ERP")
+        self.assertContains(response, "Usuario")
+        self.assertContains(response, "Contraseña")
+
+    def test_login_valido_autentica_y_redirige_al_inicio(self):
+        response = self.client.post(
+            reverse("core:login"),
+            {
+                "username": self.usuario.username,
+                "password": self.password,
+            },
+        )
+
+        self.assertRedirects(response, reverse("core:home"))
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]),
+            self.usuario.pk,
+        )
+
+    def test_login_invalido_no_autentica(self):
+        response = self.client.post(
+            reverse("core:login"),
+            {
+                "username": self.usuario.username,
+                "password": "incorrecta",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Usuario o contraseña incorrectos.")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_usuario_inactivo_no_puede_ingresar(self):
+        self.usuario.is_active = False
+        self.usuario.save()
+
+        response = self.client.post(
+            reverse("core:login"),
+            {
+                "username": self.usuario.username,
+                "password": self.password,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_login_respeta_next_interno(self):
+        next_url = reverse("core:seleccionar_empresa")
+
+        response = self.client.post(
+            reverse("core:login"),
+            {
+                "username": self.usuario.username,
+                "password": self.password,
+                "next": next_url,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, next_url)
+
+    def test_login_rechaza_next_externo(self):
+        response = self.client.post(
+            reverse("core:login"),
+            {
+                "username": self.usuario.username,
+                "password": self.password,
+                "next": "https://example.com/robo",
+            },
+        )
+
+        self.assertRedirects(response, reverse("core:home"))
+
+    def test_login_con_varias_empresas_abre_selector(self):
+        empresa_a = Empresa.objects.create(
+            cuit="30777777778",
+            razon_social="Empresa Login A SA",
+        )
+        empresa_b = Empresa.objects.create(
+            cuit="30788888888",
+            razon_social="Empresa Login B SA",
+        )
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=empresa_a,
+        )
+        UsuarioEmpresa.objects.create(
+            usuario=self.usuario,
+            empresa=empresa_b,
+        )
+
+        response = self.client.post(
+            reverse("core:login"),
+            {
+                "username": self.usuario.username,
+                "password": self.password,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:seleccionar_empresa"),
+        )
+
+    def test_usuario_autenticado_no_vuelve_al_login(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("core:login"))
+
+        self.assertRedirects(response, reverse("core:home"))
+
+    def test_logout_post_cierra_sesion_y_limpia_contexto(self):
+        self.client.force_login(self.usuario)
+        session = self.client.session
+        session[SESSION_EMPRESA_ACTIVA_ID] = 999
+        session[SESSION_SUCURSAL_ACTIVA_ID] = 999
+        session.save()
+
+        response = self.client.post(reverse("core:logout"))
+
+        self.assertRedirects(response, reverse("core:login"))
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertNotIn(
+            SESSION_EMPRESA_ACTIVA_ID,
+            self.client.session,
+        )
+        self.assertNotIn(
+            SESSION_SUCURSAL_ACTIVA_ID,
+            self.client.session,
+        )
+
+    def test_logout_get_no_esta_permitido(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.get(reverse("core:logout"))
+
+        self.assertEqual(response.status_code, 405)
 

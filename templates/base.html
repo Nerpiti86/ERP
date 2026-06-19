@@ -14,6 +14,10 @@
 
       <div class="ms-auto d-flex flex-wrap justify-content-end align-items-center gap-2">
         {% if user.is_authenticated %}
+          <span class="navbar-text small">
+            Usuario: <strong class="text-white">{{ user.get_username }}</strong>
+          </span>
+
           {% if empresa_activa %}
             <span class="navbar-text small">
               Empresa: <strong class="text-white">{{ empresa_activa.razon_social }}</strong>
@@ -44,11 +48,21 @@
               Seleccionar empresa
             </a>
           {% endif %}
+
+          {% if user.is_staff %}
+            <a class="btn btn-outline-info btn-sm" href="{% url 'admin:index' %}">
+              Admin
+            </a>
+          {% endif %}
+
+          <form method="post" action="{% url 'core:logout' %}" class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-outline-light btn-sm" type="submit">
+              Cerrar sesión
+            </button>
+          </form>
         {% else %}
-          <a
-            class="btn btn-outline-light btn-sm"
-            href="{% url 'admin:login' %}?next={% url 'core:seleccionar_empresa' %}"
-          >
+          <a class="btn btn-outline-light btn-sm" href="{% url 'core:login' %}">
             Ingresar
           </a>
         {% endif %}
