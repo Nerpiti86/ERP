@@ -7,10 +7,9 @@ Base verificada:
 ```text
 Repositorio: Nerpiti86/ERP
 Rama: main
-Último cierre funcional: TAREA 46
-Commit: 8e35e36ec3565affba379378aa818ac4cab4d1ba
-Mensaje: Definir autenticacion propia del ERP
-Tests: 85 OK
+Último cierre funcional: TAREA 47
+Mensaje: Crear configuracion amigable de parametros por empresa
+Tests: 107 OK
 ```
 
 ## 1. Resumen ejecutivo
@@ -146,21 +145,16 @@ Reglas:
 
 ## 6. Estado de usuarios
 
-Estado operativo local informado:
+Estado operativo local relevado el 19/06/2026:
 
 ```text
-Único usuario real creado: ADMIN
+Usuarios reales: ADMIN y Laura
+Empresas activas: Empresa Demo SA y ESREQUIS LAURA
 ```
 
-Los usuarios con otros nombres que aparecen en los tests se crean dentro de la base temporal de pruebas y se eliminan al finalizar.
+Laura posee acceso activo a `ESREQUIS LAURA` y a su sucursal `Consultorio Pasco`.
 
-Actualmente `ADMIN` es suficiente para continuar desarrollando y validar el sistema.
-
-Antes del uso real por otra persona deberá crearse un usuario individual y asignarle:
-
-- acceso a empresa
-- acceso a sucursal
-- rol funcional por empresa
+Todavía no posee un rol funcional asignado por empresa. Esa asignación deberá realizarse manualmente antes de validar restricciones de TAREA 48.
 
 ## 7. Tareas recientes cerradas
 
@@ -176,16 +170,18 @@ Antes del uso real por otra persona deberá crearse un usuario individual y asig
 | 44 | Empresa activa por sesión | `2d1e6ee32498b13b6955d7cfaf6c364ddab10f8f` |
 | 45 | Sucursal activa por sesión | `4e47a55b443085f4dda33bd8c2fe778f2a89d39d` |
 | 46 | Autenticación propia del ERP | `8e35e36ec3565affba379378aa818ac4cab4d1ba` |
+| 47 | Configuración amigable de parámetros por empresa | ver historial de `main` |
 
 ## 8. Próxima tarea
 
 ```text
-TAREA 47 — Aplicar permisos funcionales a las vistas del ERP
+TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
 Estado: PENDIENTE DE DISEÑO
 ```
 
 Objetivo esperado:
 
+- reemplazar restricciones temporales de `is_staff`
 - separar autenticación de autorización
 - reutilizar `usuario_tiene_permiso`
 - proteger vistas en backend
@@ -196,11 +192,11 @@ Objetivo esperado:
 
 ### Inmediatos
 
-1. Diseñar TAREA 47.
-2. Definir requisito de empresa y sucursal activas para vistas operativas.
-3. Crear gestión propia de usuarios y asignaciones mínimas.
-4. Crear pantallas propias del núcleo.
-5. Elegir el primer módulo operativo.
+1. Inicializar manualmente la configuración de `ESREQUIS LAURA`.
+2. Asignar manualmente un rol funcional a Laura.
+3. Diseñar TAREA 48.
+4. Definir requisito de empresa y sucursal activas para vistas operativas.
+5. Crear gestión propia de usuarios y asignaciones mínimas.
 
 ### Consistencia pendiente
 
@@ -242,11 +238,42 @@ La secuencia recomendada es:
 
 ```text
 autenticación
+→ configuración amigable por empresa
 → permisos en vistas
 → contexto obligatorio
-→ usuarios reales separados
-→ pantallas propias
+→ gestión propia de usuarios
 → módulos operativos
 ```
 
-La autenticación ya está cerrada. El próximo bloqueo estructural es la autorización funcional en backend.
+La autenticación y la configuración amigable ya están cerradas. El próximo bloqueo estructural es la autorización funcional en backend.
+
+## 12. Actualización posterior al corte D01: TAREA 47
+
+Se implementa la configuración amigable de parámetros por empresa.
+
+Ruta:
+
+```text
+/nucleo/configuracion/
+```
+
+La pantalla:
+
+- opera sobre la empresa activa
+- inicializa ocho parámetros estándar de forma manual e idempotente
+- preserva valores existentes
+- reactiva parámetros estándar inactivos
+- no modifica parámetros personalizados
+- permite editar moneda, punto de venta, numeración y opciones operativas
+- no expone claves, ámbitos ni tipos técnicos
+- queda restringida temporalmente a usuarios staff
+
+Caso real previsto:
+
+```text
+Empresa: ESREQUIS LAURA
+Estado antes de la prueba: 0 parámetros
+Acción posterior al cierre: inicializar manualmente desde la interfaz
+```
+
+La próxima tarea funcional pasa a ser TAREA 48: aplicar permisos funcionales a las vistas.

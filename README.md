@@ -43,12 +43,12 @@ Rama:   main
 
 Corte documental: 19/06/2026.
 
-Último cierre funcional verificado:
+Último cierre funcional:
 
 ```text
-TAREA 46 — Definir autenticación propia del ERP
-Commit: 8e35e36ec3565affba379378aa818ac4cab4d1ba
-Tests: 85 OK
+TAREA 47 — Inicializar y administrar parámetros de empresa
+Mensaje: Crear configuracion amigable de parametros por empresa
+Tests: 107 OK
 Sincronización final: origin/main...HEAD = 0 0
 ```
 
@@ -72,19 +72,23 @@ El ERP ya cuenta con:
 - cierre de sesión mediante POST en `/salir/`
 - portada protegida
 - métricas acotadas al contexto del usuario
+- configuración estándar por empresa desde `/nucleo/configuracion/`
+- inicialización idempotente de ocho parámetros estándar
+- edición amigable sin exponer claves ni tipos técnicos
 - Django Admin visible únicamente para usuarios `staff`
 
-Estado operativo local conocido:
+Estado operativo local relevado el 19/06/2026:
 
 ```text
-Usuario real creado: ADMIN
-Otros usuarios observados en tests: temporales y eliminados con la base de prueba
+Usuarios reales: ADMIN y Laura
+Empresas activas: Empresa Demo SA y ESREQUIS LAURA
+ESREQUIS LAURA: una sucursal activa y configuración pendiente de inicializar
 ```
 
 Próxima tarea funcional:
 
 ```text
-TAREA 47 — Aplicar permisos funcionales a las vistas del ERP
+TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
 Estado: pendiente de diseño
 ```
 
@@ -109,6 +113,7 @@ Documentos rectores principales:
 - `docs/08_autenticacion_erp.md`
 - `docs/09_mecanica_trabajo_tareas_txt.md`
 - `docs/10_estado_actual_y_hoja_ruta.md`
+- `docs/11_parametros_empresa.md`
 
 ## Mecánica de trabajo
 

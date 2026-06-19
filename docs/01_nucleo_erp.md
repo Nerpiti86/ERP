@@ -663,7 +663,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-85 tests OK
+107 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -675,7 +675,8 @@ push OK
 Pendientes inmediatos:
 
 1. Aplicar permisos funcionales a las vistas del ERP.
-2. Crear pantallas propias del nucleo.
+2. Definir obligatoriedad del contexto operativo.
+3. Crear gestion propia de usuarios y asignaciones.
 
 Pendientes de reglas de consistencia:
 
@@ -1021,7 +1022,7 @@ request.sucursal_activa
 request.sucursales_disponibles
 ```
 
-No se implementan todavia permisos por sucursal, obligatoriedad global, filtrado automatico de modulos ni login propio.
+No se implementan todavia permisos por sucursal, obligatoriedad global ni filtrado automatico de modulos.
 
 
 ### 10.18. Autenticacion propia del ERP
@@ -1052,3 +1053,44 @@ Reglas iniciales:
 
 No se implementan todavia recuperacion de contraseña, segundo factor, bloqueo por intentos ni permisos funcionales aplicados a cada vista.
 
+### 10.19. Configuración amigable de parámetros por empresa
+
+Al cierre de la Tarea 47 se implementa una pantalla propia para inicializar y editar la configuración estándar de la empresa activa.
+
+Documento rector agregado:
+
+- docs/11_parametros_empresa.md
+
+Componentes agregados:
+
+- apps/nucleo/parametros_empresa.py
+- apps/nucleo/forms.py
+- apps/nucleo/views.py
+- apps/nucleo/urls.py
+- apps/nucleo/templates/nucleo/configuracion_empresa.html
+- ruta /nucleo/configuracion/
+
+Reglas iniciales:
+
+- La instalación no carga parámetros en empresas reales.
+- La inicialización se ejecuta manualmente desde la interfaz.
+- Se crean solamente parámetros estándar faltantes.
+- Los valores existentes no se sobrescriben al inicializar.
+- Los parámetros estándar inactivos se reactivan preservando su valor.
+- Los parámetros personalizados no se modifican.
+- La pantalla opera exclusivamente sobre request.empresa_activa.
+- La edición no expone ámbito, clave ni tipo de valor.
+- Hasta TAREA 48, el acceso queda restringido temporalmente a usuarios staff.
+
+Parámetros estándar:
+
+- moneda_funcional
+- permite_stock_negativo
+- usa_centros_costo
+- usa_proyectos
+- requiere_aprobacion_pagos
+- requiere_aprobacion_compras
+- punto_venta_default
+- modo_numeracion_comprobantes
+
+No se implementan todavía permisos funcionales aplicados a la vista, auditoría automática de cambios, configuración por sucursal ni facturación electrónica.

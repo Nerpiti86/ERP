@@ -260,7 +260,7 @@ No se implementa:
 Tarea siguiente:
 
 ```text
-TAREA 47 — Aplicar permisos funcionales a las vistas del ERP
+TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
 ```
 
 ## 13. Estado de cierre
@@ -373,3 +373,31 @@ usuario_tiene_permiso(
 
 Ser usuario autenticado no implica tener permiso funcional para operar.
 
+## 19. Configuración de parámetros antes de aplicar permisos
+
+Al cierre de la Tarea 47 se agrega una primera pantalla funcional propia del núcleo:
+
+```text
+/nucleo/configuracion/
+```
+
+La pantalla administra los ocho parámetros estándar de `request.empresa_activa`.
+
+Como medida transitoria, antes de generalizar la autorización funcional:
+
+- exige autenticación
+- exige `user.is_staff`
+- no acepta una empresa enviada por formulario
+- no muestra el acceso a usuarios no staff
+
+La siguiente tarea reemplazará esta restricción temporal por la evaluación backend del permiso:
+
+```text
+parametros.editar
+```
+
+Tarea siguiente:
+
+```text
+TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
+```

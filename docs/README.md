@@ -17,6 +17,7 @@ Estado del índice: 19/06/2026.
 | `08_autenticacion_erp.md` | Login, logout y protección inicial de vistas | Implementado |
 | `09_mecanica_trabajo_tareas_txt.md` | Mecánica acordada de tareas ejecutables `.txt` | Vigente |
 | `10_estado_actual_y_hoja_ruta.md` | Foto del estado actual y próximos pasos | Vigente; actualización por cortes |
+| `11_parametros_empresa.md` | Inicialización y edición amigable de parámetros por empresa | Implementado |
 
 ## Jerarquía documental
 

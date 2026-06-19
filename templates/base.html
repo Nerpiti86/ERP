@@ -49,6 +49,12 @@
             </a>
           {% endif %}
 
+          {% if user.is_staff and empresa_activa %}
+            <a class="btn btn-outline-warning btn-sm" href="{% url 'nucleo:configuracion_empresa' %}">
+              Configuración
+            </a>
+          {% endif %}
+
           {% if user.is_staff %}
             <a class="btn btn-outline-info btn-sm" href="{% url 'admin:index' %}">
               Admin
