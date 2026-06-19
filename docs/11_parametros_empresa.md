@@ -89,19 +89,22 @@ El usuario no edita directamente:
 
 Al guardar, el servicio normaliza y valida los ocho registros estándar.
 
-## 7. Seguridad inicial
+## 7. Seguridad funcional
 
-Hasta aplicar permisos funcionales en TAREA 48:
+Desde TAREA 48:
 
 - la vista exige autenticación
-- la vista exige `user.is_staff`
 - la empresa debe estar activa en la sesión
-- una empresa se selecciona mediante el mecanismo ya validado
+- `parametros.ver` habilita consulta en modo solo lectura
+- `parametros.editar` habilita inicialización y guardado
+- `parametros.editar` también habilita el acceso a la pantalla
+- `user.is_staff` no concede acceso funcional por sí solo
+- el superusuario activo conserva acceso técnico total
 - no se acepta un ID de empresa enviado por formulario
+- la falta de permiso devuelve HTTP 403
 
-Esto impide editar otra empresa alterando parámetros del navegador.
-
-TAREA 48 reemplazará la restricción temporal de `is_staff` por el permiso funcional `parametros.editar`.
+Esto impide editar otra empresa alterando parámetros del navegador y separa
+el acceso al Django Admin de los permisos propios del ERP.
 
 ## 8. Validaciones
 
@@ -114,29 +117,27 @@ TAREA 48 reemplazará la restricción temporal de `is_staff` por el permiso func
 
 ## 9. Caso real de prueba
 
-El relevamiento R01 detectó:
+Estado real posterior a TAREA 47:
 
 ```text
 Empresa: ESREQUIS LAURA
-Parámetros estándar existentes: 0
+Parámetros estándar existentes: 8
+Usuario Laura: rol OPERADOR activo
 ```
 
-Después de cerrar TAREA 47, el usuario `ADMIN` deberá:
+Este escenario permite verificar que:
 
-1. seleccionar `ESREQUIS LAURA`
-2. abrir Configuración
-3. presionar Inicializar configuración
-4. revisar los valores propuestos
-5. guardar los cambios que correspondan
-
-Esa acción manual será la prueba funcional sobre la base real.
+- `ADMIN` puede administrar la configuración
+- `Laura`, como `OPERADOR`, no ve el acceso
+- una URL directa de Laura recibe HTTP 403
+- los parámetros permanecen aislados por empresa activa
 
 ## 10. Fuera de alcance
 
-TAREA 47 no implementa:
+El alcance acumulado todavía no implementa:
 
-- permisos funcionales aplicados a todas las vistas
-- asignación de roles a Laura
+- permisos funcionales sobre módulos que aún no existen
+- gestión propia de asignación de roles
 - creación automática al dar de alta una empresa
 - ejercicio fiscal o períodos contables
 - facturación electrónica

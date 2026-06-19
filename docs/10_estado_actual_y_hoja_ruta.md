@@ -7,9 +7,9 @@ Base verificada:
 ```text
 Repositorio: Nerpiti86/ERP
 Rama: main
-Último cierre funcional: TAREA 47
-Mensaje: Crear configuracion amigable de parametros por empresa
-Tests: 107 OK
+Último cierre funcional: TAREA 48
+Mensaje: Aplicar permisos funcionales a vistas del ERP
+Tests: 122 OK
 ```
 
 ## 1. Resumen ejecutivo
@@ -175,7 +175,7 @@ Todavía no posee un rol funcional asignado por empresa. Esa asignación deberá
 ## 8. Próxima tarea
 
 ```text
-TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
+TAREA 49 — Definir obligatoriedad del contexto operativo
 Estado: PENDIENTE DE DISEÑO
 ```
 
@@ -192,11 +192,11 @@ Objetivo esperado:
 
 ### Inmediatos
 
-1. Inicializar manualmente la configuración de `ESREQUIS LAURA`.
-2. Asignar manualmente un rol funcional a Laura.
-3. Diseñar TAREA 48.
-4. Definir requisito de empresa y sucursal activas para vistas operativas.
-5. Crear gestión propia de usuarios y asignaciones mínimas.
+1. Diseñar TAREA 49.
+2. Definir requisito de empresa y sucursal activas para vistas operativas.
+3. Crear gestión propia de usuarios y asignaciones mínimas.
+4. Extender autorización funcional a cada módulo nuevo.
+5. Elegir el primer módulo operativo.
 
 ### Consistencia pendiente
 
@@ -277,3 +277,31 @@ Acción posterior al cierre: inicializar manualmente desde la interfaz
 ```
 
 La próxima tarea funcional pasa a ser TAREA 48: aplicar permisos funcionales a las vistas.
+
+
+## 13. Actualización posterior: TAREA 48
+
+Se aplica autorización funcional en backend a la configuración de
+la empresa activa.
+
+Resultado:
+
+- `parametros.ver` habilita consulta en modo solo lectura.
+- `parametros.editar` habilita inicialización y guardado.
+- `OPERADOR` no posee acceso a configuración.
+- `CONTADOR`, `AUDITOR` y `SOLO_LECTURA` pueden consultar.
+- `ADMIN` puede consultar y editar.
+- `staff` deja de ser una autorización funcional.
+- la navegación refleja permisos efectivos.
+- el acceso directo sin permiso devuelve una página 403 propia.
+
+Escenario real preparado:
+
+```text
+ADMIN: acceso técnico total
+Laura: rol OPERADOR en ESREQUIS LAURA
+ESREQUIS LAURA: ocho parámetros estándar activos
+```
+
+La próxima tarea funcional es TAREA 49: definir obligatoriedad del
+contexto operativo.

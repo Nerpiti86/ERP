@@ -76,16 +76,23 @@
           </ul>
         {% endif %}
 
-        <form
-          method="post"
-          action="{% url 'nucleo:inicializar_configuracion_empresa' %}"
-          class="mt-3"
-        >
-          {% csrf_token %}
-          <button class="btn btn-dark" type="submit">
-            Inicializar configuración
-          </button>
-        </form>
+        {% if puede_editar %}
+          <form
+            method="post"
+            action="{% url 'nucleo:inicializar_configuracion_empresa' %}"
+            class="mt-3"
+          >
+            {% csrf_token %}
+            <button class="btn btn-dark" type="submit">
+              Inicializar configuración
+            </button>
+          </form>
+        {% else %}
+          <div class="alert alert-secondary mt-3 mb-0">
+            Tenés permiso de consulta, pero no de edición.
+            Un usuario autorizado debe inicializar esta configuración.
+          </div>
+        {% endif %}
       </div>
     </section>
 
@@ -126,6 +133,13 @@
           </ul>
         </div>
       </section>
+    {% endif %}
+
+    {% if not puede_editar %}
+      <div class="alert alert-secondary">
+        <strong>Modo solo lectura.</strong>
+        Podés consultar la configuración, pero no modificarla.
+      </div>
     {% endif %}
 
     <form method="post" novalidate>
@@ -219,9 +233,15 @@
           Las claves técnicas y los tipos de datos se administran internamente.
           El Django Admin queda reservado para revisión avanzada.
         </p>
-        <button class="btn btn-dark" type="submit">
-          Guardar configuración
-        </button>
+        {% if puede_editar %}
+          <button class="btn btn-dark" type="submit">
+            Guardar configuración
+          </button>
+        {% else %}
+          <span class="badge text-bg-secondary align-self-center">
+            Solo lectura
+          </span>
+        {% endif %}
       </div>
     </form>
   {% endif %}

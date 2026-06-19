@@ -663,7 +663,7 @@ Las pantallas propias del nucleo se construiran luego con:
 Ultima validacion funcional documentada:
 
 ```text
-107 tests OK
+122 tests OK
 manage.py check OK
 compileall OK
 makemigrations --check --dry-run: No changes detected
@@ -674,9 +674,9 @@ push OK
 
 Pendientes inmediatos:
 
-1. Aplicar permisos funcionales a las vistas del ERP.
-2. Definir obligatoriedad del contexto operativo.
-3. Crear gestion propia de usuarios y asignaciones.
+1. Definir obligatoriedad del contexto operativo.
+2. Crear gestion propia de usuarios y asignaciones.
+3. Extender autorización funcional a cada módulo nuevo.
 
 Pendientes de reglas de consistencia:
 
@@ -1094,3 +1094,31 @@ Parámetros estándar:
 - modo_numeracion_comprobantes
 
 No se implementan todavía permisos funcionales aplicados a la vista, auditoría automática de cambios, configuración por sucursal ni facturación electrónica.
+
+
+### 10.20. Permisos funcionales aplicados a vistas
+
+Al cierre de la Tarea 48 se implementa la primera autorización
+funcional real en backend.
+
+Componentes:
+
+- `apps/nucleo/autorizacion.py`
+- extensión de `apps/nucleo/permisos.py`
+- contexto de plantillas `permisos_erp`
+- página propia de acceso denegado
+- protección de `/nucleo/configuracion/`
+
+Reglas:
+
+- `parametros.ver` permite consultar en modo solo lectura.
+- `parametros.editar` permite consultar, inicializar y guardar.
+- `is_staff` no reemplaza permisos funcionales.
+- el superusuario activo conserva acceso técnico total.
+- la falta de empresa activa redirige al selector.
+- la falta de permiso devuelve HTTP 403.
+- los enlaces se ocultan por comodidad, pero el backend vuelve a validar.
+
+Las vistas de autenticación, selección de empresa y selección de
+sucursal continúan siendo infraestructura de sesión y no reciben
+permisos funcionales de negocio en esta tarea.

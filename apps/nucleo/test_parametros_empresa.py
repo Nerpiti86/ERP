@@ -305,7 +305,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
             ),
         )
 
-    def test_usuario_no_staff_recibe_403(self):
+    def test_usuario_sin_permiso_recibe_403(self):
         usuario = User.objects.create_user(
             username="operador_configuracion",
             email="operador_configuracion@example.com",
@@ -427,7 +427,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
         self.assertEqual(moneda_activa.valor, "USD")
         self.assertEqual(moneda_otra.valor, "ARS")
 
-    def test_navbar_muestra_configuracion_solo_a_staff(self):
+    def test_navbar_muestra_configuracion_segun_autorizacion(self):
         response_staff = self.client.get(reverse("core:home"))
         self.assertContains(
             response_staff,

@@ -60,6 +60,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.nucleo.context_processors.empresa_activa",
+                "apps.nucleo.context_processors.permisos_funcionales",
             ],
         },
     },

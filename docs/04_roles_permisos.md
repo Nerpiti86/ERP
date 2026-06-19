@@ -401,3 +401,35 @@ Tarea siguiente:
 ```text
 TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
 ```
+
+
+## 20. Aplicación inicial en vistas
+
+Al cierre de TAREA 48 los permisos dejan de ser únicamente modelos
+y pasan a proteger una vista funcional real.
+
+Configuración de empresa:
+
+- `parametros.ver`: acceso de consulta.
+- `parametros.editar`: inicialización y modificación.
+- edición implica acceso a la pantalla aunque no exista
+  `parametros.ver` en el mismo rol.
+- un usuario `staff` sin permiso funcional recibe HTTP 403.
+- un superusuario activo mantiene acceso total.
+
+Se agregan decoradores reutilizables:
+
+```text
+empresa_activa_requerida
+permiso_funcional_requerido
+permiso_funcional_alguno_requerido
+```
+
+La navegación utiliza decisiones derivadas del mismo backend.
+Ocultar un enlace no sustituye la autorización de la vista.
+
+Próxima tarea:
+
+```text
+TAREA 49 — Definir obligatoriedad del contexto operativo
+```

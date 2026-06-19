@@ -46,9 +46,9 @@ Corte documental: 19/06/2026.
 Último cierre funcional:
 
 ```text
-TAREA 47 — Inicializar y administrar parámetros de empresa
-Mensaje: Crear configuracion amigable de parametros por empresa
-Tests: 107 OK
+TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
+Mensaje: Aplicar permisos funcionales a vistas del ERP
+Tests: 122 OK
 Sincronización final: origin/main...HEAD = 0 0
 ```
 
@@ -75,6 +75,8 @@ El ERP ya cuenta con:
 - configuración estándar por empresa desde `/nucleo/configuracion/`
 - inicialización idempotente de ocho parámetros estándar
 - edición amigable sin exponer claves ni tipos técnicos
+- autorización funcional backend para consulta y edición de parámetros
+- navegación condicionada por permisos efectivos en la empresa activa
 - Django Admin visible únicamente para usuarios `staff`
 
 Estado operativo local relevado el 19/06/2026:
@@ -82,13 +84,14 @@ Estado operativo local relevado el 19/06/2026:
 ```text
 Usuarios reales: ADMIN y Laura
 Empresas activas: Empresa Demo SA y ESREQUIS LAURA
-ESREQUIS LAURA: una sucursal activa y configuración pendiente de inicializar
+ESREQUIS LAURA: ocho parámetros estándar activos
+Laura: acceso activo y rol OPERADOR en ESREQUIS LAURA
 ```
 
 Próxima tarea funcional:
 
 ```text
-TAREA 48 — Aplicar permisos funcionales a las vistas del ERP
+TAREA 49 — Definir obligatoriedad del contexto operativo
 Estado: pendiente de diseño
 ```
 

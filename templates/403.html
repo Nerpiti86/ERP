@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Acceso denegado{% endblock %}
+
+{% block content %}
+  <section class="py-4">
+    <div class="card border-danger shadow-sm">
+      <div class="card-body p-4 p-md-5">
+        <p class="text-uppercase text-danger small fw-semibold mb-2">
+          Acceso denegado
+        </p>
+        <h1 class="h3 mb-3">No tenés permiso para realizar esta operación</h1>
+        <p class="text-secondary">
+          Tu usuario está autenticado, pero el rol asignado en la empresa
+          activa no incluye el permiso funcional requerido.
+        </p>
+        {% if empresa_activa %}
+          <p class="mb-4">
+            Empresa activa:
+            <strong>{{ empresa_activa.razon_social }}</strong>
+          </p>
+        {% endif %}
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-dark" href="{% url 'core:home' %}">
+            Volver al inicio
+          </a>
+          {% if empresas_disponibles.count > 1 %}
+            <a class="btn btn-outline-secondary" href="{% url 'core:seleccionar_empresa' %}">
+              Cambiar empresa
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

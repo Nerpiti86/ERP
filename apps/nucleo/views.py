@@ -1,12 +1,14 @@
-from urllib.parse import urlencode
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render
-from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from .autorizacion import (
+    empresa_activa_requerida,
+    permiso_funcional_alguno_requerido,
+    permiso_funcional_requerido,
+)
 from .forms import ConfiguracionEmpresaForm
 from .parametros_empresa import (
     PARAMETROS_EMPRESA_ESTANDAR,
@@ -15,32 +17,30 @@ from .parametros_empresa import (
     obtener_datos_configuracion_empresa,
     obtener_estado_parametros_empresa,
 )
+from .permisos import usuario_tiene_permiso
 
 
-def _resolver_empresa_para_configuracion(request):
-    if not request.user.is_staff:
-        raise PermissionDenied
-
-    if request.empresa_activa is not None:
-        return request.empresa_activa, None
-
-    selector = reverse("core:seleccionar_empresa")
-    next_url = request.get_full_path()
-    messages.warning(
-        request,
-        "Primero tenés que seleccionar una empresa.",
-    )
-    return None, redirect(
-        f"{selector}?{urlencode({'next': next_url})}"
-    )
+PERMISOS_CONSULTA_CONFIGURACION = (
+    "parametros.ver",
+    "parametros.editar",
+)
 
 
 @login_required
+@empresa_activa_requerida
+@permiso_funcional_alguno_requerido(
+    *PERMISOS_CONSULTA_CONFIGURACION
+)
 def configuracion_empresa(request):
-    empresa, respuesta = _resolver_empresa_para_configuracion(request)
+    empresa = request.empresa_activa
+    puede_editar = usuario_tiene_permiso(
+        request.user,
+        empresa,
+        "parametros.editar",
+    )
 
-    if respuesta is not None:
-        return respuesta
+    if request.method == "POST" and not puede_editar:
+        raise PermissionDenied
 
     estado = obtener_estado_parametros_empresa(empresa)
     form = None
@@ -73,6 +73,11 @@ def configuracion_empresa(request):
                 return redirect("nucleo:configuracion_empresa")
         else:
             form = ConfiguracionEmpresaForm(initial=datos_iniciales)
+
+        if not puede_editar:
+            for campo in form.fields.values():
+                campo.disabled = True
+
     elif request.method == "POST":
         messages.warning(
             request,
@@ -89,18 +94,17 @@ def configuracion_empresa(request):
             "form": form,
             "advertencias": advertencias,
             "definiciones": PARAMETROS_EMPRESA_ESTANDAR,
+            "puede_editar": puede_editar,
         },
     )
 
 
 @login_required
+@empresa_activa_requerida
+@permiso_funcional_requerido("parametros.editar")
 @require_POST
 def inicializar_configuracion_empresa(request):
-    empresa, respuesta = _resolver_empresa_para_configuracion(request)
-
-    if respuesta is not None:
-        return respuesta
-
+    empresa = request.empresa_activa
     resultado = inicializar_parametros_empresa(empresa)
     creados = len(resultado["creados"])
     reactivados = len(resultado["reactivados"])

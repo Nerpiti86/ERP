@@ -49,7 +49,7 @@
             </a>
           {% endif %}
 
-          {% if user.is_staff and empresa_activa %}
+          {% if permisos_erp.parametros_ver %}
             <a class="btn btn-outline-warning btn-sm" href="{% url 'nucleo:configuracion_empresa' %}">
               Configuración
             </a>

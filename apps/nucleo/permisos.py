@@ -1,6 +1,6 @@
 # Helpers de permisos funcionales del ERP.
 
-from .models import PermisoFuncional, UsuarioEmpresa, UsuarioRolEmpresa
+from .models import UsuarioEmpresa, UsuarioRolEmpresa
 
 
 def normalizar_codigo_permiso(codigo_permiso):
@@ -10,10 +10,30 @@ def normalizar_codigo_permiso(codigo_permiso):
     return codigo_permiso.strip().lower()
 
 
-def usuario_tiene_permiso(usuario, empresa, codigo_permiso):
-    codigo = normalizar_codigo_permiso(codigo_permiso)
+def normalizar_codigos_permisos(codigos_permisos):
+    if isinstance(codigos_permisos, str):
+        codigos_permisos = (codigos_permisos,)
 
-    if not codigo or not usuario or not empresa:
+    return tuple(
+        dict.fromkeys(
+            codigo
+            for codigo in (
+                normalizar_codigo_permiso(item)
+                for item in (codigos_permisos or ())
+            )
+            if codigo
+        )
+    )
+
+
+def usuario_tiene_alguno_de_permisos(
+    usuario,
+    empresa,
+    codigos_permisos,
+):
+    codigos = normalizar_codigos_permisos(codigos_permisos)
+
+    if not codigos or not usuario or not empresa:
         return False
 
     if not getattr(usuario, "is_active", False):
@@ -34,20 +54,20 @@ def usuario_tiene_permiso(usuario, empresa, codigo_permiso):
     if not tiene_acceso_empresa:
         return False
 
-    permiso_activo = PermisoFuncional.objects.filter(
-        codigo=codigo,
-        activo=True,
-    ).exists()
-
-    if not permiso_activo:
-        return False
-
     return UsuarioRolEmpresa.objects.filter(
         usuario=usuario,
         empresa=empresa,
         activo=True,
         rol__activo=True,
         rol__permisos_asignados__activo=True,
-        rol__permisos_asignados__permiso__codigo=codigo,
+        rol__permisos_asignados__permiso__codigo__in=codigos,
         rol__permisos_asignados__permiso__activo=True,
     ).exists()
+
+
+def usuario_tiene_permiso(usuario, empresa, codigo_permiso):
+    return usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        (codigo_permiso,),
+    )
