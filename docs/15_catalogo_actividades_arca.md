@@ -115,13 +115,18 @@ Cuando ARCA retira un codigo, el ERP lo marca inactivo.
 No se elimina porque futuras relaciones historicas de empresas deben seguir
 mostrando el codigo y la descripcion utilizados en su momento.
 
-## 8. Proxima etapa
+## 8. Integración con empresas
 
-La siguiente tarea incorporara:
+La TAREA 0006 incorpora `EmpresaActividad`.
 
-- `EmpresaActividad`
-- actividad principal y secundarias
-- fechas de vigencia
-- tarjeta dentro de Configuracion de empresa
-- listado, alta, edicion e inactivacion
-- seleccion exclusiva desde `ActividadEconomica`
+Las empresas solo pueden seleccionar actividades activas de este catálogo.
+Cada relación conserva una instantánea del código, nomenclador, descripción
+y SHA-256 utilizados al momento del alta.
+
+El catálogo y sus importaciones son de solo lectura en Django Admin. Las
+modificaciones se realizan exclusivamente mediante el comando de
+sincronización oficial.
+
+La migración crea las tablas, pero no incluye los 958 registros. En una
+instalación nueva debe ejecutarse la sincronización antes de asignar
+actividades.

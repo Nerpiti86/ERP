@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
@@ -12,9 +14,14 @@ from .autorizacion import (
 from .forms import (
     ConfiguracionEmpresaForm,
     DatosContribuyenteForm,
+    EmpresaActividadCrearForm,
+    EmpresaActividadEditarForm,
     SucursalForm,
 )
 from .models import (
+    ActividadEconomica,
+    EmpresaActividad,
+    ImportacionCatalogoActividad,
     PerfilFiscalEmpresa,
     Sucursal,
     UsuarioEmpresa,
@@ -31,6 +38,11 @@ from .permisos import (
     usuario_tiene_alguno_de_permisos,
     usuario_tiene_permiso,
 )
+from .servicios_actividades import (
+    actualizar_empresa_actividad,
+    crear_empresa_actividad,
+    inactivar_empresa_actividad,
+)
 
 
 PERMISOS_CONSULTA_CONFIGURACION = (
@@ -39,6 +51,9 @@ PERMISOS_CONSULTA_CONFIGURACION = (
     "sucursales.ver",
     "sucursales.crear",
     "sucursales.editar",
+    "actividades.ver",
+    "actividades.crear",
+    "actividades.editar",
     "parametros.ver",
     "parametros.editar",
 )
@@ -52,6 +67,13 @@ PERMISOS_SUCURSALES = (
     "sucursales.ver",
     "sucursales.crear",
     "sucursales.editar",
+)
+
+
+PERMISOS_ACTIVIDADES = (
+    "actividades.ver",
+    "actividades.crear",
+    "actividades.editar",
 )
 
 
@@ -103,6 +125,36 @@ def _resumen_sucursales(sucursales):
     }
 
 
+def _resumen_actividades(actividades):
+    activas = [
+        relacion
+        for relacion in actividades
+        if relacion.activa
+    ]
+    principal = next(
+        (
+            relacion
+            for relacion in activas
+            if relacion.principal
+        ),
+        None,
+    )
+
+    return {
+        "total": len(actividades),
+        "activas": len(activas),
+        "secundarias_activas": len(
+            [
+                relacion
+                for relacion in activas
+                if not relacion.principal
+            ]
+        ),
+        "principal": principal,
+        "completa": bool(activas and principal is not None),
+    }
+
+
 @login_required
 @contexto_operativo_requerido(requiere_sucursal=False)
 @permiso_funcional_alguno_requerido(
@@ -126,6 +178,11 @@ def configuracion_empresa(request):
         empresa,
         PERMISOS_SUCURSALES,
     )
+    puede_ver_actividades = usuario_tiene_alguno_de_permisos(
+        request.user,
+        empresa,
+        PERMISOS_ACTIVIDADES,
+    )
 
     estado_parametros = obtener_estado_parametros_empresa(empresa)
     datos_parametros = {}
@@ -145,6 +202,26 @@ def configuracion_empresa(request):
         )
     )
     resumen_sucursales = _resumen_sucursales(sucursales)
+
+    actividades = list(
+        EmpresaActividad.objects.filter(
+            empresa=empresa,
+        )
+        .select_related("actividad")
+        .order_by(
+            "-activa",
+            "-principal",
+            "orden",
+            "codigo_registrado",
+        )
+    )
+    resumen_actividades = _resumen_actividades(actividades)
+    catalogo_actividades_disponible = (
+        ActividadEconomica.objects.filter(
+            nomenclador=ActividadEconomica.Nomenclador.ARCA_CLAE,
+            activa=True,
+        ).exists()
+    )
 
     usuarios_activos = (
         UsuarioEmpresa.objects.filter(
@@ -167,6 +244,7 @@ def configuracion_empresa(request):
         empresa.activa
         and datos_contribuyente_completos
         and resumen_sucursales["completa"]
+        and resumen_actividades["completa"]
         and estado_parametros["completa"]
         and not advertencias_parametros
     )
@@ -186,6 +264,12 @@ def configuracion_empresa(request):
             "puede_ver_sucursales": puede_ver_sucursales,
             "sucursales": sucursales,
             "resumen_sucursales": resumen_sucursales,
+            "puede_ver_actividades": puede_ver_actividades,
+            "actividades_empresa": actividades,
+            "resumen_actividades": resumen_actividades,
+            "catalogo_actividades_disponible": (
+                catalogo_actividades_disponible
+            ),
             "estado_parametros": estado_parametros,
             "datos_parametros": datos_parametros,
             "advertencias_parametros": advertencias_parametros,
@@ -193,6 +277,7 @@ def configuracion_empresa(request):
             "resumen": {
                 "sucursales_total": resumen_sucursales["total"],
                 "sucursales_activas": resumen_sucursales["activas"],
+                "actividades_activas": resumen_actividades["activas"],
                 "usuarios_activos": usuarios_activos,
                 "roles_asignados": roles_asignados,
             },
@@ -475,3 +560,297 @@ def inicializar_configuracion_empresa(request):
         )
 
     return redirect("nucleo:parametros_operativos")
+
+
+def _agregar_errores_validacion(form, error):
+    if hasattr(error, "message_dict"):
+        for campo, mensajes in error.message_dict.items():
+            destino = campo
+
+            if campo == "actividad" and "actividad_texto" in form.fields:
+                destino = "actividad_texto"
+
+            if destino not in form.fields:
+                destino = None
+
+            for mensaje in mensajes:
+                form.add_error(destino, mensaje)
+
+        return
+
+    for mensaje in error.messages:
+        form.add_error(None, mensaje)
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_alguno_requerido(*PERMISOS_ACTIVIDADES)
+@require_GET
+def actividades_empresa(request):
+    empresa = request.empresa_activa
+    relaciones = list(
+        EmpresaActividad.objects.filter(
+            empresa=empresa,
+        )
+        .select_related("actividad")
+        .order_by(
+            "-activa",
+            "-principal",
+            "orden",
+            "codigo_registrado",
+            "pk",
+        )
+    )
+    catalogo_total = ActividadEconomica.objects.filter(
+        nomenclador=ActividadEconomica.Nomenclador.ARCA_CLAE,
+        activa=True,
+    ).count()
+    ultima_importacion = (
+        ImportacionCatalogoActividad.objects.filter(
+            nomenclador=ActividadEconomica.Nomenclador.ARCA_CLAE,
+        )
+        .order_by("-importada_en", "-pk")
+        .first()
+    )
+
+    return render(
+        request,
+        "nucleo/actividades_empresa.html",
+        {
+            "empresa": empresa,
+            "actividades_empresa": relaciones,
+            "resumen": _resumen_actividades(relaciones),
+            "catalogo_total": catalogo_total,
+            "catalogo_disponible": catalogo_total > 0,
+            "ultima_importacion": ultima_importacion,
+            "puede_crear": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "actividades.crear",
+            ),
+            "puede_editar": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "actividades.editar",
+            ),
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("actividades.crear")
+def actividad_empresa_crear(request):
+    empresa = request.empresa_activa
+
+    if not ActividadEconomica.objects.filter(
+        nomenclador=ActividadEconomica.Nomenclador.ARCA_CLAE,
+        activa=True,
+    ).exists():
+        messages.error(
+            request,
+            (
+                "El catálogo ARCA-CLAE todavía no fue sincronizado. "
+                "No es posible asignar actividades."
+            ),
+        )
+        return redirect("nucleo:actividades_empresa")
+
+    if request.method == "POST":
+        form = EmpresaActividadCrearForm(
+            request.POST,
+            empresa=empresa,
+        )
+
+        if form.is_valid():
+            try:
+                relacion = crear_empresa_actividad(
+                    empresa=empresa,
+                    actividad=form.actividad,
+                    principal=form.cleaned_data["principal"],
+                    orden=form.cleaned_data["orden"],
+                    vigencia_desde=(
+                        form.cleaned_data["vigencia_desde"]
+                    ),
+                    vigencia_hasta=(
+                        form.cleaned_data["vigencia_hasta"]
+                    ),
+                    observaciones=(
+                        form.cleaned_data["observaciones"]
+                    ),
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    (
+                        f"Actividad {relacion.codigo_registrado} "
+                        "asignada correctamente."
+                    ),
+                )
+                return redirect("nucleo:actividades_empresa")
+    else:
+        form = EmpresaActividadCrearForm(
+            empresa=empresa,
+        )
+
+    return render(
+        request,
+        "nucleo/actividad_empresa_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "empresa_actividad": None,
+            "modo_creacion": True,
+            "titulo": "Nueva actividad económica",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("actividades.editar")
+def actividad_empresa_editar(request, empresa_actividad_id):
+    empresa = request.empresa_activa
+    relacion = get_object_or_404(
+        EmpresaActividad.objects.select_related("actividad"),
+        pk=empresa_actividad_id,
+        empresa=empresa,
+        activa=True,
+    )
+
+    if request.method == "POST":
+        form = EmpresaActividadEditarForm(
+            request.POST,
+            empresa=empresa,
+            empresa_actividad=relacion,
+        )
+
+        if form.is_valid():
+            try:
+                relacion = actualizar_empresa_actividad(
+                    empresa=empresa,
+                    empresa_actividad=relacion,
+                    principal=form.cleaned_data["principal"],
+                    orden=form.cleaned_data["orden"],
+                    vigencia_desde=(
+                        form.cleaned_data["vigencia_desde"]
+                    ),
+                    vigencia_hasta=(
+                        form.cleaned_data["vigencia_hasta"]
+                    ),
+                    observaciones=(
+                        form.cleaned_data["observaciones"]
+                    ),
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    (
+                        f"Actividad {relacion.codigo_registrado} "
+                        "actualizada correctamente."
+                    ),
+                )
+                return redirect("nucleo:actividades_empresa")
+    else:
+        form = EmpresaActividadEditarForm(
+            empresa=empresa,
+            empresa_actividad=relacion,
+        )
+
+    return render(
+        request,
+        "nucleo/actividad_empresa_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "empresa_actividad": relacion,
+            "modo_creacion": False,
+            "titulo": "Editar actividad económica",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("actividades.editar")
+@require_POST
+def actividad_empresa_inactivar(request, empresa_actividad_id):
+    empresa = request.empresa_activa
+    relacion = get_object_or_404(
+        EmpresaActividad,
+        pk=empresa_actividad_id,
+        empresa=empresa,
+    )
+
+    try:
+        relacion = inactivar_empresa_actividad(
+            empresa=empresa,
+            empresa_actividad=relacion,
+            request=request,
+        )
+    except ValidationError as error:
+        messages.error(
+            request,
+            " ".join(error.messages),
+        )
+    else:
+        messages.success(
+            request,
+            (
+                f"Actividad {relacion.codigo_registrado} "
+                "inactivada correctamente."
+            ),
+        )
+
+    return redirect("nucleo:actividades_empresa")
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_alguno_requerido(*PERMISOS_ACTIVIDADES)
+@require_GET
+def catalogo_actividades_buscar(request):
+    termino = request.GET.get("q", "").strip()
+
+    if len(termino) < 2:
+        return JsonResponse({"results": []})
+
+    empresa = request.empresa_activa
+    actividades = (
+        ActividadEconomica.objects.filter(
+            nomenclador=ActividadEconomica.Nomenclador.ARCA_CLAE,
+            activa=True,
+        )
+        .filter(
+            Q(codigo__icontains=termino)
+            | Q(descripcion__icontains=termino)
+        )
+        .exclude(
+            asignaciones_empresa__empresa=empresa,
+            asignaciones_empresa__activa=True,
+        )
+        .order_by("codigo")[:20]
+    )
+
+    return JsonResponse(
+        {
+            "results": [
+                {
+                    "id": actividad.pk,
+                    "codigo": actividad.codigo,
+                    "descripcion": actividad.descripcion,
+                    "text": (
+                        f"{actividad.codigo} - "
+                        f"{actividad.descripcion}"
+                    ),
+                }
+                for actividad in actividades
+            ]
+        }
+    )

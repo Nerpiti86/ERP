@@ -37,6 +37,9 @@ PERMISOS_INICIALES = {
     "sucursales.ver": "Consultar sucursales.",
     "sucursales.crear": "Crear sucursales.",
     "sucursales.editar": "Editar sucursales.",
+    "actividades.ver": "Consultar actividades económicas.",
+    "actividades.crear": "Asignar actividades económicas.",
+    "actividades.editar": "Editar o inactivar actividades económicas.",
     "usuarios.ver": "Consultar usuarios y accesos.",
     "usuarios.crear": "Crear usuarios y accesos.",
     "usuarios.editar": "Editar usuarios y accesos.",
@@ -71,6 +74,9 @@ PERMISOS_POR_ROL = {
         "ventas.ver",
         "compras.ver",
         "tesoreria.ver",
+        "actividades.ver",
+        "actividades.crear",
+        "actividades.editar",
     ),
     "OPERADOR": (
         "empresas.ver",
@@ -96,6 +102,7 @@ PERMISOS_POR_ROL = {
         "ventas.ver",
         "compras.ver",
         "tesoreria.ver",
+        "actividades.ver",
     ),
     "SOLO_LECTURA": (
         "empresas.ver",
@@ -106,6 +113,7 @@ PERMISOS_POR_ROL = {
         "ventas.ver",
         "compras.ver",
         "tesoreria.ver",
+        "actividades.ver",
     ),
 }
 

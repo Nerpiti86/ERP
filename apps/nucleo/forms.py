@@ -2,7 +2,13 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Empresa, PerfilFiscalEmpresa, Sucursal
+from .models import (
+    ActividadEconomica,
+    Empresa,
+    EmpresaActividad,
+    PerfilFiscalEmpresa,
+    Sucursal,
+)
 
 
 class ConfiguracionEmpresaForm(forms.Form):
@@ -466,3 +472,219 @@ class SucursalForm(forms.ModelForm):
             sucursal.save()
 
         return sucursal
+
+
+class EmpresaActividadCrearForm(forms.Form):
+    actividad_id = forms.IntegerField(
+        widget=forms.HiddenInput(),
+    )
+    actividad_texto = forms.CharField(
+        label="Actividad económica",
+        max_length=500,
+        help_text=(
+            "Buscá por código o descripción y seleccioná "
+            "una actividad del catálogo oficial."
+        ),
+    )
+    principal = forms.BooleanField(
+        label="Actividad principal",
+        required=False,
+    )
+    orden = forms.IntegerField(
+        label="Orden de visualización",
+        min_value=0,
+        initial=0,
+    )
+    vigencia_desde = forms.DateField(
+        label="Vigencia desde",
+        required=False,
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    vigencia_hasta = forms.DateField(
+        label="Vigencia hasta",
+        required=False,
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(self, *args, empresa, **kwargs):
+        self.empresa = empresa
+        self.actividad = None
+        super().__init__(*args, **kwargs)
+
+        _estilizar_formulario_actividad(self)
+
+        if not empresa.actividades_economicas.filter(
+            activa=True
+        ).exists():
+            self.fields["principal"].initial = True
+
+    def clean_actividad_id(self):
+        actividad_id = self.cleaned_data["actividad_id"]
+
+        actividad = ActividadEconomica.objects.filter(
+            pk=actividad_id,
+            nomenclador=(
+                ActividadEconomica.Nomenclador.ARCA_CLAE
+            ),
+            activa=True,
+        ).first()
+
+        if actividad is None:
+            raise ValidationError(
+                "Seleccioná una actividad activa del catálogo oficial."
+            )
+
+        if EmpresaActividad.objects.filter(
+            empresa=self.empresa,
+            actividad=actividad,
+            activa=True,
+        ).exists():
+            raise ValidationError(
+                "La empresa ya tiene esta actividad activa."
+            )
+
+        self.actividad = actividad
+        return actividad_id
+
+    def clean(self):
+        cleaned_data = super().clean()
+        _validar_vigencias_formulario(self, cleaned_data)
+        return cleaned_data
+
+
+class EmpresaActividadEditarForm(forms.Form):
+    principal = forms.BooleanField(
+        label="Actividad principal",
+        required=False,
+    )
+    orden = forms.IntegerField(
+        label="Orden de visualización",
+        min_value=0,
+    )
+    vigencia_desde = forms.DateField(
+        label="Vigencia desde",
+        required=False,
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    vigencia_hasta = forms.DateField(
+        label="Vigencia hasta",
+        required=False,
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(
+        self,
+        *args,
+        empresa,
+        empresa_actividad,
+        **kwargs,
+    ):
+        self.empresa = empresa
+        self.empresa_actividad = empresa_actividad
+
+        if empresa_actividad.empresa_id != empresa.pk:
+            raise ValueError(
+                "La actividad no pertenece a la empresa activa."
+            )
+
+        if not empresa_actividad.activa:
+            raise ValueError(
+                "Una relación histórica inactiva no puede editarse."
+            )
+
+        if not args and "data" not in kwargs:
+            initial = kwargs.setdefault("initial", {})
+            initial.setdefault(
+                "principal",
+                empresa_actividad.principal,
+            )
+            initial.setdefault("orden", empresa_actividad.orden)
+            initial.setdefault(
+                "vigencia_desde",
+                empresa_actividad.vigencia_desde,
+            )
+            initial.setdefault(
+                "vigencia_hasta",
+                empresa_actividad.vigencia_hasta,
+            )
+            initial.setdefault(
+                "observaciones",
+                empresa_actividad.observaciones,
+            )
+
+        super().__init__(*args, **kwargs)
+        _estilizar_formulario_actividad(self)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        _validar_vigencias_formulario(self, cleaned_data)
+        return cleaned_data
+
+
+def _estilizar_formulario_actividad(form):
+    for campo in form.fields.values():
+        if isinstance(campo.widget, forms.CheckboxInput):
+            campo.widget.attrs["class"] = "form-check-input"
+        elif isinstance(campo.widget, forms.HiddenInput):
+            continue
+        else:
+            campo.widget.attrs["class"] = "form-control"
+
+    if "actividad_texto" in form.fields:
+        form.fields["actividad_texto"].widget.attrs.update(
+            {
+                "autocomplete": "off",
+                "placeholder": "Código o descripción",
+            }
+        )
+
+
+def _validar_vigencias_formulario(form, cleaned_data):
+    vigencia_desde = cleaned_data.get("vigencia_desde")
+    vigencia_hasta = cleaned_data.get("vigencia_hasta")
+
+    if vigencia_hasta is None:
+        return
+
+    if vigencia_desde is None:
+        form.add_error(
+            "vigencia_desde",
+            (
+                "Informá la vigencia desde cuando existe "
+                "una vigencia hasta."
+            ),
+        )
+    elif vigencia_hasta < vigencia_desde:
+        form.add_error(
+            "vigencia_hasta",
+            (
+                "La vigencia hasta no puede ser anterior "
+                "a la vigencia desde."
+            ),
+        )

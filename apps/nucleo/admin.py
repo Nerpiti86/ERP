@@ -6,6 +6,7 @@ from .models import (
     RolFuncional,
     PermisoFuncional,
     ActividadEconomica,
+    EmpresaActividad,
     Auditoria,
     ImportacionCatalogoActividad,
     DocumentoAdjunto,
@@ -48,11 +49,24 @@ class ActividadEconomicaAdmin(admin.ModelAdmin):
         "descripcion",
     )
     readonly_fields = (
+        "nomenclador",
+        "codigo",
+        "descripcion",
+        "activa",
         "fuente_url",
         "fuente_sha256",
         "primera_importacion_en",
         "ultima_sincronizacion_en",
     )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(ImportacionCatalogoActividad)
@@ -83,6 +97,55 @@ class ImportacionCatalogoActividadAdmin(admin.ModelAdmin):
         "reactivados",
         "desactivados",
         "importada_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(EmpresaActividad)
+class EmpresaActividadAdmin(admin.ModelAdmin):
+    list_display = (
+        "empresa",
+        "codigo_registrado",
+        "descripcion_registrada",
+        "principal",
+        "activa",
+        "vigencia_desde",
+        "vigencia_hasta",
+    )
+    list_filter = (
+        "activa",
+        "principal",
+        "nomenclador_registrado",
+    )
+    search_fields = (
+        "empresa__razon_social",
+        "empresa__cuit",
+        "codigo_registrado",
+        "descripcion_registrada",
+    )
+    readonly_fields = (
+        "empresa",
+        "actividad",
+        "principal",
+        "activa",
+        "orden",
+        "vigencia_desde",
+        "vigencia_hasta",
+        "observaciones",
+        "nomenclador_registrado",
+        "codigo_registrado",
+        "descripcion_registrada",
+        "fuente_sha256_registrada",
+        "creada_en",
+        "actualizada_en",
     )
 
     def has_add_permission(self, request):

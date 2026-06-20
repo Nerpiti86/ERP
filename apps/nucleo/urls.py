@@ -32,6 +32,37 @@ urlpatterns = [
         name="sucursal_editar",
     ),
     path(
+        "configuracion/actividades/",
+        views.actividades_empresa,
+        name="actividades_empresa",
+    ),
+    path(
+        "configuracion/actividades/nueva/",
+        views.actividad_empresa_crear,
+        name="actividad_empresa_crear",
+    ),
+    path(
+        (
+            "configuracion/actividades/"
+            "<int:empresa_actividad_id>/editar/"
+        ),
+        views.actividad_empresa_editar,
+        name="actividad_empresa_editar",
+    ),
+    path(
+        (
+            "configuracion/actividades/"
+            "<int:empresa_actividad_id>/inactivar/"
+        ),
+        views.actividad_empresa_inactivar,
+        name="actividad_empresa_inactivar",
+    ),
+    path(
+        "configuracion/actividades/catalogo/buscar/",
+        views.catalogo_actividades_buscar,
+        name="catalogo_actividades_buscar",
+    ),
+    path(
         "configuracion/parametros/",
         views.parametros_operativos,
         name="parametros_operativos",

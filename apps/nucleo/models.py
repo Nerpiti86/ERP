@@ -259,6 +259,236 @@ class ImportacionCatalogoActividad(models.Model):
         )
 
 
+class EmpresaActividad(models.Model):
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="actividades_economicas",
+    )
+    actividad = models.ForeignKey(
+        ActividadEconomica,
+        on_delete=models.PROTECT,
+        related_name="asignaciones_empresa",
+    )
+    principal = models.BooleanField(default=False)
+    activa = models.BooleanField(default=True)
+    orden = models.PositiveIntegerField(default=0)
+    vigencia_desde = models.DateField(null=True, blank=True)
+    vigencia_hasta = models.DateField(null=True, blank=True)
+    observaciones = models.TextField(blank=True)
+    nomenclador_registrado = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+        editable=False,
+    )
+    codigo_registrado = models.CharField(
+        max_length=6,
+        blank=True,
+        default="",
+        editable=False,
+    )
+    descripcion_registrada = models.TextField(
+        blank=True,
+        default="",
+        editable=False,
+    )
+    fuente_sha256_registrada = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        editable=False,
+    )
+    creada_en = models.DateTimeField(auto_now_add=True)
+    actualizada_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_empresaactividad"
+        verbose_name = "actividad económica de empresa"
+        verbose_name_plural = "actividades económicas de empresa"
+        ordering = [
+            "empresa__razon_social",
+            "-activa",
+            "-principal",
+            "orden",
+            "codigo_registrado",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["empresa", "actividad"],
+                condition=Q(activa=True),
+                name="uniq_emp_actividad_activa",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa"],
+                condition=Q(
+                    activa=True,
+                    principal=True,
+                ),
+                name="uniq_emp_actividad_principal",
+            ),
+            models.CheckConstraint(
+                condition=Q(principal=False) | Q(activa=True),
+                name="chk_emp_act_principal_activa",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(vigencia_hasta__isnull=True)
+                    | (
+                        Q(vigencia_desde__isnull=False)
+                        & Q(vigencia_hasta__gte=F("vigencia_desde"))
+                    )
+                ),
+                name="chk_emp_act_vigencia",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "empresa",
+                    "activa",
+                    "principal",
+                    "orden",
+                ],
+                name="idx_emp_act_estado",
+            )
+        ]
+
+    CAMPOS_INSTANTANEA = (
+        "nomenclador_registrado",
+        "codigo_registrado",
+        "descripcion_registrada",
+        "fuente_sha256_registrada",
+    )
+
+    def _capturar_instantanea(self):
+        if not self.actividad_id:
+            return
+
+        actividad = ActividadEconomica.objects.only(
+            "nomenclador",
+            "codigo",
+            "descripcion",
+            "fuente_sha256",
+        ).get(pk=self.actividad_id)
+
+        self.nomenclador_registrado = actividad.nomenclador
+        self.codigo_registrado = actividad.codigo
+        self.descripcion_registrada = actividad.descripcion
+        self.fuente_sha256_registrada = actividad.fuente_sha256
+
+    def clean(self):
+        super().clean()
+
+        errores = {}
+
+        if self.principal and not self.activa:
+            errores["principal"] = (
+                "Una actividad principal debe permanecer activa."
+            )
+
+        if self.vigencia_hasta is not None:
+            if self.vigencia_desde is None:
+                errores["vigencia_desde"] = (
+                    "Informá la vigencia desde cuando existe "
+                    "una vigencia hasta."
+                )
+            elif self.vigencia_hasta < self.vigencia_desde:
+                errores["vigencia_hasta"] = (
+                    "La vigencia hasta no puede ser anterior "
+                    "a la vigencia desde."
+                )
+
+        original = None
+
+        if self.pk:
+            original = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values(
+                    "empresa_id",
+                    "actividad_id",
+                    *self.CAMPOS_INSTANTANEA,
+                )
+                .first()
+            )
+
+        if original is not None:
+            if original["empresa_id"] != self.empresa_id:
+                errores["empresa"] = (
+                    "La empresa de una relación existente no puede cambiar."
+                )
+
+            if original["actividad_id"] != self.actividad_id:
+                errores["actividad"] = (
+                    "La actividad de una relación existente no puede cambiar."
+                )
+
+            for campo in self.CAMPOS_INSTANTANEA:
+                if original[campo] != getattr(self, campo):
+                    errores[campo] = (
+                        "La instantánea histórica no puede modificarse."
+                    )
+        elif self.actividad_id and self.activa:
+            actividad_activa = ActividadEconomica.objects.filter(
+                pk=self.actividad_id,
+                activa=True,
+            ).exists()
+
+            if not actividad_activa:
+                errores["actividad"] = (
+                    "Solo se pueden asignar actividades activas "
+                    "del catálogo oficial."
+                )
+
+        if self.empresa_id and self.actividad_id and self.activa:
+            duplicada = type(self).objects.filter(
+                empresa_id=self.empresa_id,
+                actividad_id=self.actividad_id,
+                activa=True,
+            )
+
+            if self.pk:
+                duplicada = duplicada.exclude(pk=self.pk)
+
+            if duplicada.exists():
+                errores["actividad"] = (
+                    "La empresa ya tiene esta actividad activa."
+                )
+
+        if self.empresa_id and self.activa and self.principal:
+            principal_existente = type(self).objects.filter(
+                empresa_id=self.empresa_id,
+                activa=True,
+                principal=True,
+            )
+
+            if self.pk:
+                principal_existente = principal_existente.exclude(pk=self.pk)
+
+            if principal_existente.exists():
+                errores["principal"] = (
+                    "La empresa ya tiene otra actividad principal activa."
+                )
+
+        if errores:
+            raise ValidationError(errores)
+
+    def save(self, *args, **kwargs):
+        if not self.pk and self.actividad_id:
+            self._capturar_instantanea()
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        tipo = "Principal" if self.principal else "Secundaria"
+        estado = "activa" if self.activa else "inactiva"
+        return (
+            f"{self.empresa} - {self.codigo_registrado} "
+            f"({tipo}, {estado})"
+        )
+
+
 class Sucursal(models.Model):
     FUNCIONES_EXCLUSIVAS = (
         ("es_casa_central", "Casa central"),

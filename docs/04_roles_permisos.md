@@ -68,6 +68,9 @@ empresas.desactivar
 sucursales.ver
 sucursales.crear
 sucursales.editar
+actividades.ver
+actividades.crear
+actividades.editar
 usuarios.ver
 usuarios.crear
 usuarios.editar
@@ -468,3 +471,24 @@ Próxima tarea:
 ```text
 TAREA 50 — Diseñar maestro de terceros
 ```
+
+## 13. Actividades económicas por empresa
+
+La TAREA 0006 incorpora permisos funcionales específicos:
+
+```text
+actividades.ver
+actividades.crear
+actividades.editar
+```
+
+Matriz inicial:
+
+- `ADMIN`: ver, crear y editar
+- `CONTADOR`: ver, crear y editar
+- `AUDITOR`: ver
+- `SOLO_LECTURA`: ver
+- `OPERADOR`: sin acceso
+
+La seguridad se valida en backend. Ocultar botones no reemplaza los
+decoradores de permisos.

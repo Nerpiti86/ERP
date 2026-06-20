@@ -55,6 +55,25 @@ def permisos_funcionales(request):
             "sucursales.editar",
         ),
     )
+    puede_crear_actividades = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "actividades.crear",
+    )
+    puede_editar_actividades = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "actividades.editar",
+    )
+    puede_ver_actividades = usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        (
+            "actividades.ver",
+            "actividades.crear",
+            "actividades.editar",
+        ),
+    )
     puede_editar_parametros = usuario_tiene_permiso(
         usuario,
         empresa,
@@ -81,6 +100,7 @@ def permisos_funcionales(request):
             "configuracion_ver": (
                 puede_ver_empresas
                 or puede_ver_sucursales
+                or puede_ver_actividades
                 or puede_ver_parametros
             ),
             "empresas_ver": puede_ver_empresas,
@@ -88,6 +108,9 @@ def permisos_funcionales(request):
             "sucursales_ver": puede_ver_sucursales,
             "sucursales_crear": puede_crear_sucursales,
             "sucursales_editar": puede_editar_sucursales,
+            "actividades_ver": puede_ver_actividades,
+            "actividades_crear": puede_crear_actividades,
+            "actividades_editar": puede_editar_actividades,
             "parametros_ver": puede_ver_parametros,
             "parametros_editar": puede_editar_parametros,
             "contabilidad_ver": puede_ver_contabilidad,

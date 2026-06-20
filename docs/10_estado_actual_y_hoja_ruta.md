@@ -1,15 +1,15 @@
 # Estado actual y hoja de ruta del ERP
 
-Fecha del corte: 19/06/2026.
+Fecha del corte: 20/06/2026.
 
 Base verificada:
 
 ```text
 Repositorio: Nerpiti86/ERP
 Rama: main
-Último cierre funcional: TAREA 49
-Mensaje: Definir contexto operativo obligatorio
-Tests: 142 OK
+Cierre funcional: TAREA 0006
+Base de implementación: e91c21f1a08e03fa76e1be821352e847d907b84f
+Tests: 243 OK
 ```
 
 ## 1. Resumen ejecutivo
@@ -172,49 +172,44 @@ Laura posee acceso activo a `ESREQUIS LAURA`, a su sucursal `Consultorio Pasco` 
 | 48 | Permisos funcionales aplicados a vistas | `1e8b6199833f0a698fa7e914ccf433503fca099a` |
 | 49 | Contexto operativo obligatorio | ver historial de `main` |
 
-## 8. Próxima tarea
+## 8. Estado actual de configuración fiscal
 
-```text
-TAREA 50 — Diseñar maestro de terceros
-Estado: PENDIENTE DE DISEÑO
-```
+La configuración de empresa incorpora:
 
-Objetivo esperado:
+- datos básicos del contribuyente
+- sucursales y domicilios estructurados
+- catálogo oficial ARCA-CLAE
+- actividades económicas por empresa
+- parámetros operativos
+- permisos funcionales por empresa
 
-- definir un maestro único para clientes y proveedores
-- establecer identificación fiscal y datos de contacto
-- permitir que un tercero sea cliente, proveedor o ambos
-- aplicar empresa activa, permisos y auditoría desde el diseño
-- preparar la base para ventas, compras y cuentas corrientes
+La configuración base se considera lista únicamente cuando también existe
+una actividad económica principal activa.
 
 ## 9. Próximos pasos recomendados
 
-### Inmediatos
+### Inmediato
 
-1. Diseñar TAREA 50: maestro de terceros.
-2. Definir el modelo funcional de clientes y proveedores.
-3. Implementar altas, edición, consulta y baja lógica.
-4. Aplicar el contrato de contexto y permisos desde el inicio.
-5. Continuar luego con productos y servicios.
+```text
+TAREA 0007 — Ingresos Brutos y jurisdicciones
+Estado: PENDIENTE DE DISEÑO
+```
 
-### Consistencia pendiente
+Objetivos esperados:
 
-- impedir ejercicios fiscales superpuestos
-- impedir períodos contables superpuestos
-- definir política final para superusuarios
-- auditar cambios críticos de seguridad
-- aplicar permisos a rutas y acciones
+- régimen local o Convenio Multilateral
+- tratamiento fiscal general
+- jurisdicciones y números de inscripción
+- fechas de alta y baja
+- separación entre jurisdicción fiscal y sucursal física
+- integración con Configuración de empresa
 
-### Operación e infraestructura pendiente
+### Después
 
-- servidor WSGI para uso estable en Windows
-- servicio de inicio automático
-- acceso remoto por Tailscale
-- configuración final de `ALLOWED_HOSTS`
-- `DEBUG=False` para uso real
-- backups automáticos de PostgreSQL
-- recuperación probada de backups
-- política de archivos en `media/`
+1. Usuarios y accesos desde interfaz funcional.
+2. Maestro de terceros.
+3. Productos y servicios.
+4. Primer circuito transaccional.
 
 ## 10. Qué todavía no es el ERP
 
@@ -324,3 +319,25 @@ Resultado:
 
 El núcleo transversal queda listo para iniciar un módulo funcional.
 La próxima tarea es TAREA 50: diseñar el maestro de terceros.
+
+## 15. Actualización posterior: TAREA 0006
+
+Se implementan actividades económicas por empresa sobre el catálogo oficial
+ARCA-CLAE.
+
+Resultado:
+
+- modelo `EmpresaActividad`
+- instantánea histórica de datos oficiales
+- principal y secundarias
+- vigencias, orden y observaciones
+- baja lógica
+- restricciones PostgreSQL
+- servicios transaccionales
+- auditoría
+- permisos `actividades.*`
+- búsqueda por código o descripción
+- tarjeta en Configuración de empresa
+- catálogo oficial y relaciones bloqueados para escritura manual en Admin
+
+Suite verificada al cierre: `243` pruebas.

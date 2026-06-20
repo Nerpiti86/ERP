@@ -243,6 +243,90 @@
           class="card-header bg-white d-flex justify-content-between
                  align-items-center gap-3"
         >
+          <h2 class="h5 mb-0">Actividades económicas</h2>
+          {% if resumen_actividades.completa %}
+            <span class="badge text-bg-success">Completa</span>
+          {% else %}
+            <span class="badge text-bg-warning">
+              Requiere completar
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="card-body">
+          {% if puede_ver_actividades %}
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <span class="badge text-bg-light border">
+                {{ resumen_actividades.activas }}
+                actividades activas
+              </span>
+              <span class="badge text-bg-light border">
+                {{ resumen_actividades.secundarias_activas }}
+                secundarias
+              </span>
+              {% if catalogo_actividades_disponible %}
+                <span class="badge text-bg-light border">
+                  Catálogo ARCA disponible
+                </span>
+              {% else %}
+                <span class="badge text-bg-warning">
+                  Catálogo sin sincronizar
+                </span>
+              {% endif %}
+            </div>
+
+            {% if resumen_actividades.principal %}
+              <div class="fw-semibold">
+                {{ resumen_actividades.principal.codigo_registrado }}
+              </div>
+              <div class="text-secondary">
+                {{ resumen_actividades.principal.descripcion_registrada }}
+              </div>
+            {% elif resumen_actividades.activas %}
+              <div class="text-warning">
+                Hay actividades activas, pero ninguna está definida
+                como principal.
+              </div>
+            {% else %}
+              <div class="text-secondary">
+                La empresa todavía no tiene actividades económicas
+                registradas.
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="text-secondary">
+              No tenés permiso para consultar las actividades
+              económicas de esta empresa.
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card-footer bg-white border-0 pt-0">
+          {% if puede_ver_actividades %}
+            <a
+              class="btn btn-dark"
+              href="{% url 'nucleo:actividades_empresa' %}"
+            >
+              Administrar actividades
+            </a>
+          {% else %}
+            <span
+              class="btn btn-outline-secondary disabled"
+              aria-disabled="true"
+            >
+              Sin permiso para consultar
+            </span>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <article class="card shadow-sm h-100">
+        <div
+          class="card-header bg-white d-flex justify-content-between
+                 align-items-center gap-3"
+        >
           <h2 class="h5 mb-0">Parámetros operativos</h2>
           {% if estado_parametros.completa %}
             <span class="badge text-bg-success">Completa</span>

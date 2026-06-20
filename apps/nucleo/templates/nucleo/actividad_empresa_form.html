@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | {{ titulo }}{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div
+      class="d-flex flex-column flex-lg-row justify-content-between
+             align-items-lg-start gap-3"
+    >
+      <div>
+        <p class="text-uppercase text-secondary small fw-semibold mb-1">
+          Núcleo · Configuración de empresa
+        </p>
+        <h1 class="h3 mb-1">{{ titulo }}</h1>
+        <p class="text-secondary mb-0">
+          {{ empresa.razon_social }} · CUIT {{ empresa.cuit }}
+        </p>
+      </div>
+
+      <a
+        class="btn btn-outline-secondary"
+        href="{% url 'nucleo:actividades_empresa' %}"
+      >
+        Volver al listado
+      </a>
+    </div>
+  </section>
+
+  <section class="card shadow-sm">
+    <div class="card-body">
+      {% if empresa_actividad %}
+        <div class="alert alert-light border">
+          <div class="fw-semibold">
+            {{ empresa_actividad.codigo_registrado }}
+          </div>
+          <div class="text-secondary">
+            {{ empresa_actividad.descripcion_registrada }}
+          </div>
+          <div class="small text-secondary mt-1">
+            La actividad y su instantánea histórica no pueden cambiarse.
+          </div>
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+              <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if modo_creacion %}
+          {{ form.actividad_id }}
+
+          <div class="mb-3 position-relative">
+            <label
+              class="form-label"
+              for="{{ form.actividad_texto.id_for_label }}"
+            >
+              {{ form.actividad_texto.label }}
+            </label>
+            {{ form.actividad_texto }}
+            <div class="form-text">
+              {{ form.actividad_texto.help_text }}
+            </div>
+            {% for error in form.actividad_texto.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+            {% for error in form.actividad_id.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+            <div
+              id="actividad-resultados"
+              class="list-group position-absolute w-100 shadow
+                     d-none"
+              style="z-index: 1050; max-height: 20rem; overflow-y: auto;"
+            ></div>
+          </div>
+        {% endif %}
+
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <div class="form-check mt-md-4 pt-md-2">
+              {{ form.principal }}
+              <label
+                class="form-check-label"
+                for="{{ form.principal.id_for_label }}"
+              >
+                {{ form.principal.label }}
+              </label>
+            </div>
+            {% for error in form.principal.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label
+              class="form-label"
+              for="{{ form.orden.id_for_label }}"
+            >
+              {{ form.orden.label }}
+            </label>
+            {{ form.orden }}
+            {% for error in form.orden.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-4"></div>
+
+          <div class="col-12 col-md-6">
+            <label
+              class="form-label"
+              for="{{ form.vigencia_desde.id_for_label }}"
+            >
+              {{ form.vigencia_desde.label }}
+            </label>
+            {{ form.vigencia_desde }}
+            {% for error in form.vigencia_desde.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label
+              class="form-label"
+              for="{{ form.vigencia_hasta.id_for_label }}"
+            >
+              {{ form.vigencia_hasta.label }}
+            </label>
+            {{ form.vigencia_hasta }}
+            {% for error in form.vigencia_hasta.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label
+              class="form-label"
+              for="{{ form.observaciones.id_for_label }}"
+            >
+              {{ form.observaciones.label }}
+            </label>
+            {{ form.observaciones }}
+            {% for error in form.observaciones.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <button class="btn btn-dark" type="submit">
+            Guardar actividad
+          </button>
+          <a
+            class="btn btn-outline-secondary"
+            href="{% url 'nucleo:actividades_empresa' %}"
+          >
+            Cancelar
+          </a>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  {% if modo_creacion %}
+    <script>
+      (() => {
+        const input = document.getElementById(
+          "{{ form.actividad_texto.id_for_label }}"
+        );
+        const hidden = document.getElementById(
+          "{{ form.actividad_id.id_for_label }}"
+        );
+        const results = document.getElementById(
+          "actividad-resultados"
+        );
+        const endpoint = "{% url 'nucleo:catalogo_actividades_buscar' %}";
+        let timer = null;
+        let selectedText = input.value;
+
+        const closeResults = () => {
+          results.classList.add("d-none");
+          results.replaceChildren();
+        };
+
+        const renderResults = (items) => {
+          results.replaceChildren();
+
+          if (!items.length) {
+            const empty = document.createElement("div");
+            empty.className = "list-group-item text-secondary";
+            empty.textContent = "No se encontraron actividades disponibles.";
+            results.appendChild(empty);
+            results.classList.remove("d-none");
+            return;
+          }
+
+          items.forEach((item) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "list-group-item list-group-item-action";
+            button.textContent = item.text;
+            button.addEventListener("click", () => {
+              input.value = item.text;
+              hidden.value = item.id;
+              selectedText = item.text;
+              closeResults();
+            });
+            results.appendChild(button);
+          });
+
+          results.classList.remove("d-none");
+        };
+
+        input.addEventListener("input", () => {
+          if (input.value !== selectedText) {
+            hidden.value = "";
+          }
+
+          window.clearTimeout(timer);
+          const query = input.value.trim();
+
+          if (query.length < 2) {
+            closeResults();
+            return;
+          }
+
+          timer = window.setTimeout(async () => {
+            try {
+              const response = await fetch(
+                `${endpoint}?q=${encodeURIComponent(query)}`,
+                {
+                  headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                  },
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error("No se pudo consultar el catálogo.");
+              }
+
+              const data = await response.json();
+              renderResults(data.results || []);
+            } catch (error) {
+              closeResults();
+            }
+          }, 250);
+        });
+
+        document.addEventListener("click", (event) => {
+          if (
+            event.target !== input
+            && !results.contains(event.target)
+          ) {
+            closeResults();
+          }
+        });
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

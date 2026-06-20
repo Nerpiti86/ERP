@@ -70,7 +70,7 @@ Campos conceptuales:
 - cuit
 - condicion_iva
 - ingresos_brutos
-- actividad_principal
+- actividades económicas mediante `EmpresaActividad`
 - domicilio_fiscal
 - localidad
 - provincia
@@ -1154,3 +1154,28 @@ Reglas:
 
 Configuración de empresa queda declarada explícitamente como vista
 por empresa y no requiere sucursal.
+
+## Actualización acumulada: TAREA 0006
+
+La identidad fiscal ya no se concentra en campos planos de `Empresa`.
+
+Se incorporan modelos especializados:
+
+- `PerfilFiscalEmpresa`
+- `Sucursal` con domicilio estructurado
+- `ActividadEconomica`
+- `ImportacionCatalogoActividad`
+- `EmpresaActividad`
+
+Las actividades económicas se administran mediante una relación histórica
+entre empresa y catálogo oficial. No se utiliza un campo
+`actividad_principal` dentro de `Empresa`.
+
+`EmpresaActividad` permite:
+
+- una actividad principal activa
+- cualquier cantidad de actividades secundarias
+- vigencias
+- baja lógica
+- instantánea histórica del catálogo
+- auditoría de cambios

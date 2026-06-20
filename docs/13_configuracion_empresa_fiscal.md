@@ -808,3 +808,27 @@ Se implementa:
 
 La asignacion de actividades a empresas y su tarjeta funcional se realiza
 en la etapa siguiente.
+
+## 19. Implementación de actividades económicas por empresa
+
+La TAREA 0006 implementa la relación `EmpresaActividad` dentro de
+Configuración de empresa.
+
+Resultado:
+
+- selección exclusiva desde el catálogo ARCA-CLAE activo
+- actividad principal y secundarias
+- vigencias y observaciones
+- orden de visualización
+- baja lógica
+- una sola principal activa por empresa
+- prevención de duplicados activos
+- instantánea histórica de código, descripción, nomenclador y SHA-256
+- servicios transaccionales
+- auditoría de altas, cambios e inactivaciones
+- permisos funcionales propios
+- buscador por código o descripción
+- integración con el estado de configuración base
+
+La relación física con sucursales no se infiere. Las actividades pertenecen
+a la empresa y las sucursales continúan representando establecimientos.
