@@ -1,0 +1,144 @@
+html {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+@supports not (scrollbar-gutter: stable) {
+  html {
+    overflow-y: scroll;
+  }
+}
+
+body {
+  min-height: 100vh;
+}
+
+.erp-app-header {
+  position: relative;
+  z-index: 1030;
+}
+
+.erp-navbar-shell,
+.erp-page-shell,
+.erp-context-shell {
+  width: 100%;
+  max-width: none;
+}
+
+.erp-brand-name {
+  letter-spacing: 0.01em;
+}
+
+.erp-brand-product {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.erp-flow-indicator {
+  color: rgba(255, 255, 255, 0.5);
+  display: inline-flex;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.5rem 0.25rem;
+}
+
+.erp-domain-description {
+  max-width: 19rem;
+  white-space: normal;
+}
+
+.erp-context-bar {
+  min-height: 3rem;
+}
+
+.erp-context-list {
+  min-width: 0;
+}
+
+.erp-context-item {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.erp-context-label {
+  color: var(--bs-secondary-color);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.erp-context-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.erp-context-action {
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.erp-page-shell {
+  min-width: 0;
+}
+
+.pc-nivel-1 {
+  padding-left: 0;
+}
+
+.pc-nivel-2 {
+  padding-left: 1.25rem;
+}
+
+.pc-nivel-3 {
+  padding-left: 2.5rem;
+}
+
+.pc-nivel-4 {
+  padding-left: 3.75rem;
+}
+
+.pc-nivel-5 {
+  padding-left: 5rem;
+}
+
+.pc-codigo {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+  .erp-flow-indicator {
+    display: none;
+  }
+
+  .erp-context-list {
+    width: 100%;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .pc-nivel-2 {
+    padding-left: 0.75rem;
+  }
+
+  .pc-nivel-3 {
+    padding-left: 1.5rem;
+  }
+
+  .pc-nivel-4 {
+    padding-left: 2.25rem;
+  }
+
+  .pc-nivel-5 {
+    padding-left: 3rem;
+  }
+}
