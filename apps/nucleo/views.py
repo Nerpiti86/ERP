@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from .autorizacion import (
     contexto_operativo_requerido,
@@ -10,6 +10,7 @@ from .autorizacion import (
     permiso_funcional_requerido,
 )
 from .forms import ConfiguracionEmpresaForm
+from .models import UsuarioEmpresa, UsuarioRolEmpresa
 from .parametros_empresa import (
     PARAMETROS_EMPRESA_ESTANDAR,
     guardar_configuracion_empresa,
@@ -31,7 +32,79 @@ PERMISOS_CONSULTA_CONFIGURACION = (
 @permiso_funcional_alguno_requerido(
     *PERMISOS_CONSULTA_CONFIGURACION
 )
+@require_GET
 def configuracion_empresa(request):
+    empresa = request.empresa_activa
+    estado_parametros = obtener_estado_parametros_empresa(empresa)
+    datos_parametros = {}
+    advertencias_parametros = ()
+
+    if estado_parametros["completa"]:
+        (
+            datos_parametros,
+            advertencias_parametros,
+        ) = obtener_datos_configuracion_empresa(empresa)
+
+    sucursales = list(
+        empresa.sucursales.order_by(
+            "-activa",
+            "codigo",
+            "nombre",
+        )
+    )
+    sucursales_activas = sum(
+        1 for sucursal in sucursales if sucursal.activa
+    )
+    usuarios_activos = (
+        UsuarioEmpresa.objects.filter(
+            empresa=empresa,
+            activo=True,
+            usuario__is_active=True,
+        )
+        .values("usuario_id")
+        .distinct()
+        .count()
+    )
+    roles_asignados = UsuarioRolEmpresa.objects.filter(
+        empresa=empresa,
+        activo=True,
+        usuario__is_active=True,
+        rol__activo=True,
+    ).count()
+
+    configuracion_base_lista = (
+        empresa.activa
+        and sucursales_activas > 0
+        and estado_parametros["completa"]
+        and not advertencias_parametros
+    )
+
+    return render(
+        request,
+        "nucleo/configuracion_empresa.html",
+        {
+            "empresa": empresa,
+            "sucursales": sucursales,
+            "estado_parametros": estado_parametros,
+            "datos_parametros": datos_parametros,
+            "advertencias_parametros": advertencias_parametros,
+            "configuracion_base_lista": configuracion_base_lista,
+            "resumen": {
+                "sucursales_total": len(sucursales),
+                "sucursales_activas": sucursales_activas,
+                "usuarios_activos": usuarios_activos,
+                "roles_asignados": roles_asignados,
+            },
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_alguno_requerido(
+    *PERMISOS_CONSULTA_CONFIGURACION
+)
+def parametros_operativos(request):
     empresa = request.empresa_activa
     puede_editar = usuario_tiene_permiso(
         request.user,
@@ -70,7 +143,7 @@ def configuracion_empresa(request):
                         f"Parámetros procesados: {total}."
                     ),
                 )
-                return redirect("nucleo:configuracion_empresa")
+                return redirect("nucleo:parametros_operativos")
         else:
             form = ConfiguracionEmpresaForm(initial=datos_iniciales)
 
@@ -83,11 +156,11 @@ def configuracion_empresa(request):
             request,
             "Inicializá la configuración antes de editarla.",
         )
-        return redirect("nucleo:configuracion_empresa")
+        return redirect("nucleo:parametros_operativos")
 
     return render(
         request,
-        "nucleo/configuracion_empresa.html",
+        "nucleo/parametros_operativos.html",
         {
             "empresa": empresa,
             "estado": estado,
@@ -125,4 +198,4 @@ def inicializar_configuracion_empresa(request):
             "La empresa ya tenía todos los parámetros estándar activos.",
         )
 
-    return redirect("nucleo:configuracion_empresa")
+    return redirect("nucleo:parametros_operativos")

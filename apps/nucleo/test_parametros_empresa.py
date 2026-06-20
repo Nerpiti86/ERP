@@ -341,7 +341,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
 
     def test_empresa_incompleta_muestra_inicializacion(self):
         response = self.client.get(
-            reverse("nucleo:configuracion_empresa")
+            reverse("nucleo:parametros_operativos")
         )
 
         self.assertEqual(response.status_code, 200)
@@ -357,7 +357,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
         )
         self.assertEqual(
             ParametroSistema.objects.filter(
@@ -370,7 +370,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
         inicializar_parametros_empresa(self.empresa)
 
         response = self.client.get(
-            reverse("nucleo:configuracion_empresa")
+            reverse("nucleo:parametros_operativos")
         )
 
         self.assertEqual(response.status_code, 200)
@@ -385,13 +385,13 @@ class ConfiguracionEmpresaViewTests(TestCase):
         inicializar_parametros_empresa(self.empresa)
 
         response = self.client.post(
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
             self.datos_post(),
         )
 
         self.assertRedirects(
             response,
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
         )
         valores = dict(
             ParametroSistema.objects.filter(
@@ -412,7 +412,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
         inicializar_parametros_empresa(self.otra_empresa)
 
         self.client.post(
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
             self.datos_post(),
         )
 

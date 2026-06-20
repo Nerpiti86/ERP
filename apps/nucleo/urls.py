@@ -12,7 +12,12 @@ urlpatterns = [
         name="configuracion_empresa",
     ),
     path(
-        "configuracion/inicializar/",
+        "configuracion/parametros/",
+        views.parametros_operativos,
+        name="parametros_operativos",
+    ),
+    path(
+        "configuracion/parametros/inicializar/",
         views.inicializar_configuracion_empresa,
         name="inicializar_configuracion_empresa",
     ),

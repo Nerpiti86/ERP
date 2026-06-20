@@ -199,7 +199,7 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
         self.ingresar(self.lector)
 
         response = self.client.get(
-            reverse("nucleo:configuracion_empresa")
+            reverse("nucleo:parametros_operativos")
         )
 
         self.assertEqual(response.status_code, 200)
@@ -217,7 +217,7 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
         self.ingresar(self.lector)
 
         response = self.client.post(
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
             self.datos_post(),
         )
 
@@ -246,7 +246,7 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
         self.ingresar(self.editor)
 
         response = self.client.get(
-            reverse("nucleo:configuracion_empresa")
+            reverse("nucleo:parametros_operativos")
         )
 
         self.assertEqual(response.status_code, 200)
@@ -261,7 +261,7 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
         )
         self.assertEqual(
             ParametroSistema.objects.filter(
@@ -275,13 +275,13 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
         self.ingresar(self.editor)
 
         response = self.client.post(
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
             self.datos_post(),
         )
 
         self.assertRedirects(
             response,
-            reverse("nucleo:configuracion_empresa"),
+            reverse("nucleo:parametros_operativos"),
         )
         moneda = ParametroSistema.objects.get(
             empresa=self.empresa,
@@ -293,7 +293,7 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
         self.ingresar(self.staff_sin_permiso)
 
         response = self.client.get(
-            reverse("nucleo:configuracion_empresa")
+            reverse("nucleo:parametros_operativos")
         )
 
         self.assertEqual(response.status_code, 403)
@@ -330,7 +330,7 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
         session.save()
 
         response = self.client.get(
-            reverse("nucleo:configuracion_empresa")
+            reverse("nucleo:parametros_operativos")
         )
 
         self.assertEqual(response.status_code, 302)

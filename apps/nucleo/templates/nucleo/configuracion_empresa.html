@@ -4,245 +4,284 @@
 
 {% block content %}
   <section class="mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-start">
+    <div
+      class="d-flex flex-column flex-lg-row justify-content-between
+             gap-3 align-items-lg-start"
+    >
       <div>
         <p class="text-uppercase text-secondary small fw-semibold mb-1">
           Núcleo · Configuración
         </p>
         <h1 class="h3 mb-1">Configuración de empresa</h1>
         <p class="text-secondary mb-0">
-          Empresa activa:
+          Centro de configuración de
           <strong>{{ empresa.razon_social }}</strong>
           · CUIT {{ empresa.cuit }}
         </p>
       </div>
-      <div class="d-flex gap-2 align-items-center">
-        {% if estado.completa %}
-          <span class="badge text-bg-success">Configuración completa</span>
-        {% else %}
-          <span class="badge text-bg-warning">Configuración incompleta</span>
-        {% endif %}
-        <a class="btn btn-outline-secondary btn-sm" href="{% url 'core:home' %}">
-          Volver al inicio
-        </a>
-      </div>
-    </div>
-  </section>
 
-  <section class="mb-4">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
-          <div>
-            <div class="text-secondary small text-uppercase fw-semibold">
-              Estado
-            </div>
-            <div class="fs-5 fw-semibold">
-              {{ estado.configurados }} de {{ estado.total }} parámetros activos
-            </div>
-          </div>
-          <div class="text-secondary small align-self-sm-center">
-            La configuración se aplica únicamente a la empresa activa.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {% if not estado.completa %}
-    <section class="mb-4">
-      <div class="alert alert-warning">
-        <h2 class="h5">La empresa todavía no tiene la configuración estándar completa</h2>
-        <p>
-          La inicialización crea solamente los parámetros faltantes y reactiva
-          los parámetros estándar inactivos. No modifica valores ya cargados.
-        </p>
-
-        {% if estado.faltantes %}
-          <div class="fw-semibold mb-1">Faltantes:</div>
-          <ul>
-            {% for definicion in estado.faltantes %}
-              <li>{{ definicion.etiqueta }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-
-        {% if estado.inactivos %}
-          <div class="fw-semibold mb-1">Inactivos:</div>
-          <ul>
-            {% for definicion in estado.inactivos %}
-              <li>{{ definicion.etiqueta }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-
-        {% if puede_editar %}
-          <form
-            method="post"
-            action="{% url 'nucleo:inicializar_configuracion_empresa' %}"
-            class="mt-3"
-          >
-            {% csrf_token %}
-            <button class="btn btn-dark" type="submit">
-              Inicializar configuración
-            </button>
-          </form>
-        {% else %}
-          <div class="alert alert-secondary mt-3 mb-0">
-            Tenés permiso de consulta, pero no de edición.
-            Un usuario autorizado debe inicializar esta configuración.
-          </div>
-        {% endif %}
-      </div>
-    </section>
-
-    <section>
-      <div class="card shadow-sm">
-        <div class="card-header bg-white">
-          <h2 class="h5 mb-0">Valores predeterminados propuestos</h2>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Configuración</th>
-                <th>Valor inicial</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for definicion in definiciones %}
-                <tr>
-                  <td>{{ definicion.etiqueta }}</td>
-                  <td>{{ definicion.valor_predeterminado_legible }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  {% else %}
-    {% if advertencias %}
-      <section class="mb-4">
-        <div class="alert alert-warning">
-          <div class="fw-semibold mb-2">Se detectaron valores técnicos inválidos:</div>
-          <ul class="mb-0">
-            {% for advertencia in advertencias %}
-              <li>{{ advertencia }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-      </section>
-    {% endif %}
-
-    {% if not puede_editar %}
-      <div class="alert alert-secondary">
-        <strong>Modo solo lectura.</strong>
-        Podés consultar la configuración, pero no modificarla.
-      </div>
-    {% endif %}
-
-    <form method="post" novalidate>
-      {% csrf_token %}
-
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-          {% for error in form.non_field_errors %}
-            <div>{{ error }}</div>
-          {% endfor %}
-        </div>
+      {% if configuracion_base_lista %}
+        <span class="badge text-bg-success align-self-lg-center">
+          Base operativa configurada
+        </span>
+      {% else %}
+        <span class="badge text-bg-warning align-self-lg-center">
+          Requiere revisión
+        </span>
       {% endif %}
+    </div>
+  </section>
 
-      <section class="card shadow-sm mb-4">
-        <div class="card-header bg-white">
-          <h2 class="h5 mb-0">Configuración general</h2>
+  <section class="alert alert-light border shadow-sm mb-4">
+    <div class="fw-semibold mb-1">
+      Toda la configuración funcional en un solo lugar
+    </div>
+    <div class="text-secondary">
+      Consultá el estado general y accedé a cada sección sin recorrer
+      la administración técnica.
+    </div>
+  </section>
+
+  <section class="row g-4">
+    <div class="col-12 col-xl-6">
+      <article class="card shadow-sm h-100">
+        <div
+          class="card-header bg-white d-flex justify-content-between
+                 align-items-center gap-3"
+        >
+          <h2 class="h5 mb-0">Datos de la empresa</h2>
+          {% if empresa.activa %}
+            <span class="badge text-bg-success">Activa</span>
+          {% else %}
+            <span class="badge text-bg-secondary">Inactiva</span>
+          {% endif %}
         </div>
+
         <div class="card-body">
-          <div class="row g-3">
-            <div class="col-12 col-md-4">
-              <label class="form-label" for="{{ form.moneda_funcional.id_for_label }}">
-                {{ form.moneda_funcional.label }}
-              </label>
-              {{ form.moneda_funcional }}
-              {% if form.moneda_funcional.help_text %}
-                <div class="form-text">{{ form.moneda_funcional.help_text }}</div>
-              {% endif %}
-              {% for error in form.moneda_funcional.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
-              {% endfor %}
-            </div>
+          <dl class="row mb-0">
+            <dt class="col-sm-5 text-secondary fw-normal">
+              Razón social
+            </dt>
+            <dd class="col-sm-7 fw-semibold">
+              {{ empresa.razon_social }}
+            </dd>
 
-            <div class="col-12 col-md-4">
-              <label class="form-label" for="{{ form.punto_venta_default.id_for_label }}">
-                {{ form.punto_venta_default.label }}
-              </label>
-              {{ form.punto_venta_default }}
-              {% if form.punto_venta_default.help_text %}
-                <div class="form-text">{{ form.punto_venta_default.help_text }}</div>
-              {% endif %}
-              {% for error in form.punto_venta_default.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
-              {% endfor %}
-            </div>
+            <dt class="col-sm-5 text-secondary fw-normal">
+              Nombre de fantasía
+            </dt>
+            <dd class="col-sm-7">
+              {{ empresa.nombre_fantasia|default:"Sin informar" }}
+            </dd>
 
-            <div class="col-12 col-md-4">
-              <label class="form-label" for="{{ form.modo_numeracion_comprobantes.id_for_label }}">
-                {{ form.modo_numeracion_comprobantes.label }}
-              </label>
-              {{ form.modo_numeracion_comprobantes }}
-              {% if form.modo_numeracion_comprobantes.help_text %}
-                <div class="form-text">
-                  {{ form.modo_numeracion_comprobantes.help_text }}
-                </div>
-              {% endif %}
-              {% for error in form.modo_numeracion_comprobantes.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
-              {% endfor %}
-            </div>
-          </div>
+            <dt class="col-sm-5 text-secondary fw-normal">CUIT</dt>
+            <dd class="col-sm-7">{{ empresa.cuit }}</dd>
+
+            <dt class="col-sm-5 text-secondary fw-normal">
+              Condición frente al IVA
+            </dt>
+            <dd class="col-sm-7">
+              {{ empresa.get_condicion_iva_display }}
+            </dd>
+          </dl>
         </div>
-      </section>
 
-      <section class="card shadow-sm mb-4">
-        <div class="card-header bg-white">
-          <h2 class="h5 mb-0">Opciones operativas</h2>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
-            {% for campo in form %}
-              {% if campo.name != "moneda_funcional" and campo.name != "punto_venta_default" and campo.name != "modo_numeracion_comprobantes" %}
-                <div class="col-12 col-md-6">
-                  <div class="form-check border rounded p-3 ps-5 h-100">
-                    {{ campo }}
-                    <label class="form-check-label fw-semibold" for="{{ campo.id_for_label }}">
-                      {{ campo.label }}
-                    </label>
-                    {% for error in campo.errors %}
-                      <div class="text-danger small mt-1">{{ error }}</div>
-                    {% endfor %}
-                  </div>
-                </div>
-              {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-      </section>
-
-      <div class="d-flex flex-column flex-sm-row justify-content-between gap-3">
-        <p class="text-secondary small mb-0">
-          Las claves técnicas y los tipos de datos se administran internamente.
-          El Django Admin queda reservado para revisión avanzada.
-        </p>
-        {% if puede_editar %}
-          <button class="btn btn-dark" type="submit">
-            Guardar configuración
-          </button>
-        {% else %}
-          <span class="badge text-bg-secondary align-self-center">
-            Solo lectura
+        <div class="card-footer bg-white border-0 pt-0">
+          <span
+            class="btn btn-outline-secondary disabled"
+            aria-disabled="true"
+          >
+            Pantalla propia · Próxima etapa
           </span>
-        {% endif %}
-      </div>
-    </form>
-  {% endif %}
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <article class="card shadow-sm h-100">
+        <div
+          class="card-header bg-white d-flex justify-content-between
+                 align-items-center gap-3"
+        >
+          <h2 class="h5 mb-0">Sucursales</h2>
+          <span class="badge text-bg-light border">
+            {{ resumen.sucursales_activas }}
+            de {{ resumen.sucursales_total }} activas
+          </span>
+        </div>
+
+        <div class="card-body">
+          {% if sucursales %}
+            <div class="list-group list-group-flush">
+              {% for sucursal in sucursales|slice:":4" %}
+                <div
+                  class="list-group-item px-0 d-flex justify-content-between
+                         align-items-start gap-3"
+                >
+                  <div>
+                    <div class="fw-semibold">
+                      {{ sucursal.codigo }} · {{ sucursal.nombre }}
+                    </div>
+                    <div class="text-secondary small">
+                      {% if sucursal.localidad %}
+                        {{ sucursal.localidad }}
+                      {% else %}
+                        Localidad sin informar
+                      {% endif %}
+                      · {{ sucursal.provincia }}
+                    </div>
+                  </div>
+
+                  {% if sucursal.activa %}
+                    <span class="badge text-bg-success">Activa</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Inactiva</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if resumen.sucursales_total > 4 %}
+              <div class="text-secondary small mt-3">
+                Se muestran las primeras cuatro sucursales.
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="text-secondary">
+              La empresa todavía no tiene sucursales registradas.
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card-footer bg-white border-0 pt-0">
+          <span
+            class="btn btn-outline-secondary disabled"
+            aria-disabled="true"
+          >
+            Administrar sucursales · Próxima etapa
+          </span>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <article class="card shadow-sm h-100">
+        <div
+          class="card-header bg-white d-flex justify-content-between
+                 align-items-center gap-3"
+        >
+          <h2 class="h5 mb-0">Parámetros operativos</h2>
+          {% if estado_parametros.completa %}
+            <span class="badge text-bg-success">Completa</span>
+          {% else %}
+            <span class="badge text-bg-warning">Incompleta</span>
+          {% endif %}
+        </div>
+
+        <div class="card-body">
+          <div class="fs-5 fw-semibold mb-3">
+            {{ estado_parametros.configurados }}
+            de {{ estado_parametros.total }} parámetros activos
+          </div>
+
+          {% if estado_parametros.completa %}
+            <dl class="row mb-0">
+              <dt class="col-sm-6 text-secondary fw-normal">
+                Moneda funcional
+              </dt>
+              <dd class="col-sm-6">
+                {{ datos_parametros.moneda_funcional }}
+              </dd>
+
+              <dt class="col-sm-6 text-secondary fw-normal">
+                Punto de venta predeterminado
+              </dt>
+              <dd class="col-sm-6">
+                {{ datos_parametros.punto_venta_default }}
+              </dd>
+
+              <dt class="col-sm-6 text-secondary fw-normal">
+                Numeración interna
+              </dt>
+              <dd class="col-sm-6">
+                {{ datos_parametros.modo_numeracion_comprobantes|title }}
+              </dd>
+            </dl>
+          {% else %}
+            <p class="text-secondary mb-0">
+              Faltan parámetros estándar o existen parámetros inactivos.
+            </p>
+          {% endif %}
+
+          {% if advertencias_parametros %}
+            <div class="alert alert-warning mt-3 mb-0">
+              Hay valores técnicos que requieren revisión.
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card-footer bg-white border-0 pt-0">
+          <a
+            class="btn btn-dark"
+            href="{% url 'nucleo:parametros_operativos' %}"
+          >
+            Abrir parámetros operativos
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <article class="card shadow-sm h-100">
+        <div
+          class="card-header bg-white d-flex justify-content-between
+                 align-items-center gap-3"
+        >
+          <h2 class="h5 mb-0">Usuarios y accesos</h2>
+          <span class="badge text-bg-light border">
+            Próxima etapa
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="border rounded p-3 h-100">
+                <div class="text-secondary small text-uppercase fw-semibold">
+                  Usuarios activos
+                </div>
+                <div class="fs-3 fw-semibold">
+                  {{ resumen.usuarios_activos }}
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="border rounded p-3 h-100">
+                <div class="text-secondary small text-uppercase fw-semibold">
+                  Roles asignados
+                </div>
+                <div class="fs-3 fw-semibold">
+                  {{ resumen.roles_asignados }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-secondary mt-3 mb-0">
+            Esta sección reunirá usuarios habilitados, roles funcionales
+            y acceso a sucursales.
+          </p>
+        </div>
+
+        <div class="card-footer bg-white border-0 pt-0">
+          <span
+            class="btn btn-outline-secondary disabled"
+            aria-disabled="true"
+          >
+            Administrar accesos · Próxima etapa
+          </span>
+        </div>
+      </article>
+    </div>
+  </section>
 {% endblock %}
