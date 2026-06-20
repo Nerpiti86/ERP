@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -60,6 +61,37 @@ class ShellVisualTests(TestCase):
             'class="container-fluid px-3 px-lg-4 py-4 erp-page-shell"',
         )
         self.assertNotContains(response, '<main class="container py-4">')
+
+    def test_shell_carga_inter_y_numeros_tabulares(self):
+        self.ingresar(self.superusuario)
+
+        response = self.client.get(reverse("core:home"))
+
+        self.assertContains(response, "https://fonts.googleapis.com")
+        self.assertContains(response, "https://fonts.gstatic.com")
+        self.assertContains(
+            response,
+            "family=Inter:wght@400;500;600;700&display=swap",
+        )
+
+        css = (
+            settings.BASE_DIR / "static" / "css" / "erp.css"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("--erp-font-sans:", css)
+        self.assertIn('"Inter",', css)
+        self.assertIn(
+            "--bs-body-font-family: var(--erp-font-sans);",
+            css,
+        )
+        bloque_body = (
+            "body {\n"
+            "  font-family: var(--erp-font-sans);\n"
+            "  font-variant-numeric: tabular-nums;\n"
+            "  min-height: 100vh;\n"
+            "}"
+        )
+        self.assertIn(bloque_body, css)
 
     def test_navbar_muestra_gestion_antes_de_contabilidad(self):
         self.ingresar(self.superusuario)
