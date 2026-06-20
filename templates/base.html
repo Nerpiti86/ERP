@@ -181,63 +181,101 @@
 
     {% if user.is_authenticated %}
       <div class="erp-context-bar bg-white border-bottom">
-        <div
-          class="container-fluid px-3 px-lg-4 py-2 erp-context-shell
-                 d-flex flex-wrap align-items-center gap-2 gap-lg-4"
-        >
-          <div class="erp-context-list d-flex flex-wrap gap-2 gap-lg-4">
-            <div class="erp-context-item">
-              <span class="erp-context-label">Empresa:</span>
-              {% if empresa_activa %}
-                <span class="erp-context-value">
+        <div class="container-fluid px-3 px-lg-4 py-2 erp-context-shell">
+          <nav
+            class="erp-context-switchers"
+            aria-label="Contexto operativo"
+          >
+            <a
+              class="erp-context-selector{% if not empresa_activa %} erp-context-selector-attention{% endif %}"
+              href="{% url 'core:seleccionar_empresa' %}"
+            >
+              <span class="visually-hidden">Empresa:</span>
+              <span
+                class="erp-context-selector-label"
+                aria-hidden="true"
+              >
+                Empresa
+              </span>
+              <span class="erp-context-selector-value">
+                {% if empresa_activa %}
                   {{ empresa_activa.razon_social }}
-                </span>
-                <a
-                  class="erp-context-action"
-                  href="{% url 'core:seleccionar_empresa' %}"
-                >
+                {% else %}
+                  Sin seleccionar
+                {% endif %}
+              </span>
+              <span
+                class="erp-context-selector-chevron"
+                aria-hidden="true"
+              >
+                ›
+              </span>
+              <span class="visually-hidden">
+                {% if empresa_activa %}
                   Cambiar empresa
-                </a>
-              {% else %}
-                <span class="erp-context-value text-secondary">
-                  Sin seleccionar
-                </span>
-                <a
-                  class="erp-context-action"
-                  href="{% url 'core:seleccionar_empresa' %}"
-                >
+                {% else %}
                   Seleccionar empresa
-                </a>
-              {% endif %}
-            </div>
+                {% endif %}
+              </span>
+            </a>
 
-            <div class="erp-context-item">
-              <span class="erp-context-label">Sucursal:</span>
-              {% if sucursal_activa %}
-                <span class="erp-context-value">
-                  {{ sucursal_activa.codigo }} · {{ sucursal_activa.nombre }}
-                </span>
-                <a
-                  class="erp-context-action"
-                  href="{% url 'core:seleccionar_sucursal' %}"
+            {% if empresa_activa %}
+              <a
+                class="erp-context-selector{% if not sucursal_activa %} erp-context-selector-attention{% endif %}"
+                href="{% url 'core:seleccionar_sucursal' %}"
+              >
+                <span class="visually-hidden">Sucursal:</span>
+                <span
+                  class="erp-context-selector-label"
+                  aria-hidden="true"
                 >
-                  Cambiar sucursal
-                </a>
-              {% elif empresa_activa %}
-                <span class="erp-context-value text-secondary">
-                  Sin seleccionar
+                  Sucursal
                 </span>
-                <a
-                  class="erp-context-action"
-                  href="{% url 'core:seleccionar_sucursal' %}"
+                <span class="erp-context-selector-value">
+                  {% if sucursal_activa %}
+                    {{ sucursal_activa.codigo }} · {{ sucursal_activa.nombre }}
+                  {% else %}
+                    Sin seleccionar
+                  {% endif %}
+                </span>
+                <span
+                  class="erp-context-selector-chevron"
+                  aria-hidden="true"
                 >
-                  Seleccionar sucursal
-                </a>
-              {% else %}
-                <span class="erp-context-value text-secondary">—</span>
-              {% endif %}
-            </div>
-          </div>
+                  ›
+                </span>
+                <span class="visually-hidden">
+                  {% if sucursal_activa %}
+                    Cambiar sucursal
+                  {% else %}
+                    Seleccionar sucursal
+                  {% endif %}
+                </span>
+              </a>
+            {% else %}
+              <span
+                class="erp-context-selector erp-context-selector-disabled"
+                aria-disabled="true"
+              >
+                <span class="visually-hidden">Sucursal:</span>
+                <span
+                  class="erp-context-selector-label"
+                  aria-hidden="true"
+                >
+                  Sucursal
+                </span>
+                <span class="erp-context-selector-value">
+                  Sin empresa
+                </span>
+                <span
+                  class="erp-context-selector-chevron"
+                  aria-hidden="true"
+                >
+                  —
+                </span>
+              </span>
+            {% endif %}
+          </nav>
         </div>
       </div>
     {% endif %}

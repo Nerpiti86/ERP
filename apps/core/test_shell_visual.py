@@ -62,6 +62,39 @@ class ShellVisualTests(TestCase):
         )
         self.assertNotContains(response, '<main class="container py-4">')
 
+    def test_cabecera_sticky_y_selectores_contexto_homogeneos(self):
+        self.ingresar(self.superusuario)
+
+        response = self.client.get(reverse("core:home"))
+        contenido = response.content.decode("utf-8")
+
+        self.assertContains(response, 'class="erp-context-switchers"')
+        self.assertContains(response, "erp-context-selector")
+        self.assertContains(response, "Contexto operativo")
+        self.assertEqual(
+            contenido.count('class="erp-context-selector"'),
+            2,
+        )
+        self.assertContains(response, "Empresa:")
+        self.assertContains(response, "Sucursal:")
+        self.assertContains(response, "Cambiar empresa")
+        self.assertContains(response, "Cambiar sucursal")
+
+        css = (
+            settings.BASE_DIR / "static" / "css" / "erp.css"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            ".erp-app-header {\n"
+            "  position: sticky;\n"
+            "  top: 0;\n"
+            "  z-index: 1030;\n"
+            "}",
+            css,
+        )
+        self.assertIn(".erp-context-selector {", css)
+        self.assertIn("grid-template-columns:", css)
+
     def test_shell_carga_inter_y_numeros_tabulares(self):
         self.ingresar(self.superusuario)
 
