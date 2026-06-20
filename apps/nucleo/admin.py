@@ -5,7 +5,9 @@ from .models import (
     RolPermiso,
     RolFuncional,
     PermisoFuncional,
+    ActividadEconomica,
     Auditoria,
+    ImportacionCatalogoActividad,
     DocumentoAdjunto,
     EventoNegocio,
     Empresa,
@@ -25,6 +27,72 @@ class PerfilFiscalEmpresaInline(admin.StackedInline):
     can_delete = False
     max_num = 1
 
+
+
+
+@admin.register(ActividadEconomica)
+class ActividadEconomicaAdmin(admin.ModelAdmin):
+    list_display = (
+        "codigo",
+        "descripcion",
+        "nomenclador",
+        "activa",
+        "ultima_sincronizacion_en",
+    )
+    list_filter = (
+        "nomenclador",
+        "activa",
+    )
+    search_fields = (
+        "codigo",
+        "descripcion",
+    )
+    readonly_fields = (
+        "fuente_url",
+        "fuente_sha256",
+        "primera_importacion_en",
+        "ultima_sincronizacion_en",
+    )
+
+
+@admin.register(ImportacionCatalogoActividad)
+class ImportacionCatalogoActividadAdmin(admin.ModelAdmin):
+    list_display = (
+        "importada_en",
+        "nomenclador",
+        "total_registros",
+        "creados",
+        "actualizados",
+        "reactivados",
+        "desactivados",
+    )
+    list_filter = ("nomenclador",)
+    search_fields = (
+        "sha256",
+        "archivo_nombre",
+        "fuente_url",
+    )
+    readonly_fields = (
+        "nomenclador",
+        "fuente_url",
+        "archivo_nombre",
+        "sha256",
+        "total_registros",
+        "creados",
+        "actualizados",
+        "reactivados",
+        "desactivados",
+        "importada_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Empresa)

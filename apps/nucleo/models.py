@@ -180,6 +180,85 @@ class PerfilFiscalEmpresa(models.Model):
         return f"Perfil fiscal de {self.empresa}"
 
 
+class ActividadEconomica(models.Model):
+    class Nomenclador(models.TextChoices):
+        ARCA_CLAE = "ARCA_CLAE", "ARCA - CLAE F. 883"
+
+    nomenclador = models.CharField(
+        max_length=30,
+        choices=Nomenclador.choices,
+        default=Nomenclador.ARCA_CLAE,
+    )
+    codigo = models.CharField(
+        max_length=6,
+        validators=[
+            RegexValidator(
+                regex=r"^\d{6}$",
+                message=(
+                    "El codigo de actividad debe contener "
+                    "exactamente 6 digitos."
+                ),
+            )
+        ],
+    )
+    descripcion = models.TextField()
+    activa = models.BooleanField(default=True)
+    fuente_url = models.URLField(max_length=500, blank=True)
+    fuente_sha256 = models.CharField(max_length=64, blank=True)
+    primera_importacion_en = models.DateTimeField(auto_now_add=True)
+    ultima_sincronizacion_en = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = "nucleo_actividadeconomica"
+        verbose_name = "actividad economica"
+        verbose_name_plural = "actividades economicas"
+        ordering = ["nomenclador", "codigo"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["nomenclador", "codigo"],
+                name="uniq_actividad_nomenclador_codigo",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["nomenclador", "activa", "codigo"],
+                name="idx_actividad_nom_act_cod",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.codigo} - {self.descripcion}"
+
+
+class ImportacionCatalogoActividad(models.Model):
+    nomenclador = models.CharField(
+        max_length=30,
+        choices=ActividadEconomica.Nomenclador.choices,
+        default=ActividadEconomica.Nomenclador.ARCA_CLAE,
+    )
+    fuente_url = models.URLField(max_length=500)
+    archivo_nombre = models.CharField(max_length=255)
+    sha256 = models.CharField(max_length=64, db_index=True)
+    total_registros = models.PositiveIntegerField()
+    creados = models.PositiveIntegerField(default=0)
+    actualizados = models.PositiveIntegerField(default=0)
+    reactivados = models.PositiveIntegerField(default=0)
+    desactivados = models.PositiveIntegerField(default=0)
+    importada_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "nucleo_importacioncatalogoactividad"
+        verbose_name = "importacion de catalogo de actividades"
+        verbose_name_plural = "importaciones de catalogos de actividades"
+        ordering = ["-importada_en", "-id"]
+
+    def __str__(self):
+        return (
+            f"{self.get_nomenclador_display()} - "
+            f"{self.importada_en:%Y-%m-%d %H:%M:%S}"
+        )
+
+
 class Sucursal(models.Model):
     FUNCIONES_EXCLUSIVAS = (
         ("es_casa_central", "Casa central"),

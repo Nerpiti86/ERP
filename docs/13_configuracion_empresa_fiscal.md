@@ -789,3 +789,22 @@ Se incorpora:
 
 No se incorporan jurisdicciones de Ingresos Brutos ni se infieren
 funciones sobre las sucursales existentes.
+
+## 18. Implementacion del catalogo oficial CLAE
+
+La TAREA 0005 incorpora la base tecnica previa a la gestion de actividades
+por empresa.
+
+Se implementa:
+
+- catalogo local `ActividadEconomica`
+- nomenclador `ARCA_CLAE`
+- sincronizacion desde la pagina oficial vigente
+- validacion de descargas parciales
+- hash SHA-256 de la fuente
+- historial de importaciones
+- actualizacion idempotente
+- desactivacion sin borrado de codigos ausentes
+
+La asignacion de actividades a empresas y su tarjeta funcional se realiza
+en la etapa siguiente.
