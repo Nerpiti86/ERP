@@ -1,0 +1,1 @@
+"""Dominio contable del ERP."""
