@@ -181,17 +181,70 @@ class PerfilFiscalEmpresa(models.Model):
 
 
 class Sucursal(models.Model):
+    FUNCIONES_EXCLUSIVAS = (
+        ("es_casa_central", "Casa central"),
+        (
+            "es_domicilio_fiscal_nacional",
+            "Domicilio fiscal nacional",
+        ),
+        (
+            "es_domicilio_fiscal_provincial",
+            "Domicilio fiscal provincial",
+        ),
+        ("es_domicilio_legal", "Domicilio legal"),
+        (
+            "es_principal_actividades",
+            "Principal lugar de actividades",
+        ),
+    )
+
     empresa = models.ForeignKey(
         Empresa,
         on_delete=models.PROTECT,
         related_name="sucursales",
     )
-    codigo = models.CharField(max_length=20)
+    codigo = models.CharField(
+        max_length=20,
+        validators=[
+            RegexValidator(
+                regex=r"^[A-Z0-9_-]+$",
+                message=(
+                    "El código debe usar mayúsculas, números, "
+                    "guion o guion bajo."
+                ),
+            )
+        ],
+    )
     nombre = models.CharField(max_length=120)
-    domicilio = models.CharField(max_length=255, blank=True)
+    domicilio = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=(
+            "Dirección anterior conservada durante la transición "
+            "al domicilio estructurado."
+        ),
+    )
+    calle = models.CharField(max_length=160, blank=True)
+    numero = models.CharField(max_length=30, blank=True)
+    sector = models.CharField(max_length=80, blank=True)
+    torre = models.CharField(max_length=50, blank=True)
+    piso = models.CharField(max_length=30, blank=True)
+    departamento = models.CharField(max_length=30, blank=True)
+    barrio = models.CharField(max_length=120, blank=True)
     localidad = models.CharField(max_length=120, blank=True)
+    codigo_postal = models.CharField(max_length=20, blank=True)
+    partido_departamento = models.CharField(max_length=120, blank=True)
     provincia = models.CharField(max_length=120, default="Santa Fe")
     pais = models.CharField(max_length=120, default="Argentina")
+    es_casa_central = models.BooleanField(default=False)
+    es_domicilio_fiscal_nacional = models.BooleanField(default=False)
+    es_domicilio_fiscal_provincial = models.BooleanField(default=False)
+    es_domicilio_legal = models.BooleanField(default=False)
+    es_principal_actividades = models.BooleanField(default=False)
+    es_deposito = models.BooleanField(default=False)
+    es_local_comercial = models.BooleanField(default=False)
+    es_oficina_administrativa = models.BooleanField(default=False)
+    otras_funciones = models.CharField(max_length=255, blank=True)
     activa = models.BooleanField(default=True)
     creada_en = models.DateTimeField(auto_now_add=True)
     actualizada_en = models.DateTimeField(auto_now=True)
@@ -204,8 +257,166 @@ class Sucursal(models.Model):
             models.UniqueConstraint(
                 fields=["empresa", "codigo"],
                 name="uniq_sucursal_empresa_codigo",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["empresa"],
+                condition=Q(
+                    activa=True,
+                    es_casa_central=True,
+                ),
+                name="uniq_suc_emp_casa_central",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa"],
+                condition=Q(
+                    activa=True,
+                    es_domicilio_fiscal_nacional=True,
+                ),
+                name="uniq_suc_emp_fiscal_nac",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa"],
+                condition=Q(
+                    activa=True,
+                    es_domicilio_fiscal_provincial=True,
+                ),
+                name="uniq_suc_emp_fiscal_prov",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa"],
+                condition=Q(
+                    activa=True,
+                    es_domicilio_legal=True,
+                ),
+                name="uniq_suc_emp_legal",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa"],
+                condition=Q(
+                    activa=True,
+                    es_principal_actividades=True,
+                ),
+                name="uniq_suc_emp_principal_act",
+            ),
         ]
+
+    def clean(self):
+        super().clean()
+
+        self.codigo = self.codigo.strip().upper()
+        errores = {}
+
+        if self.empresa_id and self.activa:
+            for campo, etiqueta in self.FUNCIONES_EXCLUSIVAS:
+                if not getattr(self, campo):
+                    continue
+
+                duplicada = Sucursal.objects.filter(
+                    empresa_id=self.empresa_id,
+                    activa=True,
+                    **{campo: True},
+                )
+
+                if self.pk:
+                    duplicada = duplicada.exclude(pk=self.pk)
+
+                if duplicada.exists():
+                    errores[campo] = (
+                        f"Ya existe otra sucursal activa marcada como "
+                        f"{etiqueta.lower()}."
+                    )
+
+        if errores:
+            raise ValidationError(errores)
+
+    @property
+    def domicilio_estructurado_completo(self):
+        return all(
+            (
+                self.calle.strip(),
+                self.numero.strip(),
+                self.localidad.strip(),
+                self.codigo_postal.strip(),
+                self.provincia.strip(),
+                self.pais.strip(),
+            )
+        )
+
+    @property
+    def domicilio_formateado(self):
+        linea_principal = " ".join(
+            parte
+            for parte in (
+                self.calle.strip(),
+                self.numero.strip(),
+            )
+            if parte
+        )
+
+        if not linea_principal:
+            linea_principal = self.domicilio.strip()
+
+        complementos = []
+
+        for etiqueta, valor in (
+            ("Sector", self.sector),
+            ("Torre", self.torre),
+            ("Piso", self.piso),
+            ("Depto.", self.departamento),
+        ):
+            valor = valor.strip()
+            if valor:
+                complementos.append(f"{etiqueta} {valor}")
+
+        if self.barrio.strip():
+            complementos.append(self.barrio.strip())
+
+        ubicacion = [
+            valor.strip()
+            for valor in (
+                self.localidad,
+                self.partido_departamento,
+                self.provincia,
+                self.codigo_postal,
+                self.pais,
+            )
+            if valor.strip()
+        ]
+
+        bloques = []
+
+        if linea_principal:
+            bloques.append(linea_principal)
+        if complementos:
+            bloques.append(", ".join(complementos))
+        if ubicacion:
+            bloques.append(", ".join(ubicacion))
+
+        return " · ".join(bloques) or "Sin domicilio informado"
+
+    @property
+    def funciones(self):
+        funciones = []
+
+        for campo, etiqueta in self.FUNCIONES_EXCLUSIVAS:
+            if getattr(self, campo):
+                funciones.append(etiqueta)
+
+        for campo, etiqueta in (
+            ("es_deposito", "Depósito"),
+            ("es_local_comercial", "Local comercial"),
+            (
+                "es_oficina_administrativa",
+                "Oficina administrativa",
+            ),
+        ):
+            if getattr(self, campo):
+                funciones.append(etiqueta)
+
+        if self.otras_funciones.strip():
+            funciones.append(self.otras_funciones.strip())
+
+        return funciones
 
     def __str__(self):
         return f"{self.empresa} - {self.nombre}"

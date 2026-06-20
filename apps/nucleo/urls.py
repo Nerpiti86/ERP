@@ -17,6 +17,21 @@ urlpatterns = [
         name="datos_contribuyente",
     ),
     path(
+        "configuracion/sucursales/",
+        views.sucursales,
+        name="sucursales",
+    ),
+    path(
+        "configuracion/sucursales/nueva/",
+        views.sucursal_crear,
+        name="sucursal_crear",
+    ),
+    path(
+        "configuracion/sucursales/<int:sucursal_id>/editar/",
+        views.sucursal_editar,
+        name="sucursal_editar",
+    ),
+    path(
         "configuracion/parametros/",
         views.parametros_operativos,
         name="parametros_operativos",

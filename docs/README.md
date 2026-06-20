@@ -20,6 +20,7 @@ Estado del índice: 20/06/2026.
 | `11_parametros_empresa.md` | Inicialización y edición amigable de parámetros por empresa | Implementado |
 | `12_contexto_operativo.md` | Contrato obligatorio de empresa y sucursal para operaciones | Implementado |
 | `13_configuracion_empresa_fiscal.md` | Relevamiento y diseño gradual de identidad, domicilios, actividades e IIBB | Definido; implementación gradual pendiente |
+| `14_sucursales_domicilios.md` | Gestión funcional de establecimientos, domicilios estructurados y funciones | Implementado |
 
 ## Jerarquía documental
 

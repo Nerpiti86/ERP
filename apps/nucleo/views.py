@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from .autorizacion import (
@@ -9,9 +9,14 @@ from .autorizacion import (
     permiso_funcional_alguno_requerido,
     permiso_funcional_requerido,
 )
-from .forms import ConfiguracionEmpresaForm, DatosContribuyenteForm
+from .forms import (
+    ConfiguracionEmpresaForm,
+    DatosContribuyenteForm,
+    SucursalForm,
+)
 from .models import (
     PerfilFiscalEmpresa,
+    Sucursal,
     UsuarioEmpresa,
     UsuarioRolEmpresa,
 )
@@ -22,12 +27,18 @@ from .parametros_empresa import (
     obtener_datos_configuracion_empresa,
     obtener_estado_parametros_empresa,
 )
-from .permisos import usuario_tiene_permiso
+from .permisos import (
+    usuario_tiene_alguno_de_permisos,
+    usuario_tiene_permiso,
+)
 
 
 PERMISOS_CONSULTA_CONFIGURACION = (
     "empresas.ver",
     "empresas.editar",
+    "sucursales.ver",
+    "sucursales.crear",
+    "sucursales.editar",
     "parametros.ver",
     "parametros.editar",
 )
@@ -35,6 +46,12 @@ PERMISOS_CONSULTA_CONFIGURACION = (
 PERMISOS_DATOS_CONTRIBUYENTE = (
     "empresas.ver",
     "empresas.editar",
+)
+
+PERMISOS_SUCURSALES = (
+    "sucursales.ver",
+    "sucursales.crear",
+    "sucursales.editar",
 )
 
 
@@ -51,6 +68,39 @@ def _datos_contribuyente_completos(empresa, perfil):
         and perfil is not None
         and perfil.esta_completo
     )
+
+
+def _resumen_sucursales(sucursales):
+    activas = [
+        sucursal
+        for sucursal in sucursales
+        if sucursal.activa
+    ]
+    completas = [
+        sucursal
+        for sucursal in activas
+        if sucursal.domicilio_estructurado_completo
+    ]
+    casa_central = next(
+        (
+            sucursal
+            for sucursal in activas
+            if sucursal.es_casa_central
+        ),
+        None,
+    )
+
+    return {
+        "total": len(sucursales),
+        "activas": len(activas),
+        "domicilios_completos": len(completas),
+        "casa_central": casa_central,
+        "completa": bool(
+            activas
+            and len(completas) == len(activas)
+            and casa_central is not None
+        ),
+    }
 
 
 @login_required
@@ -71,6 +121,11 @@ def configuracion_empresa(request):
         empresa,
         "empresas.editar",
     )
+    puede_ver_sucursales = usuario_tiene_alguno_de_permisos(
+        request.user,
+        empresa,
+        PERMISOS_SUCURSALES,
+    )
 
     estado_parametros = obtener_estado_parametros_empresa(empresa)
     datos_parametros = {}
@@ -89,9 +144,8 @@ def configuracion_empresa(request):
             "nombre",
         )
     )
-    sucursales_activas = sum(
-        1 for sucursal in sucursales if sucursal.activa
-    )
+    resumen_sucursales = _resumen_sucursales(sucursales)
+
     usuarios_activos = (
         UsuarioEmpresa.objects.filter(
             empresa=empresa,
@@ -112,7 +166,7 @@ def configuracion_empresa(request):
     configuracion_base_lista = (
         empresa.activa
         and datos_contribuyente_completos
-        and sucursales_activas > 0
+        and resumen_sucursales["completa"]
         and estado_parametros["completa"]
         and not advertencias_parametros
     )
@@ -129,14 +183,16 @@ def configuracion_empresa(request):
             "puede_editar_datos_contribuyente": (
                 puede_editar_datos_contribuyente
             ),
+            "puede_ver_sucursales": puede_ver_sucursales,
             "sucursales": sucursales,
+            "resumen_sucursales": resumen_sucursales,
             "estado_parametros": estado_parametros,
             "datos_parametros": datos_parametros,
             "advertencias_parametros": advertencias_parametros,
             "configuracion_base_lista": configuracion_base_lista,
             "resumen": {
-                "sucursales_total": len(sucursales),
-                "sucursales_activas": sucursales_activas,
+                "sucursales_total": resumen_sucursales["total"],
+                "sucursales_activas": resumen_sucursales["activas"],
                 "usuarios_activos": usuarios_activos,
                 "roles_asignados": roles_asignados,
             },
@@ -196,6 +252,124 @@ def datos_contribuyente(request):
             "perfil": perfil,
             "form": form,
             "puede_editar": puede_editar,
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_alguno_requerido(*PERMISOS_SUCURSALES)
+@require_GET
+def sucursales(request):
+    empresa = request.empresa_activa
+    registros = list(
+        Sucursal.objects.filter(empresa=empresa).order_by(
+            "-activa",
+            "codigo",
+            "nombre",
+        )
+    )
+
+    return render(
+        request,
+        "nucleo/sucursales.html",
+        {
+            "empresa": empresa,
+            "sucursales": registros,
+            "resumen": _resumen_sucursales(registros),
+            "puede_crear": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "sucursales.crear",
+            ),
+            "puede_editar": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "sucursales.editar",
+            ),
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("sucursales.crear")
+def sucursal_crear(request):
+    empresa = request.empresa_activa
+
+    if request.method == "POST":
+        form = SucursalForm(
+            request.POST,
+            empresa=empresa,
+        )
+
+        if form.is_valid():
+            sucursal = form.save()
+            messages.success(
+                request,
+                (
+                    f"Sucursal {sucursal.codigo} · {sucursal.nombre} "
+                    "creada correctamente."
+                ),
+            )
+            return redirect("nucleo:sucursales")
+    else:
+        form = SucursalForm(empresa=empresa)
+
+    return render(
+        request,
+        "nucleo/sucursal_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "sucursal": None,
+            "titulo": "Nueva sucursal",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("sucursales.editar")
+def sucursal_editar(request, sucursal_id):
+    empresa = request.empresa_activa
+    sucursal = get_object_or_404(
+        Sucursal,
+        pk=sucursal_id,
+        empresa=empresa,
+    )
+
+    if request.method == "POST":
+        form = SucursalForm(
+            request.POST,
+            instance=sucursal,
+            empresa=empresa,
+        )
+
+        if form.is_valid():
+            sucursal = form.save()
+            messages.success(
+                request,
+                (
+                    f"Sucursal {sucursal.codigo} · {sucursal.nombre} "
+                    "actualizada correctamente."
+                ),
+            )
+            return redirect("nucleo:sucursales")
+    else:
+        form = SucursalForm(
+            instance=sucursal,
+            empresa=empresa,
+        )
+
+    return render(
+        request,
+        "nucleo/sucursal_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "sucursal": sucursal,
+            "titulo": "Editar sucursal",
         },
     )
 

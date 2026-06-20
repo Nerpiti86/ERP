@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Empresa, PerfilFiscalEmpresa
+from .models import Empresa, PerfilFiscalEmpresa, Sucursal
 
 
 class ConfiguracionEmpresaForm(forms.Form):
@@ -307,3 +307,162 @@ class DatosContribuyenteForm(forms.Form):
 
         self.perfil = perfil
         return self.empresa, perfil
+
+
+class SucursalForm(forms.ModelForm):
+    class Meta:
+        model = Sucursal
+        fields = (
+            "codigo",
+            "nombre",
+            "calle",
+            "numero",
+            "sector",
+            "torre",
+            "piso",
+            "departamento",
+            "barrio",
+            "localidad",
+            "codigo_postal",
+            "partido_departamento",
+            "provincia",
+            "pais",
+            "es_casa_central",
+            "es_domicilio_fiscal_nacional",
+            "es_domicilio_fiscal_provincial",
+            "es_domicilio_legal",
+            "es_principal_actividades",
+            "es_deposito",
+            "es_local_comercial",
+            "es_oficina_administrativa",
+            "otras_funciones",
+            "activa",
+        )
+        labels = {
+            "codigo": "Código",
+            "nombre": "Nombre",
+            "calle": "Calle",
+            "numero": "Número",
+            "sector": "Sector",
+            "torre": "Torre",
+            "piso": "Piso",
+            "departamento": "Departamento",
+            "barrio": "Barrio",
+            "localidad": "Localidad",
+            "codigo_postal": "Código postal",
+            "partido_departamento": "Partido o departamento",
+            "provincia": "Provincia",
+            "pais": "País",
+            "es_casa_central": "Casa central",
+            "es_domicilio_fiscal_nacional": (
+                "Domicilio fiscal nacional"
+            ),
+            "es_domicilio_fiscal_provincial": (
+                "Domicilio fiscal provincial"
+            ),
+            "es_domicilio_legal": "Domicilio legal",
+            "es_principal_actividades": (
+                "Principal lugar de actividades"
+            ),
+            "es_deposito": "Depósito",
+            "es_local_comercial": "Local comercial",
+            "es_oficina_administrativa": (
+                "Oficina administrativa"
+            ),
+            "otras_funciones": "Otras funciones",
+            "activa": "Sucursal activa",
+        }
+
+    CAMPOS_DOMICILIO_OBLIGATORIOS = (
+        "calle",
+        "numero",
+        "localidad",
+        "codigo_postal",
+        "provincia",
+        "pais",
+    )
+
+    def __init__(self, *args, empresa, **kwargs):
+        self.empresa = empresa
+        super().__init__(*args, **kwargs)
+
+        if self.instance.pk and self.instance.empresa_id != empresa.pk:
+            raise ValueError(
+                "La sucursal no pertenece a la empresa activa."
+            )
+
+        self.instance.empresa = empresa
+
+        for nombre, campo in self.fields.items():
+            if isinstance(campo.widget, forms.CheckboxInput):
+                campo.widget.attrs["class"] = "form-check-input"
+            elif isinstance(campo.widget, forms.Select):
+                campo.widget.attrs["class"] = "form-select"
+            else:
+                campo.widget.attrs["class"] = "form-control"
+
+        for nombre in self.CAMPOS_DOMICILIO_OBLIGATORIOS:
+            self.fields[nombre].required = True
+
+        self.fields["codigo"].help_text = (
+            "Mayúsculas, números, guion o guion bajo."
+        )
+        self.fields["otras_funciones"].help_text = (
+            "Texto breve para funciones que no estén en la lista."
+        )
+
+    def clean_codigo(self):
+        codigo = self.cleaned_data["codigo"].strip().upper()
+
+        duplicada = Sucursal.objects.filter(
+            empresa=self.empresa,
+            codigo=codigo,
+        )
+
+        if self.instance.pk:
+            duplicada = duplicada.exclude(pk=self.instance.pk)
+
+        if duplicada.exists():
+            raise ValidationError(
+                "Ya existe una sucursal con este código en la empresa."
+            )
+
+        return codigo
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if cleaned_data.get("activa"):
+            for campo, etiqueta in Sucursal.FUNCIONES_EXCLUSIVAS:
+                if not cleaned_data.get(campo):
+                    continue
+
+                duplicada = Sucursal.objects.filter(
+                    empresa=self.empresa,
+                    activa=True,
+                    **{campo: True},
+                )
+
+                if self.instance.pk:
+                    duplicada = duplicada.exclude(pk=self.instance.pk)
+
+                if duplicada.exists():
+                    self.add_error(
+                        campo,
+                        (
+                            "Ya existe otra sucursal activa marcada "
+                            f"como {etiqueta.lower()}."
+                        ),
+                    )
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        sucursal = super().save(commit=False)
+        sucursal.empresa = self.empresa
+        sucursal.full_clean()
+
+        if commit:
+            sucursal.save()
+
+        return sucursal

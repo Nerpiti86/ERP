@@ -258,25 +258,29 @@ Su función será proponer nuevos ejercicios.
 No reemplazará ni modificará automáticamente las fechas de los ejercicios
 ya creados.
 
-## 5. Domicilios
+## 5. Sucursales y domicilios
 
-## 5.1. Separación conceptual
+## 5.1. Decisión de arquitectura
 
-Se distinguen:
+Los domicilios físicos se administran dentro de `Sucursal`.
 
-- domicilio fiscal nacional
-- domicilio fiscal provincial o jurisdicción sede
-- domicilio legal
-- domicilio principal de actividades
-- establecimientos operativos o sucursales
+No se crea un modelo `DomicilioEmpresa` independiente en esta etapa.
 
-## 5.2. Modelo propuesto
+Cada sucursal representa un establecimiento físico y contiene:
 
-### DomicilioEmpresa
+- identificación operativa
+- domicilio estructurado
+- estado activo o inactivo
+- funciones que cumple para la empresa
 
-Campos conceptuales:
+Las jurisdicciones de Ingresos Brutos continúan separadas porque una
+empresa puede estar inscripta en una jurisdicción sin poseer allí una
+sucursal física.
 
-- empresa
+## 5.2. Domicilio estructurado de Sucursal
+
+Campos incorporados:
+
 - calle
 - número
 - sector
@@ -287,41 +291,45 @@ Campos conceptuales:
 - localidad
 - código postal
 - partido o departamento
-- jurisdicción o provincia
+- provincia
 - país
-- activo
-- vigencia desde
-- vigencia hasta
 
-### CaracterizacionDomicilioEmpresa
+El campo histórico `domicilio` se conserva durante la transición y no se
+borra ni transforma automáticamente.
 
-Campos conceptuales:
+La presentación usa el domicilio estructurado cuando está completo y
+recurre al texto histórico como respaldo cuando todavía no fue migrado
+manualmente.
 
-- domicilio
-- tipo de caracterización
-- activa
-- vigencia desde
-- vigencia hasta
+## 5.3. Funciones del establecimiento
 
-Tipos iniciales posibles:
+Una misma sucursal puede cumplir varias funciones:
 
-- `FISCAL_NACIONAL`
-- `FISCAL_PROVINCIAL_SEDE`
-- `LEGAL`
-- `PRINCIPAL_ACTIVIDADES`
-- `OTRO`
+- casa central
+- domicilio fiscal nacional
+- domicilio fiscal provincial
+- domicilio legal
+- principal lugar de actividades
+- depósito
+- local comercial
+- oficina administrativa
+- otras funciones
 
-Este diseño evita duplicar una misma dirección cuando cumple más de una
-función.
+Las cinco primeras funciones son exclusivas entre sucursales activas de
+una misma empresa.
 
-## 5.3. Relación con Sucursal
+Una sucursal inactiva puede conservar esas marcas como información
+histórica sin bloquear la designación de una sucursal activa actual.
 
-Una sucursal podrá vincularse en el futuro con un domicilio estructurado.
+## 5.4. Estado de completitud
 
-La migración desde los campos actuales de texto libre se hará en una
-tarea específica y sin pérdida de datos.
+La sección de sucursales se considera completa cuando:
 
-No se utilizará automáticamente una sucursal como domicilio fiscal.
+- existe al menos una sucursal activa
+- todas las sucursales activas tienen domicilio estructurado completo
+- una sucursal activa está marcada como casa central
+
+No se infieren funciones ni direcciones a partir de nombres existentes.
 
 ## 6. Actividades económicas
 
@@ -591,12 +599,11 @@ Cada acción interna seguirá validando su permiso específico.
 La portada de configuración evolucionará hacia:
 
 1. Datos del contribuyente
-2. Domicilios
+2. Sucursales y domicilios
 3. Actividades económicas
 4. Ingresos Brutos
-5. Sucursales
-6. Parámetros operativos
-7. Usuarios y accesos
+5. Parámetros operativos
+6. Usuarios y accesos
 
 Cada tarjeta deberá mostrar:
 
@@ -649,15 +656,17 @@ Alcance:
 
 No incluye domicilios, actividades ni IIBB.
 
-### Etapa 2. Domicilios y jurisdicciones
+### Etapa 2. Sucursales y domicilios
 
 Alcance:
 
-- catálogo jurisdiccional
+- listado propio de sucursales
+- alta y edición
 - domicilio estructurado
-- caracterizaciones
-- validaciones
-- resumen en portada
+- funciones múltiples del establecimiento
+- exclusividad de funciones centrales y fiscales
+- preservación del domicilio histórico
+- resumen real en la portada
 
 ### Etapa 3. Actividades económicas
 
@@ -761,3 +770,22 @@ Decisiones preservadas:
 - domicilios, actividades económicas e IIBB permanecen fuera de esta etapa
 - los datos reales se cargan localmente y no se incluyen en migraciones ni
   pruebas versionadas
+
+## 17. Implementación de la etapa 2
+
+La TAREA 0004 implementa sucursales y domicilios estructurados.
+
+Se incorpora:
+
+- CRUD funcional sin borrado físico
+- domicilio estructurado directamente en `Sucursal`
+- conservación del campo histórico `domicilio`
+- funciones múltiples por establecimiento
+- restricciones para funciones exclusivas
+- permisos específicos de consulta, creación y edición
+- listado propio
+- integración con la portada de configuración
+- pruebas de aislamiento multiempresa
+
+No se incorporan jurisdicciones de Ingresos Brutos ni se infieren
+funciones sobre las sucursales existentes.

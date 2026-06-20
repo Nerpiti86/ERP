@@ -36,6 +36,25 @@ def permisos_funcionales(request):
         empresa,
         ("empresas.ver", "empresas.editar"),
     )
+    puede_crear_sucursales = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "sucursales.crear",
+    )
+    puede_editar_sucursales = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "sucursales.editar",
+    )
+    puede_ver_sucursales = usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        (
+            "sucursales.ver",
+            "sucursales.crear",
+            "sucursales.editar",
+        ),
+    )
     puede_editar_parametros = usuario_tiene_permiso(
         usuario,
         empresa,
@@ -60,10 +79,15 @@ def permisos_funcionales(request):
     return {
         "permisos_erp": {
             "configuracion_ver": (
-                puede_ver_empresas or puede_ver_parametros
+                puede_ver_empresas
+                or puede_ver_sucursales
+                or puede_ver_parametros
             ),
             "empresas_ver": puede_ver_empresas,
             "empresas_editar": puede_editar_empresas,
+            "sucursales_ver": puede_ver_sucursales,
+            "sucursales_crear": puede_crear_sucursales,
+            "sucursales_editar": puede_editar_sucursales,
             "parametros_ver": puede_ver_parametros,
             "parametros_editar": puede_editar_parametros,
             "contabilidad_ver": puede_ver_contabilidad,

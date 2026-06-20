@@ -139,39 +139,67 @@
           class="card-header bg-white d-flex justify-content-between
                  align-items-center gap-3"
         >
-          <h2 class="h5 mb-0">Sucursales</h2>
-          <span class="badge text-bg-light border">
-            {{ resumen.sucursales_activas }}
-            de {{ resumen.sucursales_total }} activas
-          </span>
+          <h2 class="h5 mb-0">Sucursales y domicilios</h2>
+          {% if resumen_sucursales.completa %}
+            <span class="badge text-bg-success">Completa</span>
+          {% else %}
+            <span class="badge text-bg-warning">
+              Requiere completar
+            </span>
+          {% endif %}
         </div>
 
         <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge text-bg-light border">
+              {{ resumen.sucursales_activas }}
+              de {{ resumen.sucursales_total }} activas
+            </span>
+            <span class="badge text-bg-light border">
+              {{ resumen_sucursales.domicilios_completos }}
+              domicilios completos
+            </span>
+            {% if resumen_sucursales.casa_central %}
+              <span class="badge text-bg-light border">
+                Casa central definida
+              </span>
+            {% endif %}
+          </div>
+
           {% if sucursales %}
             <div class="list-group list-group-flush">
               {% for sucursal in sucursales|slice:":4" %}
-                <div
-                  class="list-group-item px-0 d-flex justify-content-between
-                         align-items-start gap-3"
-                >
-                  <div>
-                    <div class="fw-semibold">
-                      {{ sucursal.codigo }} · {{ sucursal.nombre }}
+                <div class="list-group-item px-0">
+                  <div
+                    class="d-flex justify-content-between
+                           align-items-start gap-3"
+                  >
+                    <div>
+                      <div class="fw-semibold">
+                        {{ sucursal.codigo }} · {{ sucursal.nombre }}
+                      </div>
+                      <div class="text-secondary small">
+                        {{ sucursal.domicilio_formateado }}
+                      </div>
                     </div>
-                    <div class="text-secondary small">
-                      {% if sucursal.localidad %}
-                        {{ sucursal.localidad }}
-                      {% else %}
-                        Localidad sin informar
-                      {% endif %}
-                      · {{ sucursal.provincia }}
-                    </div>
+
+                    {% if sucursal.activa %}
+                      <span class="badge text-bg-success">Activa</span>
+                    {% else %}
+                      <span class="badge text-bg-secondary">
+                        Inactiva
+                      </span>
+                    {% endif %}
                   </div>
 
-                  {% if sucursal.activa %}
-                    <span class="badge text-bg-success">Activa</span>
-                  {% else %}
-                    <span class="badge text-bg-secondary">Inactiva</span>
+                  {% if sucursal.funciones %}
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                      {% for funcion in sucursal.funciones %}
+                        <span class="badge text-bg-light border">
+                          {{ funcion }}
+                        </span>
+                      {% endfor %}
+                    </div>
                   {% endif %}
                 </div>
               {% endfor %}
@@ -190,12 +218,21 @@
         </div>
 
         <div class="card-footer bg-white border-0 pt-0">
-          <span
-            class="btn btn-outline-secondary disabled"
-            aria-disabled="true"
-          >
-            Administrar sucursales · Próxima etapa
-          </span>
+          {% if puede_ver_sucursales %}
+            <a
+              class="btn btn-dark"
+              href="{% url 'nucleo:sucursales' %}"
+            >
+              Administrar sucursales
+            </a>
+          {% else %}
+            <span
+              class="btn btn-outline-secondary disabled"
+              aria-disabled="true"
+            >
+              Sin permiso para consultar
+            </span>
+          {% endif %}
         </div>
       </article>
     </div>

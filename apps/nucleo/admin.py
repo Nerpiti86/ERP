@@ -55,10 +55,17 @@ class SucursalAdmin(admin.ModelAdmin):
         "nombre",
         "localidad",
         "provincia",
+        "es_casa_central",
+        "es_domicilio_fiscal_nacional",
         "activa",
     )
     list_filter = (
         "activa",
+        "es_casa_central",
+        "es_domicilio_fiscal_nacional",
+        "es_domicilio_fiscal_provincial",
+        "es_domicilio_legal",
+        "es_principal_actividades",
         "provincia",
     )
     search_fields = (

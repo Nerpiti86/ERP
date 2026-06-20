@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | {{ titulo }}{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div
+      class="d-flex flex-column flex-lg-row justify-content-between
+             gap-3 align-items-lg-start"
+    >
+      <div>
+        <p class="text-uppercase text-secondary small fw-semibold mb-1">
+          Configuración de empresa · Sucursales
+        </p>
+        <h1 class="h3 mb-1">{{ titulo }}</h1>
+        <p class="text-secondary mb-0">
+          Empresa activa:
+          <strong>{{ empresa.razon_social }}</strong>.
+        </p>
+      </div>
+
+      <a
+        class="btn btn-outline-secondary btn-sm"
+        href="{% url 'nucleo:sucursales' %}"
+      >
+        Volver a sucursales
+      </a>
+    </div>
+  </section>
+
+  {% if sucursal and sucursal.domicilio and not sucursal.calle %}
+    <div class="alert alert-info">
+      <strong>Domicilio anterior preservado:</strong>
+      {{ sucursal.domicilio }}.
+      Completá los campos estructurados para reemplazar su presentación.
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Identificación del establecimiento</h2>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for field in form %}
+            {% if field.name == "codigo" or field.name == "nombre" %}
+              <div
+                class="{% if field.name == 'codigo' %}col-12 col-md-4{% else %}col-12 col-md-8{% endif %}"
+              >
+                <label class="form-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                  <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                  <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          <div class="col-12">
+            <div class="form-check">
+              {{ form.activa }}
+              <label
+                class="form-check-label"
+                for="{{ form.activa.id_for_label }}"
+              >
+                {{ form.activa.label }}
+              </label>
+              {% for error in form.activa.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Domicilio estructurado</h2>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for field in form %}
+            {% if field.name == "calle" or field.name == "numero" or field.name == "sector" or field.name == "torre" or field.name == "piso" or field.name == "departamento" or field.name == "barrio" or field.name == "localidad" or field.name == "codigo_postal" or field.name == "partido_departamento" or field.name == "provincia" or field.name == "pais" %}
+              <div
+                class="{% if field.name == 'calle' %}col-12 col-md-8{% elif field.name == 'numero' or field.name == 'piso' or field.name == 'departamento' or field.name == 'codigo_postal' %}col-6 col-md-4{% else %}col-12 col-md-6{% endif %}"
+              >
+                <label class="form-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                </label>
+                {{ field }}
+                {% for error in field.errors %}
+                  <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Funciones del establecimiento</h2>
+      </div>
+      <div class="card-body">
+        <p class="text-secondary">
+          Una misma sucursal puede cumplir varias funciones. Las funciones
+          fiscales, legales, casa central y principal de actividades son
+          exclusivas entre las sucursales activas de una empresa.
+        </p>
+
+        <div class="row g-3">
+          {% for field in form %}
+            {% if field.name == "es_casa_central" or field.name == "es_domicilio_fiscal_nacional" or field.name == "es_domicilio_fiscal_provincial" or field.name == "es_domicilio_legal" or field.name == "es_principal_actividades" or field.name == "es_deposito" or field.name == "es_local_comercial" or field.name == "es_oficina_administrativa" %}
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  {{ field }}
+                  <label
+                    class="form-check-label"
+                    for="{{ field.id_for_label }}"
+                  >
+                    {{ field.label }}
+                  </label>
+                  {% for error in field.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          <div class="col-12">
+            <label
+              class="form-label"
+              for="{{ form.otras_funciones.id_for_label }}"
+            >
+              {{ form.otras_funciones.label }}
+            </label>
+            {{ form.otras_funciones }}
+            {% if form.otras_funciones.help_text %}
+              <div class="form-text">
+                {{ form.otras_funciones.help_text }}
+              </div>
+            {% endif %}
+            {% for error in form.otras_funciones.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-dark" type="submit">
+        Guardar sucursal
+      </button>
+      <a
+        class="btn btn-outline-secondary"
+        href="{% url 'nucleo:sucursales' %}"
+      >
+        Cancelar
+      </a>
+    </div>
+  </form>
+{% endblock %}
