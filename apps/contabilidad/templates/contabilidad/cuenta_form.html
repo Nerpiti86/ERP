@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Nueva cuenta contable{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-start">
+      <div>
+        <p class="text-uppercase text-secondary small fw-semibold mb-1">
+          Contabilidad · Plan de cuentas
+        </p>
+        <h1 class="h3 mb-1">Nueva cuenta contable</h1>
+        <p class="text-secondary mb-0">
+          Empresa activa:
+          <strong>{{ empresa.razon_social }}</strong>
+          · CUIT {{ empresa.cuit }}
+        </p>
+      </div>
+      <a class="btn btn-outline-secondary" href="{% url 'contabilidad:plan_cuentas' %}">
+        Volver al plan
+      </a>
+    </div>
+  </section>
+
+  <section class="alert alert-info">
+    <div class="fw-semibold">La jerarquía se determina por el código</div>
+    <div>
+      El sistema deriva la cuenta superior, valida que exista en la empresa activa
+      y verifica la coherencia de tipo, nivel y naturaleza.
+    </div>
+  </section>
+
+  {% if codigo_padre_esperado %}
+    <section class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="text-secondary small text-uppercase fw-semibold">
+          Superior esperado por el código ingresado
+        </div>
+        <div class="fw-semibold">
+          {{ codigo_padre_esperado }}
+          {% if cuenta_superior_esperada %}
+            · {{ cuenta_superior_esperada.nombre }}
+          {% else %}
+            · No existe actualmente
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white"><h2 class="h5 mb-0">Identificación</h2></div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.codigo.id_for_label }}">{{ form.codigo.label }}</label>
+            {{ form.codigo }}
+            <div class="form-text">{{ form.codigo.help_text }}</div>
+            {% for error in form.codigo.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-12 col-md-8">
+            <label class="form-label" for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+            {{ form.nombre }}
+            {% for error in form.nombre.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="{{ form.descripcion.id_for_label }}">{{ form.descripcion.label }}</label>
+            {{ form.descripcion }}
+            {% for error in form.descripcion.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white"><h2 class="h5 mb-0">Clasificación contable</h2></div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.tipo_contable.id_for_label }}">{{ form.tipo_contable.label }}</label>
+            {{ form.tipo_contable }}
+            {% for error in form.tipo_contable.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.naturaleza.id_for_label }}">{{ form.naturaleza.label }}</label>
+            {{ form.naturaleza }}
+            <div class="form-text">{{ form.naturaleza.help_text }}</div>
+            {% for error in form.naturaleza.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-12">
+            <div class="form-check border rounded p-3 ps-5">
+              {{ form.habilitada }}
+              <label class="form-check-label fw-semibold" for="{{ form.habilitada.id_for_label }}">
+                {{ form.habilitada.label }}
+              </label>
+              <div class="form-text">{{ form.habilitada.help_text }}</div>
+              {% for error in form.habilitada.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="d-flex flex-column flex-sm-row justify-content-between gap-3">
+      <p class="text-secondary small mb-0">
+        La creación usa el servicio transaccional y todas las validaciones del modelo.
+      </p>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'contabilidad:plan_cuentas' %}">
+          Cancelar
+        </a>
+        <button class="btn btn-dark" type="submit">Crear cuenta</button>
+      </div>
+    </div>
+  </form>
+{% endblock %}

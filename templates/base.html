@@ -49,6 +49,12 @@
             </a>
           {% endif %}
 
+          {% if permisos_erp.contabilidad_ver %}
+            <a class="btn btn-outline-success btn-sm" href="{% url 'contabilidad:plan_cuentas' %}">
+              Plan de cuentas
+            </a>
+          {% endif %}
+
           {% if permisos_erp.parametros_ver %}
             <a class="btn btn-outline-warning btn-sm" href="{% url 'nucleo:configuracion_empresa' %}">
               Configuración

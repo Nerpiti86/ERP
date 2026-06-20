@@ -36,10 +36,22 @@ def permisos_funcionales(request):
         empresa,
         ("parametros.ver", "parametros.editar"),
     )
+    puede_editar_contabilidad = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "contabilidad.editar",
+    )
+    puede_ver_contabilidad = usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        ("contabilidad.ver", "contabilidad.editar"),
+    )
 
     return {
         "permisos_erp": {
             "parametros_ver": puede_ver_parametros,
             "parametros_editar": puede_editar_parametros,
+            "contabilidad_ver": puede_ver_contabilidad,
+            "contabilidad_editar": puede_editar_contabilidad,
         }
     }

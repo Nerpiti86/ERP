@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Plan de cuentas{% endblock %}
+
+{% block content %}
+  <style>
+    .pc-nivel-1 { padding-left: 0; }
+    .pc-nivel-2 { padding-left: 1.25rem; }
+    .pc-nivel-3 { padding-left: 2.5rem; }
+    .pc-nivel-4 { padding-left: 3.75rem; }
+    .pc-nivel-5 { padding-left: 5rem; }
+    .pc-codigo { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  </style>
+
+  <section class="mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-start">
+      <div>
+        <p class="text-uppercase text-secondary small fw-semibold mb-1">
+          Contabilidad · Maestro
+        </p>
+        <h1 class="h3 mb-1">Plan de cuentas</h1>
+        <p class="text-secondary mb-0">
+          Empresa activa:
+          <strong>{{ empresa.razon_social }}</strong>
+          · CUIT {{ empresa.cuit }}
+        </p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        {% if puede_crear %}
+          <a class="btn btn-dark" href="{% url 'contabilidad:crear_cuenta' %}">
+            Nueva cuenta
+          </a>
+        {% else %}
+          <span class="badge text-bg-secondary align-self-center">
+            Solo lectura
+          </span>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'core:home' %}">
+          Volver al inicio
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100"><div class="card-body">
+        <div class="text-secondary small text-uppercase fw-semibold">Total</div>
+        <div class="fs-3 fw-semibold">{{ resumen.total }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100"><div class="card-body">
+        <div class="text-secondary small text-uppercase fw-semibold">Habilitadas</div>
+        <div class="fs-3 fw-semibold">{{ resumen.habilitadas }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100"><div class="card-body">
+        <div class="text-secondary small text-uppercase fw-semibold">Agrupadoras</div>
+        <div class="fs-3 fw-semibold">{{ resumen.agrupadoras }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100"><div class="card-body">
+        <div class="text-secondary small text-uppercase fw-semibold">Imputables</div>
+        <div class="fs-3 fw-semibold">{{ resumen.imputables }}</div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <h2 class="h5 mb-0">Buscar y filtrar</h2>
+    </div>
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-lg-4">
+          <label class="form-label" for="id_q">Código o nombre</label>
+          <input class="form-control" id="id_q" name="q" type="search"
+                 value="{{ filtros.q }}" placeholder="Ejemplo: caja o 1.1.01">
+        </div>
+        <div class="col-12 col-sm-4 col-lg-3">
+          <label class="form-label" for="id_tipo">Tipo contable</label>
+          <select class="form-select" id="id_tipo" name="tipo">
+            <option value="">Todos</option>
+            {% for valor, etiqueta in tipo_opciones %}
+              <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>
+                {{ etiqueta }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-sm-4 col-lg-2">
+          <label class="form-label" for="id_clase">Clase</label>
+          <select class="form-select" id="id_clase" name="clase">
+            <option value="">Todas</option>
+            <option value="agrupadoras" {% if filtros.clase == "agrupadoras" %}selected{% endif %}>
+              Agrupadoras
+            </option>
+            <option value="imputables" {% if filtros.clase == "imputables" %}selected{% endif %}>
+              Imputables
+            </option>
+          </select>
+        </div>
+        <div class="col-12 col-sm-4 col-lg-2">
+          <label class="form-label" for="id_estado">Estado</label>
+          <select class="form-select" id="id_estado" name="estado">
+            <option value="">Todos</option>
+            <option value="habilitadas" {% if filtros.estado == "habilitadas" %}selected{% endif %}>
+              Habilitadas
+            </option>
+            <option value="deshabilitadas" {% if filtros.estado == "deshabilitadas" %}selected{% endif %}>
+              Deshabilitadas
+            </option>
+          </select>
+        </div>
+        <div class="col-12 col-lg-1 d-grid">
+          <button class="btn btn-dark" type="submit">Aplicar</button>
+        </div>
+        {% if hay_filtros %}
+          <div class="col-12">
+            <a class="btn btn-sm btn-outline-secondary"
+               href="{% url 'contabilidad:plan_cuentas' %}">
+              Limpiar filtros
+            </a>
+          </div>
+        {% endif %}
+      </form>
+    </div>
+  </section>
+
+  <section class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between gap-3">
+      <h2 class="h5 mb-0">Cuentas de {{ empresa.razon_social }}</h2>
+      <span class="text-secondary small">{{ cuentas|length }} resultados</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Código y cuenta</th>
+            <th>Tipo</th>
+            <th>Naturaleza</th>
+            <th>Nivel</th>
+            <th>Clase</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cuenta in cuentas %}
+            <tr>
+              <td>
+                <div class="pc-nivel-{{ cuenta.nivel }}">
+                  <div class="fw-semibold">
+                    <span class="pc-codigo">{{ cuenta.codigo }}</span>
+                    · {{ cuenta.nombre }}
+                  </div>
+                  {% if cuenta.parent %}
+                    <div class="text-secondary small">
+                      Superior: {{ cuenta.parent.codigo }} · {{ cuenta.parent.nombre }}
+                    </div>
+                  {% else %}
+                    <div class="text-secondary small">Cuenta raíz</div>
+                  {% endif %}
+                  {% if cuenta.descripcion %}
+                    <div class="text-secondary small">{{ cuenta.descripcion }}</div>
+                  {% endif %}
+                </div>
+              </td>
+              <td>{{ cuenta.get_tipo_contable_display }}</td>
+              <td>
+                {% if cuenta.naturaleza %}
+                  {{ cuenta.get_naturaleza_display }}
+                {% else %}
+                  <span class="text-secondary">—</span>
+                {% endif %}
+              </td>
+              <td>{{ cuenta.nivel }}</td>
+              <td>
+                {% if cuenta.imputable %}
+                  <span class="badge text-bg-primary">Imputable</span>
+                {% else %}
+                  <span class="badge text-bg-light border text-dark">Agrupadora</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if cuenta.habilitada %}
+                  <span class="badge text-bg-success">Habilitada</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">Deshabilitada</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-secondary py-5">
+                No se encontraron cuentas con los filtros seleccionados.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}
