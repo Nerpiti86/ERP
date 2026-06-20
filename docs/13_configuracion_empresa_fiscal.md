@@ -731,3 +731,33 @@ Alcance cerrado:
 - Gobierno de Santa Fe, SIPRIB.
 - Gobierno de Santa Fe, Padrón de Alícuotas de Retenciones y
   Percepciones.
+
+## 16. Implementación de la etapa 1
+
+La TAREA 0003 implementa los datos básicos del contribuyente.
+
+Se incorpora:
+
+- modelo `PerfilFiscalEmpresa` relacionado uno a uno con `Empresa`
+- naturaleza del contribuyente
+- fecha de inicio de actividades
+- mes de cierre predeterminado
+- apellido
+- apellido materno
+- nombres
+- fecha de nacimiento
+- pantalla propia de consulta y edición
+- validación con permisos `empresas.ver` y `empresas.editar`
+- resumen y estado de completitud en la portada integrada
+
+Decisiones preservadas:
+
+- `Empresa.nombre_fantasia` continúa como campo técnico y se presenta como
+  `Nombre corto para listados`
+- el cierre se almacena como mes y no como fecha fija
+- los ejercicios existentes no se modifican
+- los datos personales se aplican únicamente a personas humanas y
+  sucesiones indivisas
+- domicilios, actividades económicas e IIBB permanecen fuera de esta etapa
+- los datos reales se cargan localmente y no se incluyen en migraciones ni
+  pruebas versionadas

@@ -9,8 +9,12 @@ from .autorizacion import (
     permiso_funcional_alguno_requerido,
     permiso_funcional_requerido,
 )
-from .forms import ConfiguracionEmpresaForm
-from .models import UsuarioEmpresa, UsuarioRolEmpresa
+from .forms import ConfiguracionEmpresaForm, DatosContribuyenteForm
+from .models import (
+    PerfilFiscalEmpresa,
+    UsuarioEmpresa,
+    UsuarioRolEmpresa,
+)
 from .parametros_empresa import (
     PARAMETROS_EMPRESA_ESTANDAR,
     guardar_configuracion_empresa,
@@ -22,9 +26,31 @@ from .permisos import usuario_tiene_permiso
 
 
 PERMISOS_CONSULTA_CONFIGURACION = (
+    "empresas.ver",
+    "empresas.editar",
     "parametros.ver",
     "parametros.editar",
 )
+
+PERMISOS_DATOS_CONTRIBUYENTE = (
+    "empresas.ver",
+    "empresas.editar",
+)
+
+
+def _obtener_perfil_fiscal(empresa):
+    try:
+        return empresa.perfil_fiscal
+    except PerfilFiscalEmpresa.DoesNotExist:
+        return None
+
+
+def _datos_contribuyente_completos(empresa, perfil):
+    return bool(
+        empresa.nombre_fantasia.strip()
+        and perfil is not None
+        and perfil.esta_completo
+    )
 
 
 @login_required
@@ -35,6 +61,17 @@ PERMISOS_CONSULTA_CONFIGURACION = (
 @require_GET
 def configuracion_empresa(request):
     empresa = request.empresa_activa
+    perfil_fiscal = _obtener_perfil_fiscal(empresa)
+    datos_contribuyente_completos = _datos_contribuyente_completos(
+        empresa,
+        perfil_fiscal,
+    )
+    puede_editar_datos_contribuyente = usuario_tiene_permiso(
+        request.user,
+        empresa,
+        "empresas.editar",
+    )
+
     estado_parametros = obtener_estado_parametros_empresa(empresa)
     datos_parametros = {}
     advertencias_parametros = ()
@@ -74,6 +111,7 @@ def configuracion_empresa(request):
 
     configuracion_base_lista = (
         empresa.activa
+        and datos_contribuyente_completos
         and sucursales_activas > 0
         and estado_parametros["completa"]
         and not advertencias_parametros
@@ -84,6 +122,13 @@ def configuracion_empresa(request):
         "nucleo/configuracion_empresa.html",
         {
             "empresa": empresa,
+            "perfil_fiscal": perfil_fiscal,
+            "datos_contribuyente_completos": (
+                datos_contribuyente_completos
+            ),
+            "puede_editar_datos_contribuyente": (
+                puede_editar_datos_contribuyente
+            ),
             "sucursales": sucursales,
             "estado_parametros": estado_parametros,
             "datos_parametros": datos_parametros,
@@ -102,7 +147,64 @@ def configuracion_empresa(request):
 @login_required
 @contexto_operativo_requerido(requiere_sucursal=False)
 @permiso_funcional_alguno_requerido(
-    *PERMISOS_CONSULTA_CONFIGURACION
+    *PERMISOS_DATOS_CONTRIBUYENTE
+)
+def datos_contribuyente(request):
+    empresa = request.empresa_activa
+    perfil = _obtener_perfil_fiscal(empresa)
+    puede_editar = usuario_tiene_permiso(
+        request.user,
+        empresa,
+        "empresas.editar",
+    )
+
+    if request.method == "POST" and not puede_editar:
+        raise PermissionDenied
+
+    if request.method == "POST":
+        form = DatosContribuyenteForm(
+            request.POST,
+            empresa=empresa,
+            perfil=perfil,
+        )
+
+        if form.is_valid():
+            empresa, perfil = form.save()
+            messages.success(
+                request,
+                (
+                    f"Datos del contribuyente {empresa.razon_social} "
+                    "guardados correctamente."
+                ),
+            )
+            return redirect("nucleo:datos_contribuyente")
+    else:
+        form = DatosContribuyenteForm(
+            empresa=empresa,
+            perfil=perfil,
+        )
+
+    if not puede_editar:
+        for campo in form.fields.values():
+            campo.disabled = True
+
+    return render(
+        request,
+        "nucleo/datos_contribuyente.html",
+        {
+            "empresa": empresa,
+            "perfil": perfil,
+            "form": form,
+            "puede_editar": puede_editar,
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_alguno_requerido(
+    "parametros.ver",
+    "parametros.editar",
 )
 def parametros_operativos(request):
     empresa = request.empresa_activa

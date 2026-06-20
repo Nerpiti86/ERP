@@ -12,14 +12,24 @@ from .models import (
     EjercicioFiscal,
     PeriodoContable,
     ParametroSistema,
+    PerfilFiscalEmpresa,
     Sucursal,
     UsuarioEmpresa,
     UsuarioSucursal,
 )
 
 
+class PerfilFiscalEmpresaInline(admin.StackedInline):
+    model = PerfilFiscalEmpresa
+    extra = 0
+    can_delete = False
+    max_num = 1
+
+
+
 @admin.register(Empresa)
 class EmpresaAdmin(admin.ModelAdmin):
+    inlines = (PerfilFiscalEmpresaInline,)
     list_display = (
         "razon_social",
         "cuit",

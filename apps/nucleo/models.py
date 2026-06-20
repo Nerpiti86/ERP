@@ -48,6 +48,138 @@ class Empresa(models.Model):
         return self.razon_social
 
 
+class PerfilFiscalEmpresa(models.Model):
+    class NaturalezaContribuyente(models.TextChoices):
+        PERSONA_HUMANA = "PERSONA_HUMANA", "Persona humana"
+        PERSONA_JURIDICA = "PERSONA_JURIDICA", "Persona jurídica"
+        SUCESION_INDIVISA = "SUCESION_INDIVISA", "Sucesión indivisa"
+        OTRA = "OTRA", "Otra"
+
+    MESES_CIERRE = (
+        (1, "Enero"),
+        (2, "Febrero"),
+        (3, "Marzo"),
+        (4, "Abril"),
+        (5, "Mayo"),
+        (6, "Junio"),
+        (7, "Julio"),
+        (8, "Agosto"),
+        (9, "Septiembre"),
+        (10, "Octubre"),
+        (11, "Noviembre"),
+        (12, "Diciembre"),
+    )
+
+    empresa = models.OneToOneField(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="perfil_fiscal",
+    )
+    naturaleza = models.CharField(
+        max_length=30,
+        choices=NaturalezaContribuyente.choices,
+        blank=True,
+        default="",
+    )
+    fecha_inicio_actividades = models.DateField(
+        null=True,
+        blank=True,
+    )
+    mes_cierre_ejercicio_predeterminado = models.PositiveSmallIntegerField(
+        choices=MESES_CIERRE,
+        null=True,
+        blank=True,
+    )
+    apellido = models.CharField(max_length=120, blank=True)
+    apellido_materno = models.CharField(max_length=120, blank=True)
+    nombres = models.CharField(max_length=160, blank=True)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_perfilfiscalempresa"
+        verbose_name = "perfil fiscal de empresa"
+        verbose_name_plural = "perfiles fiscales de empresa"
+        ordering = ["empresa__razon_social"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(mes_cierre_ejercicio_predeterminado__isnull=True)
+                    | Q(
+                        mes_cierre_ejercicio_predeterminado__gte=1,
+                        mes_cierre_ejercicio_predeterminado__lte=12,
+                    )
+                ),
+                name="chk_perfil_fiscal_mes_cierre",
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+
+        naturaleza_personal = {
+            self.NaturalezaContribuyente.PERSONA_HUMANA,
+            self.NaturalezaContribuyente.SUCESION_INDIVISA,
+        }
+
+        if self.naturaleza in naturaleza_personal:
+            errores = {}
+
+            if not self.apellido.strip():
+                errores["apellido"] = (
+                    "El apellido es obligatorio para esta naturaleza."
+                )
+
+            if not self.nombres.strip():
+                errores["nombres"] = (
+                    "Los nombres son obligatorios para esta naturaleza."
+                )
+
+            if errores:
+                raise ValidationError(errores)
+
+        elif self.naturaleza:
+            campos_personales = (
+                self.apellido,
+                self.apellido_materno,
+                self.nombres,
+                self.fecha_nacimiento,
+            )
+
+            if any(campos_personales):
+                raise ValidationError(
+                    "Los datos personales corresponden únicamente a "
+                    "personas humanas o sucesiones indivisas."
+                )
+
+    @property
+    def esta_completo(self):
+        basicos = (
+            bool(self.naturaleza)
+            and self.fecha_inicio_actividades is not None
+            and self.mes_cierre_ejercicio_predeterminado is not None
+        )
+
+        if not basicos:
+            return False
+
+        if self.naturaleza in {
+            self.NaturalezaContribuyente.PERSONA_HUMANA,
+            self.NaturalezaContribuyente.SUCESION_INDIVISA,
+        }:
+            return bool(
+                self.apellido.strip()
+                and self.nombres.strip()
+                and self.fecha_nacimiento
+            )
+
+        return True
+
+    def __str__(self):
+        return f"Perfil fiscal de {self.empresa}"
+
+
 class Sucursal(models.Model):
     empresa = models.ForeignKey(
         Empresa,

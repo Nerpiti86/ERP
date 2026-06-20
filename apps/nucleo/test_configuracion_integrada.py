@@ -103,7 +103,7 @@ class ConfiguracionEmpresaIntegradaTests(TestCase):
             response,
             "nucleo/configuracion_empresa.html",
         )
-        self.assertContains(response, "Datos de la empresa")
+        self.assertContains(response, "Datos del contribuyente")
         self.assertContains(response, "Sucursales")
         self.assertContains(response, "Parámetros operativos")
         self.assertContains(response, "Usuarios y accesos")

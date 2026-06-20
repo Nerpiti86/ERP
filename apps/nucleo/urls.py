@@ -12,6 +12,11 @@ urlpatterns = [
         name="configuracion_empresa",
     ),
     path(
+        "configuracion/datos-contribuyente/",
+        views.datos_contribuyente,
+        name="datos_contribuyente",
+    ),
+    path(
         "configuracion/parametros/",
         views.parametros_operativos,
         name="parametros_operativos",

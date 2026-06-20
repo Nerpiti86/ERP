@@ -26,6 +26,16 @@ def permisos_funcionales(request):
     empresa = getattr(request, "empresa_activa", None)
     usuario = getattr(request, "user", None)
 
+    puede_editar_empresas = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "empresas.editar",
+    )
+    puede_ver_empresas = usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        ("empresas.ver", "empresas.editar"),
+    )
     puede_editar_parametros = usuario_tiene_permiso(
         usuario,
         empresa,
@@ -49,6 +59,11 @@ def permisos_funcionales(request):
 
     return {
         "permisos_erp": {
+            "configuracion_ver": (
+                puede_ver_empresas or puede_ver_parametros
+            ),
+            "empresas_ver": puede_ver_empresas,
+            "empresas_editar": puede_editar_empresas,
             "parametros_ver": puede_ver_parametros,
             "parametros_editar": puede_editar_parametros,
             "contabilidad_ver": puede_ver_contabilidad,

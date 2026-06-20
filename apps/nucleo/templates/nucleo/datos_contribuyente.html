@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Datos del contribuyente{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div
+      class="d-flex flex-column flex-lg-row justify-content-between
+             gap-3 align-items-lg-start"
+    >
+      <div>
+        <p class="text-uppercase text-secondary small fw-semibold mb-1">
+          Configuración de empresa · Datos básicos
+        </p>
+        <h1 class="h3 mb-1">Datos del contribuyente</h1>
+        <p class="text-secondary mb-0">
+          Identificación y perfil fiscal básico de
+          <strong>{{ empresa.razon_social }}</strong>.
+        </p>
+      </div>
+
+      <a
+        class="btn btn-outline-secondary btn-sm"
+        href="{% url 'nucleo:configuracion_empresa' %}"
+      >
+        Volver a configuración
+      </a>
+    </div>
+  </section>
+
+  {% if not puede_editar %}
+    <div class="alert alert-secondary">
+      <strong>Modo solo lectura.</strong>
+      Podés consultar estos datos, pero no modificarlos.
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Identificación</h2>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.cuit.id_for_label }}">
+              {{ form.cuit.label }}
+            </label>
+            {{ form.cuit }}
+            {% if form.cuit.help_text %}
+              <div class="form-text">{{ form.cuit.help_text }}</div>
+            {% endif %}
+            {% for error in form.cuit.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-8">
+            <label
+              class="form-label"
+              for="{{ form.razon_social.id_for_label }}"
+            >
+              {{ form.razon_social.label }}
+            </label>
+            {{ form.razon_social }}
+            {% for error in form.razon_social.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-8">
+            <label
+              class="form-label"
+              for="{{ form.nombre_corto.id_for_label }}"
+            >
+              {{ form.nombre_corto.label }}
+            </label>
+            {{ form.nombre_corto }}
+            <div class="form-text">
+              Se utiliza en selectores, listados y contextos compactos.
+            </div>
+            {% for error in form.nombre_corto.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-4 d-flex align-items-end">
+            <div class="form-check mb-2">
+              {{ form.activa }}
+              <label
+                class="form-check-label"
+                for="{{ form.activa.id_for_label }}"
+              >
+                {{ form.activa.label }}
+              </label>
+              {% for error in form.activa.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Situación fiscal básica</h2>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label
+              class="form-label"
+              for="{{ form.naturaleza.id_for_label }}"
+            >
+              {{ form.naturaleza.label }}
+            </label>
+            {{ form.naturaleza }}
+            {% for error in form.naturaleza.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label
+              class="form-label"
+              for="{{ form.condicion_iva.id_for_label }}"
+            >
+              {{ form.condicion_iva.label }}
+            </label>
+            {{ form.condicion_iva }}
+            {% for error in form.condicion_iva.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label
+              class="form-label"
+              for="{{ form.fecha_inicio_actividades.id_for_label }}"
+            >
+              {{ form.fecha_inicio_actividades.label }}
+            </label>
+            {{ form.fecha_inicio_actividades }}
+            {% for error in form.fecha_inicio_actividades.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label
+              class="form-label"
+              for="{{ form.mes_cierre_ejercicio_predeterminado.id_for_label }}"
+            >
+              {{ form.mes_cierre_ejercicio_predeterminado.label }}
+            </label>
+            {{ form.mes_cierre_ejercicio_predeterminado }}
+            {% if form.mes_cierre_ejercicio_predeterminado.help_text %}
+              <div class="form-text">
+                {{ form.mes_cierre_ejercicio_predeterminado.help_text }}
+              </div>
+            {% endif %}
+            {% for error in form.mes_cierre_ejercicio_predeterminado.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
+      class="card shadow-sm mb-4"
+      id="datosPersonales"
+    >
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Datos personales</h2>
+      </div>
+      <div class="card-body">
+        <p class="text-secondary">
+          Se solicitan únicamente para personas humanas o sucesiones
+          indivisas.
+        </p>
+
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <label
+              class="form-label"
+              for="{{ form.apellido.id_for_label }}"
+            >
+              {{ form.apellido.label }}
+            </label>
+            {{ form.apellido }}
+            {% for error in form.apellido.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label
+              class="form-label"
+              for="{{ form.apellido_materno.id_for_label }}"
+            >
+              {{ form.apellido_materno.label }}
+            </label>
+            {{ form.apellido_materno }}
+            {% for error in form.apellido_materno.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label
+              class="form-label"
+              for="{{ form.nombres.id_for_label }}"
+            >
+              {{ form.nombres.label }}
+            </label>
+            {{ form.nombres }}
+            {% for error in form.nombres.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label
+              class="form-label"
+              for="{{ form.fecha_nacimiento.id_for_label }}"
+            >
+              {{ form.fecha_nacimiento.label }}
+            </label>
+            {{ form.fecha_nacimiento }}
+            {% for error in form.fecha_nacimiento.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% if puede_editar %}
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-dark" type="submit">
+          Guardar datos del contribuyente
+        </button>
+        <a
+          class="btn btn-outline-secondary"
+          href="{% url 'nucleo:configuracion_empresa' %}"
+        >
+          Cancelar
+        </a>
+      </div>
+    {% endif %}
+  </form>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    (() => {
+      const naturaleza = document.getElementById(
+        "{{ form.naturaleza.id_for_label }}"
+      );
+      const datosPersonales = document.getElementById("datosPersonales");
+      const camposPersonales = [
+        "{{ form.apellido.id_for_label }}",
+        "{{ form.apellido_materno.id_for_label }}",
+        "{{ form.nombres.id_for_label }}",
+        "{{ form.fecha_nacimiento.id_for_label }}"
+      ].map((id) => document.getElementById(id));
+
+      if (!naturaleza || !datosPersonales) {
+        return;
+      }
+
+      const naturalezasPersonales = new Set([
+        "PERSONA_HUMANA",
+        "SUCESION_INDIVISA"
+      ]);
+
+      const actualizar = (limpiar) => {
+        const mostrar = naturalezasPersonales.has(naturaleza.value);
+        datosPersonales.hidden = !mostrar;
+
+        if (!mostrar && limpiar) {
+          camposPersonales.forEach((campo) => {
+            if (campo && !campo.disabled) {
+              campo.value = "";
+            }
+          });
+        }
+      };
+
+      actualizar(false);
+      naturaleza.addEventListener("change", () => actualizar(true));
+    })();
+  </script>
+{% endblock %}

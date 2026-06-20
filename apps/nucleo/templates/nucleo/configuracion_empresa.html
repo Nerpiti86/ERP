@@ -49,11 +49,11 @@
           class="card-header bg-white d-flex justify-content-between
                  align-items-center gap-3"
         >
-          <h2 class="h5 mb-0">Datos de la empresa</h2>
-          {% if empresa.activa %}
-            <span class="badge text-bg-success">Activa</span>
+          <h2 class="h5 mb-0">Datos del contribuyente</h2>
+          {% if datos_contribuyente_completos %}
+            <span class="badge text-bg-success">Completo</span>
           {% else %}
-            <span class="badge text-bg-secondary">Inactiva</span>
+            <span class="badge text-bg-warning">Incompleto</span>
           {% endif %}
         </div>
 
@@ -67,7 +67,7 @@
             </dd>
 
             <dt class="col-sm-5 text-secondary fw-normal">
-              Nombre de fantasía
+              Nombre corto
             </dt>
             <dd class="col-sm-7">
               {{ empresa.nombre_fantasia|default:"Sin informar" }}
@@ -77,21 +77,58 @@
             <dd class="col-sm-7">{{ empresa.cuit }}</dd>
 
             <dt class="col-sm-5 text-secondary fw-normal">
+              Naturaleza
+            </dt>
+            <dd class="col-sm-7">
+              {% if perfil_fiscal and perfil_fiscal.naturaleza %}
+                {{ perfil_fiscal.get_naturaleza_display }}
+              {% else %}
+                Sin configurar
+              {% endif %}
+            </dd>
+
+            <dt class="col-sm-5 text-secondary fw-normal">
               Condición frente al IVA
             </dt>
             <dd class="col-sm-7">
               {{ empresa.get_condicion_iva_display }}
             </dd>
+
+            <dt class="col-sm-5 text-secondary fw-normal">
+              Inicio de actividades
+            </dt>
+            <dd class="col-sm-7">
+              {% if perfil_fiscal.fecha_inicio_actividades %}
+                {{ perfil_fiscal.fecha_inicio_actividades|date:"d/m/Y" }}
+              {% else %}
+                Sin configurar
+              {% endif %}
+            </dd>
+
+            <dt class="col-sm-5 text-secondary fw-normal">
+              Cierre predeterminado
+            </dt>
+            <dd class="col-sm-7">
+              {% if perfil_fiscal.mes_cierre_ejercicio_predeterminado %}
+                {{ perfil_fiscal.get_mes_cierre_ejercicio_predeterminado_display }}
+              {% else %}
+                Sin configurar
+              {% endif %}
+            </dd>
           </dl>
         </div>
 
         <div class="card-footer bg-white border-0 pt-0">
-          <span
-            class="btn btn-outline-secondary disabled"
-            aria-disabled="true"
+          <a
+            class="btn btn-dark"
+            href="{% url 'nucleo:datos_contribuyente' %}"
           >
-            Pantalla propia · Próxima etapa
-          </span>
+            {% if puede_editar_datos_contribuyente %}
+              Administrar datos
+            {% else %}
+              Consultar datos
+            {% endif %}
+          </a>
         </div>
       </article>
     </div>
