@@ -1,6 +1,6 @@
 # Índice de documentación del ERP
 
-Estado del índice: 19/06/2026.
+Estado del índice: 20/06/2026.
 
 ## Documentos de arquitectura y operación
 
@@ -19,6 +19,7 @@ Estado del índice: 19/06/2026.
 | `10_estado_actual_y_hoja_ruta.md` | Foto del estado actual y próximos pasos | Vigente; actualización por cortes |
 | `11_parametros_empresa.md` | Inicialización y edición amigable de parámetros por empresa | Implementado |
 | `12_contexto_operativo.md` | Contrato obligatorio de empresa y sucursal para operaciones | Implementado |
+| `13_configuracion_empresa_fiscal.md` | Relevamiento y diseño gradual de identidad, domicilios, actividades e IIBB | Definido; implementación gradual pendiente |
 
 ## Jerarquía documental
 
