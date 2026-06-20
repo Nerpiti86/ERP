@@ -341,3 +341,48 @@ Resultado:
 - catálogo oficial y relaciones bloqueados para escritura manual en Admin
 
 Suite verificada al cierre: `243` pruebas.
+
+## 15. Corte documental D02
+
+Base verificada antes del corte:
+
+```text
+Commit: 4842d374f43d696e625368bc625a19dfc5a3ead6
+Última tarea funcional: TAREA 0006
+Pruebas: 243 OK
+Migraciones de núcleo: hasta 0012
+Catálogo ARCA-CLAE: 958 actividades activas
+```
+
+Funcionalidad fiscal y empresarial incorporada después del corte anterior:
+
+- datos básicos del contribuyente
+- perfil fiscal de empresa
+- sucursales y domicilios estructurados
+- funciones exclusivas de establecimientos
+- catálogo oficial ARCA-CLAE
+- sincronización auditable del catálogo
+- actividades económicas por empresa
+- actividad principal y secundarias
+- snapshot histórico
+- permisos específicos
+- auditoría de cambios
+- integración en Configuración de empresa
+
+Lecciones metodológicas consolidadas:
+
+- revisar siempre el remoto real
+- fijar el SHA contractual
+- no usar anclas textuales frágiles
+- validar el código generado por los scripts
+- inicializar Django antes de importar modelos en Python directo
+- retrasar migraciones hasta terminar validaciones previas
+- crear continuaciones específicas
+- preservar datos mediante backup y baja lógica
+- verificar el commit directamente en GitHub
+
+El estándar completo queda documentado en:
+
+```text
+docs/17_lecciones_aprendidas_y_estandar_implementacion.md
+```

@@ -1,6 +1,6 @@
 # Mecánica de trabajo mediante tareas ejecutables TXT
 
-Estado: acordada y formalizada en el corte documental D01.
+Estado: revisada y ampliada en el corte documental D02.
 
 ## 1. Objetivo
 
@@ -236,3 +236,61 @@ La mecánica permite:
 - mantener `main` alineada con el remoto
 - revisar cada cambio como una unidad
 - documentar con precisión qué está realmente terminado
+
+## 15. Reglas incorporadas en D02
+
+Antes de entregar un script, el asistente debe validar no solo el Bash, sino
+también el código que el Bash generará.
+
+Validaciones previas recomendadas:
+
+- `bash -n`
+- compilación de Python embebido
+- compilación sintáctica de archivos Python heredoc
+- prueba de anclas contra archivos reales
+- verificación de finales de archivo
+- lista exacta de archivos esperados
+
+## 16. Prohibición de anclas frágiles
+
+No se debe buscar una línea documental completa si una tilde, un espacio o
+una modificación menor puede invalidarla.
+
+Cada transformación debe:
+
+1. usar una referencia semántica
+2. exigir una única coincidencia
+3. validar el resultado
+4. abortar ante cualquier ambigüedad
+
+## 17. Bloques Python conscientes de Django
+
+Cuando un bloque Python importe modelos Django fuera de `manage.py`, deberá
+inicializar Django antes de importar los modelos.
+
+Se preferirá ejecutar la lógica mediante comandos de administración o
+`manage.py shell`.
+
+## 18. Orden de validación mejorado
+
+La tarea debe retrasar migraciones e importaciones hasta que hayan pasado:
+
+- controles estáticos
+- carga de plantillas
+- `manage.py check`
+- revisión de migraciones
+- pruebas específicas
+- suite completa
+- validación de fuentes externas
+
+Las comprobaciones posteriores de datos son obligatorias antes del commit.
+
+## 19. Referencia consolidada
+
+Las lecciones completas, incluyendo arquitectura, fuentes externas,
+historial, permisos, multiempresa, pruebas y definición de terminado, están
+en:
+
+```text
+docs/17_lecciones_aprendidas_y_estandar_implementacion.md
+```

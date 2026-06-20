@@ -216,3 +216,33 @@ La tarea solo queda cerrada cuando:
 4. se hizo push
 5. el repositorio terminó limpio y sincronizado
 6. el commit fue verificado contra GitHub
+
+---
+
+## 15. Logs como evidencia de diagnóstico y aprendizaje
+
+El log completo no solo demuestra que una tarea se ejecutó.
+
+También permite reconstruir el estado exacto cuando una tarea se detiene:
+
+- último paso correcto
+- comando que falló
+- archivos pendientes
+- migraciones creadas
+- migraciones aplicadas
+- cambios de base de datos
+- pruebas ejecutadas
+- existencia o ausencia de commit y push
+
+Cuando una tarea use una fuente externa, el backup debe conservar cuando
+corresponda:
+
+- copia descargada
+- URL
+- SHA-256
+- tamaño
+- conteos extraídos
+- validaciones aplicadas
+
+Los logs y backups constituyen evidencia local. No deben versionarse, pero
+sus conclusiones estables deben consolidarse en documentos del repositorio.

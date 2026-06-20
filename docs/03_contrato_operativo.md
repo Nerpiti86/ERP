@@ -466,3 +466,116 @@ Su objetivo es:
 - evitar alterar la numeración de tareas funcionales
 
 Los cortes documentales también deben generar log, backup, commit y push.
+
+---
+
+## 26. Revisión remota y validación del artefacto
+
+Antes de preparar una tarea, el asistente deberá revisar el `main` remoto y
+los archivos concretos que serán afectados.
+
+No deberá diseñar cambios basándose únicamente en memoria, conversaciones
+anteriores o documentos históricos.
+
+Toda tarea deberá fijar el SHA esperado de inicio.
+
+Los scripts generados deberán validarse antes de entregarse mediante:
+
+- `bash -n`
+- compilación de bloques Python embebidos
+- compilación sintáctica de archivos Python generados
+- comprobación de puntos de inserción
+- verificación de lista exacta de archivos
+
+La validación del artefacto preparado no reemplaza las comprobaciones en el
+entorno real.
+
+## 27. Anclas de modificación seguras
+
+Las modificaciones automáticas no deberán depender de líneas completas
+frágiles cuando puedan cambiar por:
+
+- tildes
+- espacios
+- saltos de línea
+- formato
+- redacción menor
+
+Se preferirán anclas semánticas estables, como nombres de clases, funciones
+o encabezados.
+
+Todo ancla deberá aparecer exactamente una vez. Si no aparece o aparece más
+de una vez, la tarea deberá detenerse.
+
+## 28. Inicialización de Django en bloques Python
+
+Un bloque Python que importe modelos Django fuera de `manage.py` deberá
+configurar `DJANGO_SETTINGS_MODULE` y ejecutar `django.setup()` antes de la
+importación.
+
+Cuando sea posible se preferirán:
+
+- comandos de administración
+- `manage.py shell`
+- pruebas Django
+
+## 29. Orden de efectos persistentes
+
+Las migraciones, importaciones y transformaciones de datos deberán
+ejecutarse después de:
+
+- compilación
+- `manage.py check`
+- revisión de migraciones
+- pruebas específicas
+- suite completa
+- validación de fuentes externas requeridas
+
+Después de modificar la base se deberán verificar explícitamente los datos
+resultantes antes del commit.
+
+## 30. Restricciones, servicios y auditoría
+
+Las reglas críticas deberán evaluarse en cuatro niveles:
+
+1. base de datos
+2. modelo
+3. servicio transaccional
+4. formulario o vista
+
+Las operaciones con efectos múltiples deberán centralizarse en servicios
+atómicos y registrar auditoría cuando sean funcionalmente relevantes.
+
+## 31. Catálogos externos y datos históricos
+
+Los catálogos oficiales externos deberán mantenerse localmente con fuente,
+fecha, SHA-256 y auditoría de importación.
+
+Los datos históricos que puedan cambiar en el catálogo deberán conservar
+una instantánea cuando sea necesario reproducir el estado anterior.
+
+Los catálogos oficiales y las relaciones administradas por servicios no
+deberán quedar editables libremente en Django Admin.
+
+## 32. Validación exacta de archivos y staging
+
+Antes del commit se deberán comparar:
+
+- archivos esperados
+- archivos modificados
+- archivos staged
+
+Los conjuntos deberán coincidir.
+
+Se mantiene prohibido usar `git add .`.
+
+## 33. Estándar consolidado
+
+El estándar completo surgido de estas lecciones está documentado en:
+
+```text
+docs/17_lecciones_aprendidas_y_estandar_implementacion.md
+```
+
+Sus reglas complementan este contrato y deberán aplicarse en las tareas
+futuras.
