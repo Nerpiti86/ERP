@@ -489,6 +489,462 @@ class EmpresaActividad(models.Model):
         )
 
 
+class JurisdiccionFiscal(models.Model):
+    codigo = models.CharField(
+        max_length=3,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r"^9\d{2}$",
+                message="El código COMARB debe contener tres dígitos.",
+            )
+        ],
+    )
+    nombre = models.CharField(max_length=120)
+    activa = models.BooleanField(default=True)
+    orden = models.PositiveIntegerField(default=0)
+    fuente_url = models.URLField(max_length=500, blank=True)
+    creada_en = models.DateTimeField(auto_now_add=True)
+    actualizada_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_jurisdiccionfiscal"
+        verbose_name = "jurisdicción fiscal"
+        verbose_name_plural = "jurisdicciones fiscales"
+        ordering = ["orden", "codigo"]
+        indexes = [
+            models.Index(
+                fields=["activa", "orden", "codigo"],
+                name="idx_jur_fiscal_act_ord",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
+
+
+class ConfiguracionIIBBEmpresa(models.Model):
+    class Regimen(models.TextChoices):
+        NO_INSCRIPTO = "NO_INSCRIPTO", "No inscripto"
+        LOCAL = "LOCAL", "Contribuyente local"
+        CONVENIO_MULTILATERAL = (
+            "CONVENIO_MULTILATERAL",
+            "Convenio Multilateral",
+        )
+
+    class TratamientoGeneral(models.TextChoices):
+        GRAVADO = "GRAVADO", "Gravado"
+        EXENTO = "EXENTO", "Exento"
+        NO_ALCANZADO = "NO_ALCANZADO", "No alcanzado"
+        MIXTO = "MIXTO", "Mixto"
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="configuraciones_iibb",
+    )
+    regimen = models.CharField(
+        max_length=30,
+        choices=Regimen.choices,
+    )
+    tratamiento_general = models.CharField(
+        max_length=20,
+        choices=TratamientoGeneral.choices,
+        default=TratamientoGeneral.GRAVADO,
+    )
+    numero_inscripcion = models.CharField(max_length=50, blank=True)
+    fecha_alta = models.DateField(null=True, blank=True)
+    fecha_baja = models.DateField(null=True, blank=True)
+    activa = models.BooleanField(default=True)
+    observaciones = models.TextField(blank=True)
+    creada_en = models.DateTimeField(auto_now_add=True)
+    actualizada_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_configuracionesiibbempresa"
+        verbose_name = "configuración de Ingresos Brutos"
+        verbose_name_plural = "configuraciones de Ingresos Brutos"
+        ordering = ["empresa__razon_social", "-activa", "-creada_en"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["empresa"],
+                condition=Q(activa=True),
+                name="uniq_emp_config_iibb_activa",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(fecha_baja__isnull=True)
+                    | (
+                        Q(fecha_alta__isnull=False)
+                        & Q(fecha_baja__gte=F("fecha_alta"))
+                    )
+                ),
+                name="chk_config_iibb_fechas",
+            ),
+            models.CheckConstraint(
+                condition=Q(activa=False) | Q(fecha_baja__isnull=True),
+                name="chk_config_iibb_activa_sin_baja",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["empresa", "activa", "regimen"],
+                name="idx_config_iibb_emp_est",
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+        self.numero_inscripcion = self.numero_inscripcion.strip()
+        self.observaciones = self.observaciones.strip()
+        errores = {}
+
+        if self.fecha_baja is not None:
+            if self.fecha_alta is None:
+                errores["fecha_alta"] = (
+                    "Informá la fecha de alta cuando existe fecha de baja."
+                )
+            elif self.fecha_baja < self.fecha_alta:
+                errores["fecha_baja"] = (
+                    "La fecha de baja no puede ser anterior a la fecha de alta."
+                )
+
+        if self.activa and self.fecha_baja is not None:
+            errores["fecha_baja"] = (
+                "Una configuración activa no puede tener fecha de baja."
+            )
+
+        if self.regimen == self.Regimen.NO_INSCRIPTO:
+            if self.numero_inscripcion:
+                errores["numero_inscripcion"] = (
+                    "Una empresa no inscripta no debe tener número de inscripción."
+                )
+            if self.fecha_alta is not None:
+                errores["fecha_alta"] = (
+                    "Una empresa no inscripta no debe tener fecha de alta."
+                )
+        elif self.activa:
+            if not self.numero_inscripcion:
+                errores["numero_inscripcion"] = (
+                    "El número de inscripción es obligatorio."
+                )
+            if self.fecha_alta is None:
+                errores["fecha_alta"] = "La fecha de alta es obligatoria."
+
+        original = None
+        if self.pk:
+            original = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values("empresa_id")
+                .first()
+            )
+
+        if original and original["empresa_id"] != self.empresa_id:
+            errores["empresa"] = (
+                "La empresa de una configuración existente no puede cambiar."
+            )
+
+        if self.empresa_id and self.activa:
+            duplicada = type(self).objects.filter(
+                empresa_id=self.empresa_id,
+                activa=True,
+            )
+            if self.pk:
+                duplicada = duplicada.exclude(pk=self.pk)
+            if duplicada.exists():
+                errores["empresa"] = (
+                    "La empresa ya tiene una configuración de IIBB activa."
+                )
+
+        if self.pk and self.activa:
+            activas = self.jurisdicciones.filter(activa=True)
+            if self.regimen == self.Regimen.NO_INSCRIPTO and activas.exists():
+                errores["regimen"] = (
+                    "Inactivá las jurisdicciones antes de marcar no inscripto."
+                )
+            if self.regimen == self.Regimen.LOCAL and activas.count() > 1:
+                errores["regimen"] = (
+                    "El régimen local admite una sola jurisdicción activa."
+                )
+
+        if errores:
+            raise ValidationError(errores)
+
+    @property
+    def esta_completa(self):
+        if not self.activa:
+            return False
+
+        activas = self.jurisdicciones.filter(activa=True)
+        sedes = activas.filter(sede=True).count()
+
+        if self.regimen == self.Regimen.NO_INSCRIPTO:
+            return not activas.exists()
+
+        if not self.numero_inscripcion or self.fecha_alta is None:
+            return False
+
+        if self.regimen == self.Regimen.LOCAL:
+            return activas.count() == 1 and sedes == 1
+
+        return activas.exists() and sedes == 1
+
+    def __str__(self):
+        return f"{self.empresa} - {self.get_regimen_display()}"
+
+
+class EmpresaJurisdiccionIIBB(models.Model):
+    class Tratamiento(models.TextChoices):
+        SEGUN_CONFIGURACION = (
+            "SEGUN_CONFIGURACION",
+            "Según configuración general",
+        )
+        GRAVADO = "GRAVADO", "Gravado"
+        EXENTO = "EXENTO", "Exento"
+        NO_ALCANZADO = "NO_ALCANZADO", "No alcanzado"
+        MIXTO = "MIXTO", "Mixto"
+
+    configuracion = models.ForeignKey(
+        ConfiguracionIIBBEmpresa,
+        on_delete=models.PROTECT,
+        related_name="jurisdicciones",
+    )
+    jurisdiccion = models.ForeignKey(
+        JurisdiccionFiscal,
+        on_delete=models.PROTECT,
+        related_name="inscripciones_empresa",
+    )
+    numero_inscripcion = models.CharField(max_length=50, blank=True)
+    sede = models.BooleanField(default=False)
+    tratamiento = models.CharField(
+        max_length=25,
+        choices=Tratamiento.choices,
+        default=Tratamiento.SEGUN_CONFIGURACION,
+    )
+    fecha_alta = models.DateField(null=True, blank=True)
+    fecha_baja = models.DateField(null=True, blank=True)
+    activa = models.BooleanField(default=True)
+    observaciones = models.TextField(blank=True)
+    codigo_registrado = models.CharField(
+        max_length=3,
+        blank=True,
+        default="",
+        editable=False,
+    )
+    nombre_registrado = models.CharField(
+        max_length=120,
+        blank=True,
+        default="",
+        editable=False,
+    )
+    fuente_url_registrada = models.URLField(
+        max_length=500,
+        blank=True,
+        default="",
+        editable=False,
+    )
+    creada_en = models.DateTimeField(auto_now_add=True)
+    actualizada_en = models.DateTimeField(auto_now=True)
+
+    CAMPOS_INSTANTANEA = (
+        "codigo_registrado",
+        "nombre_registrado",
+        "fuente_url_registrada",
+    )
+
+    class Meta:
+        db_table = "nucleo_empresajurisdicioniibb"
+        verbose_name = "jurisdicción de Ingresos Brutos"
+        verbose_name_plural = "jurisdicciones de Ingresos Brutos"
+        ordering = [
+            "configuracion__empresa__razon_social",
+            "-activa",
+            "-sede",
+            "jurisdiccion__orden",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["configuracion", "jurisdiccion"],
+                condition=Q(activa=True),
+                name="uniq_config_jur_iibb_activa",
+            ),
+            models.UniqueConstraint(
+                fields=["configuracion"],
+                condition=Q(activa=True, sede=True),
+                name="uniq_config_jur_iibb_sede",
+            ),
+            models.CheckConstraint(
+                condition=Q(sede=False) | Q(activa=True),
+                name="chk_jur_iibb_sede_activa",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(fecha_baja__isnull=True)
+                    | (
+                        Q(fecha_alta__isnull=False)
+                        & Q(fecha_baja__gte=F("fecha_alta"))
+                    )
+                ),
+                name="chk_jur_iibb_fechas",
+            ),
+            models.CheckConstraint(
+                condition=Q(activa=False) | Q(fecha_baja__isnull=True),
+                name="chk_jur_iibb_activa_sin_baja",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["configuracion", "activa", "sede"],
+                name="idx_jur_iibb_config_est",
+            )
+        ]
+
+    def _capturar_instantanea(self):
+        if not self.jurisdiccion_id:
+            return
+        jurisdiccion = JurisdiccionFiscal.objects.only(
+            "codigo",
+            "nombre",
+            "fuente_url",
+        ).get(pk=self.jurisdiccion_id)
+        self.codigo_registrado = jurisdiccion.codigo
+        self.nombre_registrado = jurisdiccion.nombre
+        self.fuente_url_registrada = jurisdiccion.fuente_url
+
+    def clean(self):
+        super().clean()
+        self.numero_inscripcion = self.numero_inscripcion.strip()
+        self.observaciones = self.observaciones.strip()
+        errores = {}
+
+        if self.sede and not self.activa:
+            errores["sede"] = "Una jurisdicción sede debe estar activa."
+
+        if self.fecha_baja is not None:
+            if self.fecha_alta is None:
+                errores["fecha_alta"] = (
+                    "Informá la fecha de alta cuando existe fecha de baja."
+                )
+            elif self.fecha_baja < self.fecha_alta:
+                errores["fecha_baja"] = (
+                    "La fecha de baja no puede ser anterior a la fecha de alta."
+                )
+
+        if self.activa and self.fecha_baja is not None:
+            errores["fecha_baja"] = (
+                "Una jurisdicción activa no puede tener fecha de baja."
+            )
+
+        if self.activa and self.fecha_alta is None:
+            errores["fecha_alta"] = (
+                "La fecha de alta jurisdiccional es obligatoria."
+            )
+
+        original = None
+        if self.pk:
+            original = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values(
+                    "configuracion_id",
+                    "jurisdiccion_id",
+                    *self.CAMPOS_INSTANTANEA,
+                )
+                .first()
+            )
+
+        if original:
+            if original["configuracion_id"] != self.configuracion_id:
+                errores["configuracion"] = (
+                    "La configuración de una relación existente no puede cambiar."
+                )
+            if original["jurisdiccion_id"] != self.jurisdiccion_id:
+                errores["jurisdiccion"] = (
+                    "La jurisdicción de una relación existente no puede cambiar."
+                )
+            for campo in self.CAMPOS_INSTANTANEA:
+                if original[campo] != getattr(self, campo):
+                    errores[campo] = (
+                        "La instantánea histórica no puede modificarse."
+                    )
+        elif self.jurisdiccion_id and self.activa:
+            if not JurisdiccionFiscal.objects.filter(
+                pk=self.jurisdiccion_id,
+                activa=True,
+            ).exists():
+                errores["jurisdiccion"] = (
+                    "Solo se pueden asignar jurisdicciones activas."
+                )
+
+        if self.configuracion_id and self.activa:
+            if not self.configuracion.activa:
+                errores["configuracion"] = (
+                    "La configuración de IIBB no está activa."
+                )
+            if (
+                self.configuracion.regimen
+                == ConfiguracionIIBBEmpresa.Regimen.NO_INSCRIPTO
+            ):
+                errores["configuracion"] = (
+                    "Una empresa no inscripta no admite jurisdicciones activas."
+                )
+
+            duplicada = type(self).objects.filter(
+                configuracion_id=self.configuracion_id,
+                jurisdiccion_id=self.jurisdiccion_id,
+                activa=True,
+            )
+            if self.pk:
+                duplicada = duplicada.exclude(pk=self.pk)
+            if duplicada.exists():
+                errores["jurisdiccion"] = (
+                    "La jurisdicción ya está activa en esta configuración."
+                )
+
+            if (
+                self.configuracion.regimen
+                == ConfiguracionIIBBEmpresa.Regimen.LOCAL
+            ):
+                otra = type(self).objects.filter(
+                    configuracion_id=self.configuracion_id,
+                    activa=True,
+                )
+                if self.pk:
+                    otra = otra.exclude(pk=self.pk)
+                if otra.exists():
+                    errores["jurisdiccion"] = (
+                        "El régimen local admite una sola jurisdicción activa."
+                    )
+
+            if self.sede:
+                sede_existente = type(self).objects.filter(
+                    configuracion_id=self.configuracion_id,
+                    activa=True,
+                    sede=True,
+                )
+                if self.pk:
+                    sede_existente = sede_existente.exclude(pk=self.pk)
+                if sede_existente.exists():
+                    errores["sede"] = (
+                        "La configuración ya tiene otra jurisdicción sede."
+                    )
+
+        if errores:
+            raise ValidationError(errores)
+
+    def save(self, *args, **kwargs):
+        if not self.pk and self.jurisdiccion_id:
+            self._capturar_instantanea()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        sede = " - Sede" if self.sede else ""
+        return (
+            f"{self.configuracion.empresa} - "
+            f"{self.codigo_registrado} {self.nombre_registrado}{sede}"
+        )
+
 class Sucursal(models.Model):
     FUNCIONES_EXCLUSIVAS = (
         ("es_casa_central", "Casa central"),

@@ -19,11 +19,12 @@ Estado del índice: 20/06/2026.
 | `10_estado_actual_y_hoja_ruta.md` | Foto del estado actual y próximos pasos | Vigente; actualización por cortes |
 | `11_parametros_empresa.md` | Inicialización y edición amigable de parámetros por empresa | Implementado |
 | `12_contexto_operativo.md` | Contrato obligatorio de empresa y sucursal para operaciones | Implementado |
-| `13_configuracion_empresa_fiscal.md` | Identidad, domicilios, actividades e IIBB de empresa | Implementado hasta actividades; IIBB pendiente |
+| `13_configuracion_empresa_fiscal.md` | Identidad, domicilios, actividades e IIBB de empresa | Implementado hasta IIBB; agentes pendiente |
 | `14_sucursales_domicilios.md` | Gestión funcional de establecimientos, domicilios estructurados y funciones | Implementado |
 | `15_catalogo_actividades_arca.md` | Catálogo local sincronizado con el nomenclador oficial ARCA CLAE | Implementado |
 | `16_actividades_economicas_empresa.md` | Actividades principales y secundarias por empresa | Implementado |
 | `17_lecciones_aprendidas_y_estandar_implementacion.md` | Lecciones consolidadas y estándar obligatorio para tareas futuras | Vigente |
+| `18_ingresos_brutos_jurisdicciones.md` | Configuración de IIBB, jurisdicción sede e historial por empresa | Implementado |
 
 ## Jerarquía documental
 

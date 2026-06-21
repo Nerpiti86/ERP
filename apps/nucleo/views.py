@@ -14,14 +14,20 @@ from .autorizacion import (
 from .forms import (
     ConfiguracionEmpresaForm,
     DatosContribuyenteForm,
+    ConfiguracionIIBBEmpresaForm,
     EmpresaActividadCrearForm,
     EmpresaActividadEditarForm,
+    EmpresaJurisdiccionIIBBCrearForm,
+    EmpresaJurisdiccionIIBBEditarForm,
     SucursalForm,
 )
 from .models import (
     ActividadEconomica,
+    ConfiguracionIIBBEmpresa,
     EmpresaActividad,
+    EmpresaJurisdiccionIIBB,
     ImportacionCatalogoActividad,
+    JurisdiccionFiscal,
     PerfilFiscalEmpresa,
     Sucursal,
     UsuarioEmpresa,
@@ -43,6 +49,14 @@ from .servicios_actividades import (
     crear_empresa_actividad,
     inactivar_empresa_actividad,
 )
+from .servicios_iibb import (
+    actualizar_configuracion_iibb,
+    actualizar_jurisdiccion_iibb,
+    crear_configuracion_iibb,
+    crear_jurisdiccion_iibb,
+    inactivar_configuracion_iibb,
+    inactivar_jurisdiccion_iibb,
+)
 
 
 PERMISOS_CONSULTA_CONFIGURACION = (
@@ -54,6 +68,9 @@ PERMISOS_CONSULTA_CONFIGURACION = (
     "actividades.ver",
     "actividades.crear",
     "actividades.editar",
+    "iibb.ver",
+    "iibb.crear",
+    "iibb.editar",
     "parametros.ver",
     "parametros.editar",
 )
@@ -74,6 +91,13 @@ PERMISOS_ACTIVIDADES = (
     "actividades.ver",
     "actividades.crear",
     "actividades.editar",
+)
+
+
+PERMISOS_IIBB = (
+    "iibb.ver",
+    "iibb.crear",
+    "iibb.editar",
 )
 
 
@@ -183,6 +207,11 @@ def configuracion_empresa(request):
         empresa,
         PERMISOS_ACTIVIDADES,
     )
+    puede_ver_iibb = usuario_tiene_alguno_de_permisos(
+        request.user,
+        empresa,
+        PERMISOS_IIBB,
+    )
 
     estado_parametros = obtener_estado_parametros_empresa(empresa)
     datos_parametros = {}
@@ -223,6 +252,8 @@ def configuracion_empresa(request):
         ).exists()
     )
 
+    resumen_iibb = _resumen_iibb_empresa(empresa)
+
     usuarios_activos = (
         UsuarioEmpresa.objects.filter(
             empresa=empresa,
@@ -245,6 +276,7 @@ def configuracion_empresa(request):
         and datos_contribuyente_completos
         and resumen_sucursales["completa"]
         and resumen_actividades["completa"]
+        and resumen_iibb["completa"]
         and estado_parametros["completa"]
         and not advertencias_parametros
     )
@@ -270,6 +302,8 @@ def configuracion_empresa(request):
             "catalogo_actividades_disponible": (
                 catalogo_actividades_disponible
             ),
+            "puede_ver_iibb": puede_ver_iibb,
+            "resumen_iibb": resumen_iibb,
             "estado_parametros": estado_parametros,
             "datos_parametros": datos_parametros,
             "advertencias_parametros": advertencias_parametros,
@@ -278,6 +312,9 @@ def configuracion_empresa(request):
                 "sucursales_total": resumen_sucursales["total"],
                 "sucursales_activas": resumen_sucursales["activas"],
                 "actividades_activas": resumen_actividades["activas"],
+                "jurisdicciones_iibb_activas": (
+                    resumen_iibb["jurisdicciones_total"]
+                ),
                 "usuarios_activos": usuarios_activos,
                 "roles_asignados": roles_asignados,
             },
@@ -854,3 +891,433 @@ def catalogo_actividades_buscar(request):
             ]
         }
     )
+
+def _resumen_iibb_empresa(empresa):
+    configuraciones = list(
+        ConfiguracionIIBBEmpresa.objects.filter(
+            empresa=empresa,
+        ).order_by(
+            "-activa",
+            "-creada_en",
+            "-pk",
+        )
+    )
+    configuracion_activa = next(
+        (
+            configuracion
+            for configuracion in configuraciones
+            if configuracion.activa
+        ),
+        None,
+    )
+
+    jurisdicciones_activas = []
+    sede = None
+
+    jurisdicciones_historicas = list(
+        EmpresaJurisdiccionIIBB.objects.filter(
+            configuracion__empresa=empresa,
+            activa=False,
+        )
+        .select_related(
+            "configuracion",
+            "jurisdiccion",
+        )
+        .order_by(
+            "-fecha_baja",
+            "-actualizada_en",
+            "codigo_registrado",
+        )
+    )
+
+    if configuracion_activa is not None:
+        jurisdicciones_activas = list(
+            EmpresaJurisdiccionIIBB.objects.filter(
+                configuracion=configuracion_activa,
+                activa=True,
+            )
+            .select_related("jurisdiccion")
+            .order_by(
+                "-sede",
+                "jurisdiccion__orden",
+                "codigo_registrado",
+            )
+        )
+        sede = next(
+            (
+                relacion
+                for relacion in jurisdicciones_activas
+                if relacion.sede
+            ),
+            None,
+        )
+
+    return {
+        "configuraciones": configuraciones,
+        "configuracion_activa": configuracion_activa,
+        "jurisdicciones_activas": jurisdicciones_activas,
+        "jurisdicciones_historicas": jurisdicciones_historicas,
+        "jurisdicciones_total": len(jurisdicciones_activas),
+        "sede": sede,
+        "completa": bool(
+            configuracion_activa is not None
+            and configuracion_activa.esta_completa
+        ),
+    }
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_alguno_requerido(*PERMISOS_IIBB)
+@require_GET
+def ingresos_brutos(request):
+    empresa = request.empresa_activa
+    resumen = _resumen_iibb_empresa(empresa)
+
+    return render(
+        request,
+        "nucleo/ingresos_brutos.html",
+        {
+            "empresa": empresa,
+            "resumen": resumen,
+            "catalogo_total": JurisdiccionFiscal.objects.filter(
+                activa=True
+            ).count(),
+            "puede_crear": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "iibb.crear",
+            ),
+            "puede_editar": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "iibb.editar",
+            ),
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("iibb.crear")
+def configuracion_iibb_crear(request):
+    empresa = request.empresa_activa
+
+    if ConfiguracionIIBBEmpresa.objects.filter(
+        empresa=empresa,
+        activa=True,
+    ).exists():
+        messages.warning(
+            request,
+            "La empresa ya tiene una configuración de IIBB activa.",
+        )
+        return redirect("nucleo:ingresos_brutos")
+
+    if request.method == "POST":
+        form = ConfiguracionIIBBEmpresaForm(
+            request.POST,
+            empresa=empresa,
+        )
+
+        if form.is_valid():
+            try:
+                configuracion = crear_configuracion_iibb(
+                    empresa=empresa,
+                    regimen=form.cleaned_data["regimen"],
+                    tratamiento_general=(
+                        form.cleaned_data["tratamiento_general"]
+                    ),
+                    numero_inscripcion=(
+                        form.cleaned_data["numero_inscripcion"]
+                    ),
+                    fecha_alta=form.cleaned_data["fecha_alta"],
+                    observaciones=form.cleaned_data["observaciones"],
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    (
+                        "Configuración de Ingresos Brutos creada "
+                        f"como {configuracion.get_regimen_display()}."
+                    ),
+                )
+                return redirect("nucleo:ingresos_brutos")
+    else:
+        form = ConfiguracionIIBBEmpresaForm(
+            empresa=empresa,
+        )
+
+    return render(
+        request,
+        "nucleo/configuracion_iibb_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "configuracion": None,
+            "titulo": "Nueva configuración de Ingresos Brutos",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("iibb.editar")
+def configuracion_iibb_editar(request, configuracion_id):
+    empresa = request.empresa_activa
+    configuracion = get_object_or_404(
+        ConfiguracionIIBBEmpresa,
+        pk=configuracion_id,
+        empresa=empresa,
+        activa=True,
+    )
+
+    if request.method == "POST":
+        form = ConfiguracionIIBBEmpresaForm(
+            request.POST,
+            empresa=empresa,
+            configuracion=configuracion,
+        )
+
+        if form.is_valid():
+            try:
+                configuracion = actualizar_configuracion_iibb(
+                    empresa=empresa,
+                    configuracion=configuracion,
+                    regimen=form.cleaned_data["regimen"],
+                    tratamiento_general=(
+                        form.cleaned_data["tratamiento_general"]
+                    ),
+                    numero_inscripcion=(
+                        form.cleaned_data["numero_inscripcion"]
+                    ),
+                    fecha_alta=form.cleaned_data["fecha_alta"],
+                    observaciones=form.cleaned_data["observaciones"],
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    "Configuración de Ingresos Brutos actualizada.",
+                )
+                return redirect("nucleo:ingresos_brutos")
+    else:
+        form = ConfiguracionIIBBEmpresaForm(
+            empresa=empresa,
+            configuracion=configuracion,
+        )
+
+    return render(
+        request,
+        "nucleo/configuracion_iibb_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "configuracion": configuracion,
+            "titulo": "Editar configuración de Ingresos Brutos",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("iibb.editar")
+@require_POST
+def configuracion_iibb_inactivar(request, configuracion_id):
+    empresa = request.empresa_activa
+    configuracion = get_object_or_404(
+        ConfiguracionIIBBEmpresa,
+        pk=configuracion_id,
+        empresa=empresa,
+    )
+
+    try:
+        inactivar_configuracion_iibb(
+            empresa=empresa,
+            configuracion=configuracion,
+            request=request,
+        )
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+    else:
+        messages.success(
+            request,
+            "Configuración de Ingresos Brutos inactivada.",
+        )
+
+    return redirect("nucleo:ingresos_brutos")
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("iibb.crear")
+def jurisdiccion_iibb_crear(request, configuracion_id):
+    empresa = request.empresa_activa
+    configuracion = get_object_or_404(
+        ConfiguracionIIBBEmpresa,
+        pk=configuracion_id,
+        empresa=empresa,
+        activa=True,
+    )
+
+    if (
+        configuracion.regimen
+        == ConfiguracionIIBBEmpresa.Regimen.NO_INSCRIPTO
+    ):
+        messages.warning(
+            request,
+            "Una empresa no inscripta no admite jurisdicciones.",
+        )
+        return redirect("nucleo:ingresos_brutos")
+
+    if request.method == "POST":
+        form = EmpresaJurisdiccionIIBBCrearForm(
+            request.POST,
+            configuracion=configuracion,
+        )
+
+        if form.is_valid():
+            try:
+                relacion = crear_jurisdiccion_iibb(
+                    empresa=empresa,
+                    configuracion=configuracion,
+                    jurisdiccion=form.cleaned_data["jurisdiccion"],
+                    numero_inscripcion=(
+                        form.cleaned_data["numero_inscripcion"]
+                    ),
+                    sede=form.cleaned_data["sede"],
+                    tratamiento=form.cleaned_data["tratamiento"],
+                    fecha_alta=form.cleaned_data["fecha_alta"],
+                    observaciones=form.cleaned_data["observaciones"],
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    (
+                        f"Jurisdicción {relacion.codigo_registrado} "
+                        "agregada correctamente."
+                    ),
+                )
+                return redirect("nucleo:ingresos_brutos")
+    else:
+        form = EmpresaJurisdiccionIIBBCrearForm(
+            configuracion=configuracion,
+        )
+
+    return render(
+        request,
+        "nucleo/jurisdiccion_iibb_form.html",
+        {
+            "empresa": empresa,
+            "configuracion": configuracion,
+            "relacion": None,
+            "form": form,
+            "titulo": "Agregar jurisdicción de Ingresos Brutos",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("iibb.editar")
+def jurisdiccion_iibb_editar(request, relacion_id):
+    empresa = request.empresa_activa
+    relacion = get_object_or_404(
+        EmpresaJurisdiccionIIBB.objects.select_related(
+            "configuracion",
+            "jurisdiccion",
+        ),
+        pk=relacion_id,
+        configuracion__empresa=empresa,
+        activa=True,
+    )
+    configuracion = relacion.configuracion
+
+    if request.method == "POST":
+        form = EmpresaJurisdiccionIIBBEditarForm(
+            request.POST,
+            configuracion=configuracion,
+            relacion=relacion,
+        )
+
+        if form.is_valid():
+            try:
+                relacion = actualizar_jurisdiccion_iibb(
+                    empresa=empresa,
+                    relacion=relacion,
+                    numero_inscripcion=(
+                        form.cleaned_data["numero_inscripcion"]
+                    ),
+                    sede=form.cleaned_data["sede"],
+                    tratamiento=form.cleaned_data["tratamiento"],
+                    fecha_alta=form.cleaned_data["fecha_alta"],
+                    observaciones=form.cleaned_data["observaciones"],
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    (
+                        f"Jurisdicción {relacion.codigo_registrado} "
+                        "actualizada correctamente."
+                    ),
+                )
+                return redirect("nucleo:ingresos_brutos")
+    else:
+        form = EmpresaJurisdiccionIIBBEditarForm(
+            configuracion=configuracion,
+            relacion=relacion,
+        )
+
+    return render(
+        request,
+        "nucleo/jurisdiccion_iibb_form.html",
+        {
+            "empresa": empresa,
+            "configuracion": configuracion,
+            "relacion": relacion,
+            "form": form,
+            "titulo": "Editar jurisdicción de Ingresos Brutos",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("iibb.editar")
+@require_POST
+def jurisdiccion_iibb_inactivar(request, relacion_id):
+    empresa = request.empresa_activa
+    relacion = get_object_or_404(
+        EmpresaJurisdiccionIIBB,
+        pk=relacion_id,
+        configuracion__empresa=empresa,
+    )
+
+    try:
+        relacion = inactivar_jurisdiccion_iibb(
+            empresa=empresa,
+            relacion=relacion,
+            request=request,
+        )
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+    else:
+        messages.success(
+            request,
+            (
+                f"Jurisdicción {relacion.codigo_registrado} "
+                "inactivada correctamente."
+            ),
+        )
+
+    return redirect("nucleo:ingresos_brutos")

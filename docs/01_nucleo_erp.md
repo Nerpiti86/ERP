@@ -1179,3 +1179,17 @@ entre empresa y catálogo oficial. No se utiliza un campo
 - baja lógica
 - instantánea histórica del catálogo
 - auditoría de cambios
+
+## Actualización acumulada: TAREA 0007
+
+La configuración fiscal empresarial incorpora:
+
+- `JurisdiccionFiscal`
+- `ConfiguracionIIBBEmpresa`
+- `EmpresaJurisdiccionIIBB`
+
+Ingresos Brutos no se representa mediante un texto plano dentro de
+`Empresa`.
+
+El régimen, las jurisdicciones, la sede, las vigencias y el historial se
+administran mediante modelos especializados y servicios transaccionales.

@@ -62,6 +62,51 @@ urlpatterns = [
         views.catalogo_actividades_buscar,
         name="catalogo_actividades_buscar",
     ),
+
+path(
+    "configuracion/ingresos-brutos/",
+    views.ingresos_brutos,
+    name="ingresos_brutos",
+),
+path(
+    "configuracion/ingresos-brutos/nueva/",
+    views.configuracion_iibb_crear,
+    name="configuracion_iibb_crear",
+),
+path(
+    "configuracion/ingresos-brutos/<int:configuracion_id>/editar/",
+    views.configuracion_iibb_editar,
+    name="configuracion_iibb_editar",
+),
+path(
+    "configuracion/ingresos-brutos/<int:configuracion_id>/inactivar/",
+    views.configuracion_iibb_inactivar,
+    name="configuracion_iibb_inactivar",
+),
+path(
+    (
+        "configuracion/ingresos-brutos/<int:configuracion_id>/"
+        "jurisdicciones/nueva/"
+    ),
+    views.jurisdiccion_iibb_crear,
+    name="jurisdiccion_iibb_crear",
+),
+path(
+    (
+        "configuracion/ingresos-brutos/jurisdicciones/"
+        "<int:relacion_id>/editar/"
+    ),
+    views.jurisdiccion_iibb_editar,
+    name="jurisdiccion_iibb_editar",
+),
+path(
+    (
+        "configuracion/ingresos-brutos/jurisdicciones/"
+        "<int:relacion_id>/inactivar/"
+    ),
+    views.jurisdiccion_iibb_inactivar,
+    name="jurisdiccion_iibb_inactivar",
+),
     path(
         "configuracion/parametros/",
         views.parametros_operativos,

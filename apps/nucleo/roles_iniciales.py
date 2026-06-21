@@ -40,6 +40,9 @@ PERMISOS_INICIALES = {
     "actividades.ver": "Consultar actividades económicas.",
     "actividades.crear": "Asignar actividades económicas.",
     "actividades.editar": "Editar o inactivar actividades económicas.",
+    "iibb.ver": "Consultar Ingresos Brutos y jurisdicciones.",
+    "iibb.crear": "Crear configuraciones y jurisdicciones de IIBB.",
+    "iibb.editar": "Editar o inactivar datos de IIBB.",
     "usuarios.ver": "Consultar usuarios y accesos.",
     "usuarios.crear": "Crear usuarios y accesos.",
     "usuarios.editar": "Editar usuarios y accesos.",
@@ -77,6 +80,9 @@ PERMISOS_POR_ROL = {
         "actividades.ver",
         "actividades.crear",
         "actividades.editar",
+        "iibb.ver",
+        "iibb.crear",
+        "iibb.editar",
     ),
     "OPERADOR": (
         "empresas.ver",
@@ -103,6 +109,7 @@ PERMISOS_POR_ROL = {
         "compras.ver",
         "tesoreria.ver",
         "actividades.ver",
+        "iibb.ver",
     ),
     "SOLO_LECTURA": (
         "empresas.ver",
@@ -114,6 +121,7 @@ PERMISOS_POR_ROL = {
         "compras.ver",
         "tesoreria.ver",
         "actividades.ver",
+        "iibb.ver",
     ),
 }
 

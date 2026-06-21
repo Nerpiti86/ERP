@@ -105,6 +105,7 @@ class ConfiguracionEmpresaIntegradaTests(TestCase):
         )
         self.assertContains(response, "Datos del contribuyente")
         self.assertContains(response, "Sucursales")
+        self.assertContains(response, "Ingresos Brutos")
         self.assertContains(response, "Parámetros operativos")
         self.assertContains(response, "Usuarios y accesos")
         self.assertContains(response, self.empresa.razon_social)

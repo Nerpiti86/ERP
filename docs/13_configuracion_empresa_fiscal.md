@@ -832,3 +832,27 @@ Resultado:
 
 La relación física con sucursales no se infiere. Las actividades pertenecen
 a la empresa y las sucursales continúan representando establecimientos.
+
+## 20. Implementación de Ingresos Brutos y jurisdicciones
+
+La TAREA 0007 implementa:
+
+- catálogo `JurisdiccionFiscal`
+- 24 códigos oficiales COMARB del 901 al 924
+- configuraciones históricas de IIBB por empresa
+- régimen local, Convenio Multilateral o no inscripto
+- tratamiento fiscal general
+- números de inscripción
+- fechas de alta y baja
+- jurisdicciones activas e históricas
+- una única jurisdicción sede activa
+- snapshot histórico
+- baja lógica
+- servicios transaccionales
+- auditoría
+- permisos `iibb.*`
+- tarjeta dentro de Configuración de empresa
+
+Las jurisdicciones fiscales permanecen separadas de las sucursales físicas.
+
+No se implementan liquidaciones, alícuotas ni declaraciones juradas.

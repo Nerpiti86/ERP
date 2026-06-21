@@ -4,8 +4,11 @@ from django.db import transaction
 
 from .models import (
     ActividadEconomica,
+    ConfiguracionIIBBEmpresa,
     Empresa,
     EmpresaActividad,
+    EmpresaJurisdiccionIIBB,
+    JurisdiccionFiscal,
     PerfilFiscalEmpresa,
     Sucursal,
 )
@@ -688,3 +691,329 @@ def _validar_vigencias_formulario(form, cleaned_data):
                 "a la vigencia desde."
             ),
         )
+
+class ConfiguracionIIBBEmpresaForm(forms.Form):
+    regimen = forms.ChoiceField(
+        label="Régimen de inscripción",
+        choices=ConfiguracionIIBBEmpresa.Regimen.choices,
+    )
+    tratamiento_general = forms.ChoiceField(
+        label="Tratamiento fiscal general",
+        choices=ConfiguracionIIBBEmpresa.TratamientoGeneral.choices,
+    )
+    numero_inscripcion = forms.CharField(
+        label="Número de inscripción",
+        max_length=50,
+        required=False,
+        help_text=(
+            "Para Convenio Multilateral puede consignarse la CUIT "
+            "o el identificador que figure en la constancia."
+        ),
+    )
+    fecha_alta = forms.DateField(
+        label="Fecha de alta",
+        required=False,
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(self, *args, empresa, configuracion=None, **kwargs):
+        self.empresa = empresa
+        self.configuracion = configuracion
+
+        if (
+            configuracion is not None
+            and configuracion.empresa_id != empresa.pk
+        ):
+            raise ValueError(
+                "La configuración de IIBB no pertenece a la empresa activa."
+            )
+
+        if not args and "data" not in kwargs and configuracion is not None:
+            initial = kwargs.setdefault("initial", {})
+            initial.setdefault("regimen", configuracion.regimen)
+            initial.setdefault(
+                "tratamiento_general",
+                configuracion.tratamiento_general,
+            )
+            initial.setdefault(
+                "numero_inscripcion",
+                configuracion.numero_inscripcion,
+            )
+            initial.setdefault("fecha_alta", configuracion.fecha_alta)
+            initial.setdefault(
+                "observaciones",
+                configuracion.observaciones,
+            )
+
+        super().__init__(*args, **kwargs)
+        _estilizar_formulario_iibb(self)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        regimen = cleaned_data.get("regimen")
+        numero = (cleaned_data.get("numero_inscripcion") or "").strip()
+        fecha_alta = cleaned_data.get("fecha_alta")
+
+        if regimen == ConfiguracionIIBBEmpresa.Regimen.NO_INSCRIPTO:
+            numero = ""
+            fecha_alta = None
+            cleaned_data["numero_inscripcion"] = numero
+            cleaned_data["fecha_alta"] = fecha_alta
+
+            if (
+                self.configuracion is not None
+                and self.configuracion.jurisdicciones.filter(
+                    activa=True
+                ).exists()
+            ):
+                self.add_error(
+                    "regimen",
+                    (
+                        "Inactivá las jurisdicciones antes de marcar "
+                        "la empresa como no inscripta."
+                    ),
+                )
+        elif regimen:
+            if not numero:
+                self.add_error(
+                    "numero_inscripcion",
+                    "El número de inscripción es obligatorio.",
+                )
+            if fecha_alta is None:
+                self.add_error(
+                    "fecha_alta",
+                    "La fecha de alta es obligatoria.",
+                )
+
+        if (
+            regimen == ConfiguracionIIBBEmpresa.Regimen.LOCAL
+            and self.configuracion is not None
+            and self.configuracion.jurisdicciones.filter(
+                activa=True
+            ).count() > 1
+        ):
+            self.add_error(
+                "regimen",
+                (
+                    "El régimen local admite una sola jurisdicción activa. "
+                    "Inactivá las restantes antes de cambiar el régimen."
+                ),
+            )
+
+        cleaned_data["numero_inscripcion"] = numero
+        cleaned_data["observaciones"] = (
+            cleaned_data.get("observaciones") or ""
+        ).strip()
+        return cleaned_data
+
+
+class EmpresaJurisdiccionIIBBCrearForm(forms.Form):
+    jurisdiccion = forms.ModelChoiceField(
+        label="Jurisdicción",
+        queryset=JurisdiccionFiscal.objects.none(),
+        empty_label="Seleccionar jurisdicción",
+    )
+    numero_inscripcion = forms.CharField(
+        label="Número de inscripción o cuenta jurisdiccional",
+        max_length=50,
+        required=False,
+    )
+    sede = forms.BooleanField(
+        label="Jurisdicción sede",
+        required=False,
+        help_text=(
+            "La primera jurisdicción se establece como sede automáticamente."
+        ),
+    )
+    tratamiento = forms.ChoiceField(
+        label="Tratamiento en la jurisdicción",
+        choices=EmpresaJurisdiccionIIBB.Tratamiento.choices,
+    )
+    fecha_alta = forms.DateField(
+        label="Fecha de alta jurisdiccional",
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(self, *args, configuracion, **kwargs):
+        self.configuracion = configuracion
+        super().__init__(*args, **kwargs)
+
+        asignadas = configuracion.jurisdicciones.filter(
+            activa=True
+        ).values_list("jurisdiccion_id", flat=True)
+
+        self.fields["jurisdiccion"].queryset = (
+            JurisdiccionFiscal.objects.filter(activa=True)
+            .exclude(pk__in=asignadas)
+            .order_by("orden", "codigo")
+        )
+
+        if not configuracion.jurisdicciones.filter(activa=True).exists():
+            self.fields["sede"].initial = True
+
+        if (
+            configuracion.regimen
+            == ConfiguracionIIBBEmpresa.Regimen.LOCAL
+        ):
+            self.fields["sede"].initial = True
+            self.fields["sede"].disabled = True
+
+        _estilizar_formulario_iibb(self)
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if not self.configuracion.activa:
+            raise ValidationError(
+                "La configuración de IIBB ya no está activa."
+            )
+
+        if (
+            self.configuracion.regimen
+            == ConfiguracionIIBBEmpresa.Regimen.NO_INSCRIPTO
+        ):
+            raise ValidationError(
+                "Una empresa no inscripta no admite jurisdicciones."
+            )
+
+        if (
+            self.configuracion.regimen
+            == ConfiguracionIIBBEmpresa.Regimen.LOCAL
+            and self.configuracion.jurisdicciones.filter(
+                activa=True
+            ).exists()
+        ):
+            raise ValidationError(
+                "El régimen local admite una sola jurisdicción activa."
+            )
+
+        cleaned_data["numero_inscripcion"] = (
+            cleaned_data.get("numero_inscripcion") or ""
+        ).strip()
+        cleaned_data["observaciones"] = (
+            cleaned_data.get("observaciones") or ""
+        ).strip()
+        return cleaned_data
+
+
+class EmpresaJurisdiccionIIBBEditarForm(forms.Form):
+    numero_inscripcion = forms.CharField(
+        label="Número de inscripción o cuenta jurisdiccional",
+        max_length=50,
+        required=False,
+    )
+    sede = forms.BooleanField(
+        label="Jurisdicción sede",
+        required=False,
+        help_text=(
+            "Para cambiar la sede, editá otra jurisdicción y marcala como sede."
+        ),
+    )
+    tratamiento = forms.ChoiceField(
+        label="Tratamiento en la jurisdicción",
+        choices=EmpresaJurisdiccionIIBB.Tratamiento.choices,
+    )
+    fecha_alta = forms.DateField(
+        label="Fecha de alta jurisdiccional",
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(
+        self,
+        *args,
+        configuracion,
+        relacion,
+        **kwargs,
+    ):
+        self.configuracion = configuracion
+        self.relacion = relacion
+
+        if relacion.configuracion_id != configuracion.pk:
+            raise ValueError(
+                "La jurisdicción no pertenece a la configuración activa."
+            )
+
+        if not relacion.activa:
+            raise ValueError(
+                "Una jurisdicción histórica inactiva no puede editarse."
+            )
+
+        if not args and "data" not in kwargs:
+            initial = kwargs.setdefault("initial", {})
+            initial.setdefault(
+                "numero_inscripcion",
+                relacion.numero_inscripcion,
+            )
+            initial.setdefault("sede", relacion.sede)
+            initial.setdefault("tratamiento", relacion.tratamiento)
+            initial.setdefault("fecha_alta", relacion.fecha_alta)
+            initial.setdefault("observaciones", relacion.observaciones)
+
+        super().__init__(*args, **kwargs)
+
+        if (
+            configuracion.regimen
+            == ConfiguracionIIBBEmpresa.Regimen.LOCAL
+        ):
+            self.fields["sede"].initial = True
+            self.fields["sede"].disabled = True
+
+        _estilizar_formulario_iibb(self)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        sede = bool(cleaned_data.get("sede"))
+
+        if self.relacion.sede and not sede:
+            self.add_error(
+                "sede",
+                (
+                    "No podés quitar la sede directamente. "
+                    "Marcá otra jurisdicción como sede."
+                ),
+            )
+
+        cleaned_data["numero_inscripcion"] = (
+            cleaned_data.get("numero_inscripcion") or ""
+        ).strip()
+        cleaned_data["observaciones"] = (
+            cleaned_data.get("observaciones") or ""
+        ).strip()
+        return cleaned_data
+
+
+def _estilizar_formulario_iibb(form):
+    for campo in form.fields.values():
+        if isinstance(campo.widget, forms.CheckboxInput):
+            campo.widget.attrs["class"] = "form-check-input"
+        elif isinstance(campo.widget, forms.Select):
+            campo.widget.attrs["class"] = "form-select"
+        else:
+            campo.widget.attrs["class"] = "form-control"

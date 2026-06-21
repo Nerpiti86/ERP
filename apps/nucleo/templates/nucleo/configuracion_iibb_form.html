@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | {{ titulo }}{% endblock %}
+
+{% block content %}
+  <section class="mx-auto" style="max-width: 860px;">
+    <div class="mb-4">
+      <div class="text-uppercase text-secondary small fw-semibold mb-1">
+        Configuración fiscal · {{ empresa.razon_social }}
+      </div>
+      <h1 class="h3 mb-1">{{ titulo }}</h1>
+      <p class="text-secondary mb-0">
+        El régimen y la inscripción describen la situación vigente de la
+        empresa frente al impuesto.
+      </p>
+    </div>
+
+    <form method="post" class="card shadow-sm">
+      {% csrf_token %}
+      <div class="card-body">
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="row g-3">
+          {% for field in form %}
+            <div class="{% if field.name == 'observaciones' %}col-12{% else %}col-12 col-md-6{% endif %}">
+              <label class="form-label" for="{{ field.id_for_label }}">
+                {{ field.label }}
+              </label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="alert alert-light border mt-4 mb-0">
+          <strong>Importante:</strong>
+          los cálculos, alícuotas y declaraciones juradas no forman parte de
+          esta etapa. Esta pantalla conserva únicamente la configuración
+          registral de la empresa.
+        </div>
+      </div>
+
+      <div class="card-footer bg-white d-flex justify-content-between gap-2">
+        <a
+          class="btn btn-outline-secondary"
+          href="{% url 'nucleo:ingresos_brutos' %}"
+        >
+          Cancelar
+        </a>
+        <button class="btn btn-dark" type="submit">
+          Guardar configuración
+        </button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

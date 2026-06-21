@@ -6,7 +6,10 @@ from .models import (
     RolFuncional,
     PermisoFuncional,
     ActividadEconomica,
+    ConfiguracionIIBBEmpresa,
     EmpresaActividad,
+    EmpresaJurisdiccionIIBB,
+    JurisdiccionFiscal,
     Auditoria,
     ImportacionCatalogoActividad,
     DocumentoAdjunto,
@@ -157,6 +160,131 @@ class EmpresaActividadAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+
+@admin.register(JurisdiccionFiscal)
+class JurisdiccionFiscalAdmin(admin.ModelAdmin):
+    list_display = (
+        "codigo",
+        "nombre",
+        "activa",
+        "orden",
+    )
+    list_filter = ("activa",)
+    search_fields = (
+        "codigo",
+        "nombre",
+    )
+    readonly_fields = (
+        "codigo",
+        "nombre",
+        "activa",
+        "orden",
+        "fuente_url",
+        "creada_en",
+        "actualizada_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ConfiguracionIIBBEmpresa)
+class ConfiguracionIIBBEmpresaAdmin(admin.ModelAdmin):
+    list_display = (
+        "empresa",
+        "regimen",
+        "tratamiento_general",
+        "numero_inscripcion",
+        "activa",
+        "fecha_alta",
+        "fecha_baja",
+    )
+    list_filter = (
+        "regimen",
+        "tratamiento_general",
+        "activa",
+    )
+    search_fields = (
+        "empresa__razon_social",
+        "empresa__cuit",
+        "numero_inscripcion",
+    )
+    readonly_fields = (
+        "empresa",
+        "regimen",
+        "tratamiento_general",
+        "numero_inscripcion",
+        "fecha_alta",
+        "fecha_baja",
+        "activa",
+        "observaciones",
+        "creada_en",
+        "actualizada_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(EmpresaJurisdiccionIIBB)
+class EmpresaJurisdiccionIIBBAdmin(admin.ModelAdmin):
+    list_display = (
+        "configuracion",
+        "codigo_registrado",
+        "nombre_registrado",
+        "sede",
+        "activa",
+        "fecha_alta",
+        "fecha_baja",
+    )
+    list_filter = (
+        "activa",
+        "sede",
+        "tratamiento",
+    )
+    search_fields = (
+        "configuracion__empresa__razon_social",
+        "configuracion__empresa__cuit",
+        "codigo_registrado",
+        "nombre_registrado",
+    )
+    readonly_fields = (
+        "configuracion",
+        "jurisdiccion",
+        "numero_inscripcion",
+        "sede",
+        "tratamiento",
+        "fecha_alta",
+        "fecha_baja",
+        "activa",
+        "observaciones",
+        "codigo_registrado",
+        "nombre_registrado",
+        "fuente_url_registrada",
+        "creada_en",
+        "actualizada_en",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 @admin.register(Empresa)
 class EmpresaAdmin(admin.ModelAdmin):

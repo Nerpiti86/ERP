@@ -386,3 +386,30 @@ El estándar completo queda documentado en:
 ```text
 docs/17_lecciones_aprendidas_y_estandar_implementacion.md
 ```
+
+## 16. Actualización posterior: TAREA 0007
+
+Se implementa la configuración de Ingresos Brutos y jurisdicciones fiscales.
+
+Resultado:
+
+- catálogo oficial de 24 jurisdicciones COMARB
+- régimen local, Convenio Multilateral y no inscripto
+- tratamiento fiscal general
+- números de inscripción
+- vigencias e historial
+- jurisdicción sede
+- restricciones PostgreSQL
+- servicios transaccionales
+- auditoría
+- permisos `iibb.*`
+- integración en Configuración de empresa
+- separación entre jurisdicción fiscal y sucursal física
+
+Suite verificada al cierre: `277` pruebas.
+
+Próxima tarea funcional sugerida:
+
+```text
+TAREA 0008 — Agentes de retención y percepción
+```

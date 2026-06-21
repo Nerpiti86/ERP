@@ -492,3 +492,23 @@ Matriz inicial:
 
 La seguridad se valida en backend. Ocultar botones no reemplaza los
 decoradores de permisos.
+
+## 14. Ingresos Brutos y jurisdicciones
+
+La TAREA 0007 incorpora permisos funcionales específicos:
+
+```text
+iibb.ver
+iibb.crear
+iibb.editar
+```
+
+Matriz inicial:
+
+- `ADMIN`: ver, crear y editar
+- `CONTADOR`: ver, crear y editar
+- `AUDITOR`: ver
+- `SOLO_LECTURA`: ver
+- `OPERADOR`: sin acceso
+
+La seguridad se aplica en backend y por empresa activa.
