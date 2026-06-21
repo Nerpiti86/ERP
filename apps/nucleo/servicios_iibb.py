@@ -7,6 +7,7 @@ from .models import (
     ConfiguracionIIBBEmpresa,
     EmpresaJurisdiccionIIBB,
     JurisdiccionFiscal,
+    PuntoVenta,
 )
 
 
@@ -317,6 +318,20 @@ def inactivar_configuracion_iibb(
     if not configuracion.activa:
         return configuracion
 
+    if PuntoVenta.objects.filter(
+        empresa=empresa,
+        activo=True,
+        jurisdiccion_iibb_predeterminada__configuracion=configuracion,
+        jurisdiccion_iibb_predeterminada__activa=True,
+    ).exists():
+        raise ValidationError(
+            (
+                "La configuración de IIBB está utilizada por puntos de "
+                "venta activos. Reasigná o quitá esas jurisdicciones "
+                "predeterminadas antes de inactivarla."
+            )
+        )
+
     relaciones = list(
         EmpresaJurisdiccionIIBB.objects.select_for_update()
         .filter(
@@ -591,6 +606,19 @@ def inactivar_jurisdiccion_iibb(
 
     if not relacion.activa:
         return relacion
+
+    if PuntoVenta.objects.filter(
+        empresa=empresa,
+        activo=True,
+        jurisdiccion_iibb_predeterminada=relacion,
+    ).exists():
+        raise ValidationError(
+            (
+                "La jurisdicción está configurada como predeterminada "
+                "en puntos de venta activos. Reasignala o quitá esa "
+                "configuración antes de inactivarla."
+            )
+        )
 
     configuracion = relacion.configuracion
     era_sede = relacion.sede

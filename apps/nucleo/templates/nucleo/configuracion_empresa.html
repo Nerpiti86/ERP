@@ -237,6 +237,94 @@
       </article>
     </div>
 
+
+<div class="col-12 col-xl-6">
+  <article class="card shadow-sm h-100">
+    <div
+      class="card-header bg-white d-flex justify-content-between
+             align-items-center gap-3"
+    >
+      <h2 class="h5 mb-0">Puntos de venta</h2>
+      {% if resumen_puntos_venta.completa %}
+        <span class="badge text-bg-success">Completa</span>
+      {% else %}
+        <span class="badge text-bg-warning">Requiere completar</span>
+      {% endif %}
+    </div>
+
+    <div class="card-body">
+      {% if puede_ver_puntos_venta %}
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge text-bg-light border">
+            {{ resumen_puntos_venta.activos }} activos
+          </span>
+          <span class="badge text-bg-light border">
+            {{ resumen_puntos_venta.sucursales_con_puntos }}
+            de {{ resumen_puntos_venta.sucursales_activas }}
+            sucursales con puntos
+          </span>
+          {% if resumen_puntos_venta.bloqueados %}
+            <span class="badge text-bg-danger">
+              {{ resumen_puntos_venta.bloqueados }} bloqueados
+            </span>
+          {% endif %}
+        </div>
+
+        {% if puntos_venta %}
+          <div class="list-group list-group-flush">
+            {% for punto in puntos_venta|slice:":4" %}
+              <div class="list-group-item px-0">
+                <div class="d-flex justify-content-between gap-3">
+                  <div>
+                    <div class="fw-semibold">
+                      {{ punto.numero_formateado }} ·
+                      {{ punto.sucursal.codigo }}
+                    </div>
+                    <div class="text-secondary small">
+                      {{ punto.get_sistema_emision_display }}
+                    </div>
+                  </div>
+                  {% if punto.activo %}
+                    <span class="badge text-bg-success">Activo</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Histórico</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-secondary">
+            La empresa todavía no tiene puntos de venta registrados.
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="text-secondary">
+          No tenés permiso para consultar los puntos de venta.
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card-footer bg-white border-0 pt-0">
+      {% if puede_ver_puntos_venta %}
+        <a
+          class="btn btn-dark"
+          href="{% url 'nucleo:puntos_venta' %}"
+        >
+          Administrar puntos de venta
+        </a>
+      {% else %}
+        <span
+          class="btn btn-outline-secondary disabled"
+          aria-disabled="true"
+        >
+          Sin permiso para consultar
+        </span>
+      {% endif %}
+    </div>
+  </article>
+</div>
+
     <div class="col-12 col-xl-6">
       <article class="card shadow-sm h-100">
         <div
@@ -427,13 +515,6 @@
               </dt>
               <dd class="col-sm-6">
                 {{ datos_parametros.moneda_funcional }}
-              </dd>
-
-              <dt class="col-sm-6 text-secondary fw-normal">
-                Punto de venta predeterminado
-              </dt>
-              <dd class="col-sm-6">
-                {{ datos_parametros.punto_venta_default }}
               </dd>
 
               <dt class="col-sm-6 text-secondary fw-normal">

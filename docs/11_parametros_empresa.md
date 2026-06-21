@@ -12,12 +12,12 @@ El Django Admin conserva el formulario técnico como herramienta avanzada.
 
 Se implementan:
 
-- definición versionada de ocho parámetros estándar
+- definición versionada de siete parámetros estándar
 - inicialización manual e idempotente por empresa activa
 - reactivación de parámetros estándar inactivos sin modificar su valor
 - preservación de valores existentes
 - formulario funcional para editar la configuración
-- validación de moneda, punto de venta y modo de numeración
+- validación de moneda y modo de numeración
 - conversión de casillas booleanas a valores internos `si` y `no`
 - acceso desde la navegación del ERP
 - aislamiento estricto por empresa activa
@@ -47,7 +47,6 @@ La inicialización se ejecuta mediante POST:
 | Usar proyectos | `usa_proyectos` | `no` | Booleano |
 | Requerir aprobación de pagos | `requiere_aprobacion_pagos` | `no` | Booleano |
 | Requerir aprobación de compras | `requiere_aprobacion_compras` | `no` | Booleano |
-| Punto de venta predeterminado | `punto_venta_default` | `0001` | Texto |
 | Numeración de comprobantes internos | `modo_numeracion_comprobantes` | `automatico` | Texto |
 
 La numeración de comprobantes internos no configura todavía facturación electrónica ARCA/AFIP.
@@ -87,7 +86,7 @@ El usuario no edita directamente:
 - descripción técnica
 - estado activo
 
-Al guardar, el servicio normaliza y valida los ocho registros estándar.
+Al guardar, el servicio normaliza y valida los siete registros estándar.
 
 ## 7. Seguridad funcional
 
@@ -121,7 +120,7 @@ Estado real posterior a TAREA 47:
 
 ```text
 Empresa: ESREQUIS LAURA
-Parámetros estándar existentes: 8
+Parámetros estándar vigentes: 7
 Usuario Laura: rol OPERADOR activo
 ```
 
@@ -146,3 +145,22 @@ El alcance acumulado todavía no implementa:
 - configuración por sucursal
 - parámetros globales
 - edición de parámetros personalizados
+
+
+## Separación de puntos de venta
+
+Desde la TAREA 0008, `punto_venta_default` deja de integrar la definición de
+parámetros estándar.
+
+Motivo:
+
+- un punto de venta debe asociarse a una sucursal
+- puede haber varios puntos por sucursal
+- debe conservar sistema de emisión, vigencia y estado
+- no corresponde crear automáticamente el valor `0001`
+
+Los registros anteriores de `ParametroSistema` no se eliminan. La pantalla de
+Puntos de venta puede utilizar un valor anterior válido como sugerencia de
+carga manual, sin convertirlo automáticamente.
+
+La configuración estándar queda compuesta por siete parámetros.

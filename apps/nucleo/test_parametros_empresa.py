@@ -33,7 +33,6 @@ class ParametrosEmpresaServiceTests(TestCase):
     def datos_validos(self):
         return {
             "moneda_funcional": "USD",
-            "punto_venta_default": "0007",
             "modo_numeracion_comprobantes": "manual",
             "permite_stock_negativo": True,
             "usa_centros_costo": False,
@@ -42,15 +41,15 @@ class ParametrosEmpresaServiceTests(TestCase):
             "requiere_aprobacion_pagos": False,
         }
 
-    def test_inicializacion_crea_ocho_parametros_predeterminados(self):
+    def test_inicializacion_crea_siete_parametros_predeterminados(self):
         resultado = inicializar_parametros_empresa(self.empresa)
 
-        self.assertEqual(len(resultado["creados"]), 8)
+        self.assertEqual(len(resultado["creados"]), 7)
         self.assertEqual(resultado["reactivados"], ())
         self.assertEqual(resultado["existentes"], ())
         self.assertEqual(
             ParametroSistema.objects.filter(empresa=self.empresa).count(),
-            8,
+            7,
         )
 
         valores = dict(
@@ -59,7 +58,6 @@ class ParametrosEmpresaServiceTests(TestCase):
             ).values_list("clave", "valor")
         )
         self.assertEqual(valores["moneda_funcional"], "ARS")
-        self.assertEqual(valores["punto_venta_default"], "0001")
         self.assertEqual(
             valores["modo_numeracion_comprobantes"],
             "automatico",
@@ -73,10 +71,10 @@ class ParametrosEmpresaServiceTests(TestCase):
 
         self.assertEqual(resultado["creados"], ())
         self.assertEqual(resultado["reactivados"], ())
-        self.assertEqual(len(resultado["existentes"]), 8)
+        self.assertEqual(len(resultado["existentes"]), 7)
         self.assertEqual(
             ParametroSistema.objects.filter(empresa=self.empresa).count(),
-            8,
+            7,
         )
 
     def test_inicializacion_preserva_valor_existente(self):
@@ -128,8 +126,8 @@ class ParametrosEmpresaServiceTests(TestCase):
         ParametroSistema.objects.create(
             ambito=ParametroSistema.Ambito.EMPRESA,
             empresa=self.empresa,
-            clave="punto_venta_default",
-            valor="0001",
+            clave="modo_numeracion_comprobantes",
+            valor="automatico",
             tipo_valor=ParametroSistema.TipoValor.TEXTO,
             activo=False,
         )
@@ -138,7 +136,7 @@ class ParametrosEmpresaServiceTests(TestCase):
 
         self.assertFalse(estado["completa"])
         self.assertEqual(estado["configurados"], 1)
-        self.assertEqual(len(estado["faltantes"]), 6)
+        self.assertEqual(len(estado["faltantes"]), 5)
         self.assertEqual(len(estado["inactivos"]), 1)
 
     def test_lectura_convierte_booleanos_para_formulario(self):
@@ -150,7 +148,6 @@ class ParametrosEmpresaServiceTests(TestCase):
 
         self.assertEqual(advertencias, ())
         self.assertEqual(datos["moneda_funcional"], "ARS")
-        self.assertEqual(datos["punto_venta_default"], "0001")
         self.assertFalse(datos["permite_stock_negativo"])
         self.assertTrue(datos["usa_centros_costo"])
 
@@ -160,7 +157,7 @@ class ParametrosEmpresaServiceTests(TestCase):
             self.datos_validos(),
         )
 
-        self.assertEqual(len(resultado["creados"]), 8)
+        self.assertEqual(len(resultado["creados"]), 7)
         self.assertEqual(resultado["actualizados"], ())
         self.assertTrue(
             obtener_estado_parametros_empresa(self.empresa)["completa"]
@@ -172,7 +169,6 @@ class ParametrosEmpresaServiceTests(TestCase):
             ).values_list("clave", "valor")
         )
         self.assertEqual(valores["moneda_funcional"], "USD")
-        self.assertEqual(valores["punto_venta_default"], "0007")
         self.assertEqual(
             valores["modo_numeracion_comprobantes"],
             "manual",
@@ -206,11 +202,34 @@ class ParametrosEmpresaServiceTests(TestCase):
         )
 
 
+    def test_configuracion_estandar_preserva_parametro_legacy(self):
+        legacy = ParametroSistema.objects.create(
+            ambito=ParametroSistema.Ambito.EMPRESA,
+            empresa=self.empresa,
+            clave="punto_venta_default",
+            valor="0001",
+            tipo_valor=ParametroSistema.TipoValor.TEXTO,
+        )
+
+        inicializar_parametros_empresa(self.empresa)
+        guardar_configuracion_empresa(
+            self.empresa,
+            self.datos_validos(),
+        )
+
+        legacy.refresh_from_db()
+        self.assertEqual(legacy.valor, "0001")
+        self.assertTrue(legacy.activo)
+        self.assertNotIn(
+            "punto_venta_default",
+            CLAVES_PARAMETROS_EMPRESA,
+        )
+
+
 class ConfiguracionEmpresaFormTests(TestCase):
     def datos_validos(self):
         return {
             "moneda_funcional": "ars",
-            "punto_venta_default": "0001",
             "modo_numeracion_comprobantes": "automatico",
             "permite_stock_negativo": "",
             "usa_centros_costo": "on",
@@ -235,15 +254,6 @@ class ConfiguracionEmpresaFormTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn("moneda_funcional", form.errors)
-
-    def test_formulario_rechaza_punto_venta_invalido(self):
-        datos = self.datos_validos()
-        datos["punto_venta_default"] = "1"
-
-        form = ConfiguracionEmpresaForm(datos)
-
-        self.assertFalse(form.is_valid())
-        self.assertIn("punto_venta_default", form.errors)
 
     def test_formulario_rechaza_modo_desconocido(self):
         datos = self.datos_validos()
@@ -281,7 +291,6 @@ class ConfiguracionEmpresaViewTests(TestCase):
     def datos_post(self):
         return {
             "moneda_funcional": "USD",
-            "punto_venta_default": "0007",
             "modo_numeracion_comprobantes": "manual",
             "permite_stock_negativo": "on",
             "usa_centros_costo": "",
@@ -346,7 +355,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Configuración incompleta")
-        self.assertContains(response, "0 de 8 parámetros activos")
+        self.assertContains(response, "0 de 7 parámetros activos")
         self.assertContains(response, "Inicializar configuración")
         self.assertContains(response, "Valores predeterminados propuestos")
 
@@ -363,7 +372,7 @@ class ConfiguracionEmpresaViewTests(TestCase):
             ParametroSistema.objects.filter(
                 empresa=self.empresa,
             ).count(),
-            8,
+            7,
         )
 
     def test_empresa_completa_muestra_formulario_amigable(self):
@@ -399,7 +408,6 @@ class ConfiguracionEmpresaViewTests(TestCase):
             ).values_list("clave", "valor")
         )
         self.assertEqual(valores["moneda_funcional"], "USD")
-        self.assertEqual(valores["punto_venta_default"], "0007")
         self.assertEqual(
             valores["modo_numeracion_comprobantes"],
             "manual",

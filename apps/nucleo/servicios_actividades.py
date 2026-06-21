@@ -6,6 +6,7 @@ from .models import (
     ActividadEconomica,
     Auditoria,
     EmpresaActividad,
+    PuntoVenta,
 )
 
 
@@ -283,6 +284,18 @@ def inactivar_empresa_actividad(
 
     if not relacion.activa:
         return relacion
+
+    if PuntoVenta.objects.filter(
+        actividad_predeterminada=relacion,
+        activo=True,
+    ).exists():
+        raise ValidationError(
+            (
+                "La actividad está configurada como predeterminada "
+                "en puntos de venta activos. Reasignala o quitá esa "
+                "configuración antes de inactivarla."
+            )
+        )
 
     datos_anteriores = datos_empresa_actividad(relacion)
     fecha_fin = timezone.localdate()

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | {{ titulo }}{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-start">
+      <div>
+        <p class="text-uppercase text-secondary small fw-semibold mb-1">
+          Configuración de empresa · Puntos de venta
+        </p>
+        <h1 class="h3 mb-1">{{ titulo }}</h1>
+        <p class="text-secondary mb-0">
+          Empresa activa:
+          <strong>{{ empresa.razon_social }}</strong>
+          · CUIT {{ empresa.cuit }}
+        </p>
+      </div>
+      <a
+        class="btn btn-outline-secondary btn-sm"
+        href="{% url 'nucleo:puntos_venta' %}"
+      >
+        Volver al listado
+      </a>
+    </div>
+  </section>
+
+  {% if numero_legacy and not punto_venta %}
+    <div class="alert alert-warning">
+      Se propone el valor histórico
+      <strong>{{ numero_legacy|stringformat:"05d" }}</strong>.
+      Confirmá la sucursal y el sistema de emisión antes de guardar.
+    </div>
+  {% endif %}
+
+  {% if punto_venta %}
+    <section class="alert alert-light border shadow-sm">
+      <div class="fw-semibold">
+        Punto de venta {{ punto_venta.numero_formateado }}
+      </div>
+      <div class="text-secondary">
+        El número y la empresa son inmutables. Para dejar de utilizarlo,
+        aplicá una baja lógica desde el listado.
+      </div>
+    </section>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Identificación y emisión</h2>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for campo in form %}
+            {% if campo.name == "numero" or campo.name == "sucursal" or campo.name == "nombre_fantasia" or campo.name == "sistema_emision" or campo.name == "descripcion_sistema_arca" or campo.name == "fecha_alta" %}
+              <div class="col-12 {% if campo.name == 'descripcion_sistema_arca' %}col-lg-12{% else %}col-lg-6{% endif %}">
+                <label class="form-label" for="{{ campo.id_for_label }}">
+                  {{ campo.label }}
+                </label>
+                {{ campo }}
+                {% if campo.help_text %}
+                  <div class="form-text">{{ campo.help_text }}</div>
+                {% endif %}
+                {% for error in campo.errors %}
+                  <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Valores predeterminados</h2>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <label class="form-label" for="{{ form.actividad_predeterminada.id_for_label }}">
+              {{ form.actividad_predeterminada.label }}
+            </label>
+            {{ form.actividad_predeterminada }}
+            {% for error in form.actividad_predeterminada.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-12 col-lg-6">
+            <label class="form-label" for="{{ form.jurisdiccion_iibb_predeterminada.id_for_label }}">
+              {{ form.jurisdiccion_iibb_predeterminada.label }}
+            </label>
+            {{ form.jurisdiccion_iibb_predeterminada }}
+            {% for error in form.jurisdiccion_iibb_predeterminada.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="form-check border rounded p-3 ps-5 h-100">
+              {{ form.predeterminado }}
+              <label class="form-check-label fw-semibold" for="{{ form.predeterminado.id_for_label }}">
+                {{ form.predeterminado.label }}
+              </label>
+              {% for error in form.predeterminado.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="form-check border rounded p-3 ps-5 h-100">
+              {{ form.bloqueado }}
+              <label class="form-check-label fw-semibold" for="{{ form.bloqueado.id_for_label }}">
+                {{ form.bloqueado.label }}
+              </label>
+              {% for error in form.bloqueado.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Observaciones</h2>
+      </div>
+      <div class="card-body">
+        <label class="form-label" for="{{ form.observaciones.id_for_label }}">
+          {{ form.observaciones.label }}
+        </label>
+        {{ form.observaciones }}
+        {% for error in form.observaciones.errors %}
+          <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="d-flex justify-content-end gap-2">
+      <a
+        class="btn btn-outline-secondary"
+        href="{% url 'nucleo:puntos_venta' %}"
+      >
+        Cancelar
+      </a>
+      <button class="btn btn-dark" type="submit">
+        Guardar punto de venta
+      </button>
+    </div>
+  </form>
+{% endblock %}

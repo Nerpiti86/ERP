@@ -512,3 +512,25 @@ Matriz inicial:
 - `OPERADOR`: sin acceso
 
 La seguridad se aplica en backend y por empresa activa.
+
+
+## Puntos de venta por sucursal
+
+La TAREA 0008 incorpora permisos funcionales específicos:
+
+```text
+puntos_venta.ver
+puntos_venta.crear
+puntos_venta.editar
+```
+
+Matriz inicial:
+
+- `ADMIN`: ver, crear y editar
+- `CONTADOR`: ver, crear y editar
+- `AUDITOR`: ver
+- `SOLO_LECTURA`: ver
+- `OPERADOR`: sin acceso
+
+La seguridad se valida en backend y por empresa activa. La sucursal de cada
+punto también debe pertenecer a la empresa activa.

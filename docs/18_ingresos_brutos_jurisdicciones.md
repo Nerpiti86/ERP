@@ -253,4 +253,7 @@ La implementación incorpora pruebas de:
 - vistas
 - Django Admin de solo lectura
 
-Suite completa verificada al cierre: `277` pruebas.
+Suite completa verificada al cierre: `237` pruebas.
+
+El recuento fue confirmado nuevamente al inicio de la TAREA 0008 sobre el
+commit de cierre de la TAREA 0007.

@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}ERP | Puntos de venta{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-start">
+      <div>
+        <p class="text-uppercase text-secondary small fw-semibold mb-1">
+          Configuración de empresa · Facturación
+        </p>
+        <h1 class="h3 mb-1">Puntos de venta</h1>
+        <p class="text-secondary mb-0">
+          Empresa activa:
+          <strong>{{ empresa.razon_social }}</strong>
+          · CUIT {{ empresa.cuit }}
+        </p>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        {% if resumen.completa %}
+          <span class="badge text-bg-success">Configuración completa</span>
+        {% else %}
+          <span class="badge text-bg-warning">Requiere completar</span>
+        {% endif %}
+        <a
+          class="btn btn-outline-secondary btn-sm"
+          href="{% url 'nucleo:configuracion_empresa' %}"
+        >
+          Volver a configuración
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {% if numero_legacy %}
+    <section class="alert alert-warning shadow-sm">
+      <div class="fw-semibold">Valor anterior detectado</div>
+      <p class="mb-0">
+        El parámetro histórico proponía el punto de venta
+        <strong>{{ numero_legacy|stringformat:"05d" }}</strong>.
+        El dato se conserva, pero no se convirtió automáticamente porque
+        todavía debe asociarse a una sucursal y a un sistema de emisión.
+      </p>
+    </section>
+  {% endif %}
+
+  {% if not sucursales_activas %}
+    <section class="alert alert-warning shadow-sm">
+      La empresa necesita al menos una sucursal activa antes de registrar
+      puntos de venta.
+    </section>
+  {% endif %}
+
+  <section class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-secondary small text-uppercase fw-semibold">
+            Activos
+          </div>
+          <div class="fs-3 fw-semibold">{{ resumen.activos }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-secondary small text-uppercase fw-semibold">
+            Sucursales
+          </div>
+          <div class="fs-3 fw-semibold">
+            {{ resumen.sucursales_con_puntos }}
+            <span class="fs-6 text-secondary">
+              de {{ resumen.sucursales_activas }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-secondary small text-uppercase fw-semibold">
+            Bloqueados
+          </div>
+          <div class="fs-3 fw-semibold">{{ resumen.bloqueados }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-secondary small text-uppercase fw-semibold">
+            Históricos
+          </div>
+          <div class="fs-3 fw-semibold">{{ resumen.historicos }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card shadow-sm">
+    <div class="card-header bg-white d-flex flex-column flex-sm-row justify-content-between gap-3 align-items-sm-center">
+      <div>
+        <h2 class="h5 mb-1">Puntos registrados</h2>
+        <div class="text-secondary small">
+          El número es único por empresa y no se reutiliza después de una baja.
+        </div>
+      </div>
+      {% if puede_crear and sucursales_activas %}
+        <a
+          class="btn btn-dark"
+          href="{% url 'nucleo:punto_venta_crear' %}"
+        >
+          Nuevo punto de venta
+        </a>
+      {% endif %}
+    </div>
+
+    {% if puntos_venta %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Punto de venta</th>
+              <th>Sucursal</th>
+              <th>Sistema</th>
+              <th>Configuración</th>
+              <th>Estado</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for punto in puntos_venta %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ punto.numero_formateado }}</div>
+                  <div class="text-secondary small">
+                    {{ punto.nombre_fantasia|default:"Sin nombre de fantasía" }}
+                  </div>
+                </td>
+                <td>
+                  <div>{{ punto.sucursal.codigo }} · {{ punto.sucursal.nombre }}</div>
+                  <div class="text-secondary small">
+                    {{ punto.sucursal.domicilio_formateado }}
+                  </div>
+                </td>
+                <td>
+                  <div>{{ punto.get_sistema_emision_display }}</div>
+                  {% if punto.descripcion_sistema_arca %}
+                    <div class="text-secondary small">
+                      {{ punto.descripcion_sistema_arca }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if punto.predeterminado %}
+                    <span class="badge text-bg-dark">Sucursal</span>
+                  {% endif %}
+                  {% if punto.actividad_predeterminada %}
+                    <div class="small mt-1">
+                      Actividad:
+                      {{ punto.actividad_predeterminada.codigo_registrado }}
+                    </div>
+                  {% endif %}
+                  {% if punto.jurisdiccion_iibb_predeterminada %}
+                    <div class="small">
+                      IIBB:
+                      {{ punto.jurisdiccion_iibb_predeterminada.codigo_registrado }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if punto.activo %}
+                    <span class="badge text-bg-success">Activo</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Inactivo</span>
+                  {% endif %}
+                  {% if punto.bloqueado %}
+                    <span class="badge text-bg-danger">Bloqueado</span>
+                  {% endif %}
+                  {% if punto.fecha_baja %}
+                    <div class="text-secondary small mt-1">
+                      Baja {{ punto.fecha_baja|date:"d/m/Y" }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if punto.activo and puede_editar %}
+                    <div class="d-flex justify-content-end gap-2">
+                      <a
+                        class="btn btn-outline-secondary btn-sm"
+                        href="{% url 'nucleo:punto_venta_editar' punto.pk %}"
+                      >
+                        Editar
+                      </a>
+                      <form
+                        method="post"
+                        action="{% url 'nucleo:punto_venta_inactivar' punto.pk %}"
+                      >
+                        {% csrf_token %}
+                        <button
+                          class="btn btn-outline-danger btn-sm"
+                          type="submit"
+                        >
+                          Inactivar
+                        </button>
+                      </form>
+                    </div>
+                  {% elif not punto.activo %}
+                    <span class="text-secondary small">Histórico</span>
+                  {% else %}
+                    <span class="text-secondary small">Solo lectura</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="card-body text-secondary">
+        La empresa todavía no tiene puntos de venta registrados.
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

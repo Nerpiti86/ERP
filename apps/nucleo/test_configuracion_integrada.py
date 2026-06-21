@@ -106,6 +106,7 @@ class ConfiguracionEmpresaIntegradaTests(TestCase):
         self.assertContains(response, "Datos del contribuyente")
         self.assertContains(response, "Sucursales")
         self.assertContains(response, "Ingresos Brutos")
+        self.assertContains(response, "Puntos de venta")
         self.assertContains(response, "Parámetros operativos")
         self.assertContains(response, "Usuarios y accesos")
         self.assertContains(response, self.empresa.razon_social)
@@ -121,11 +122,11 @@ class ConfiguracionEmpresaIntegradaTests(TestCase):
         )
         self.assertEqual(
             response.context["estado_parametros"]["configurados"],
-            8,
+            7,
         )
         self.assertEqual(
             response.context["estado_parametros"]["total"],
-            8,
+            7,
         )
         self.assertTrue(
             response.context["estado_parametros"]["completa"]

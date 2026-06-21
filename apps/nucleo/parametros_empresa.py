@@ -75,16 +75,6 @@ PARAMETROS_EMPRESA_ESTANDAR = (
         descripcion="Define si las compras requieren aprobación previa.",
     ),
     DefinicionParametroEmpresa(
-        clave="punto_venta_default",
-        etiqueta="Punto de venta predeterminado",
-        valor_predeterminado="0001",
-        tipo_valor=ParametroSistema.TipoValor.TEXTO,
-        descripcion=(
-            "Punto de venta inicial por defecto. Se guarda como texto "
-            "para conservar ceros a la izquierda."
-        ),
-    ),
-    DefinicionParametroEmpresa(
         clave="modo_numeracion_comprobantes",
         etiqueta="Numeración de comprobantes internos",
         valor_predeterminado="automatico",
@@ -137,13 +127,6 @@ def _deserializar_valor(definicion, valor):
         if not re.fullmatch(r"[A-Z]{3}", normalizado):
             raise ValueError("La moneda funcional debe tener tres letras.")
         return normalizado
-
-    if definicion.clave == "punto_venta_default":
-        if not re.fullmatch(r"\d{4}", texto):
-            raise ValueError(
-                "El punto de venta predeterminado debe tener cuatro dígitos."
-            )
-        return texto
 
     if definicion.clave == "modo_numeracion_comprobantes":
         normalizado = texto.lower()

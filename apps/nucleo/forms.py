@@ -10,6 +10,7 @@ from .models import (
     EmpresaJurisdiccionIIBB,
     JurisdiccionFiscal,
     PerfilFiscalEmpresa,
+    PuntoVenta,
     Sucursal,
 )
 
@@ -23,16 +24,6 @@ class ConfiguracionEmpresaForm(forms.Form):
         help_text="Código de tres letras. Ejemplo: ARS.",
         error_messages={
             "invalid": "Ingresá una moneda de tres letras, por ejemplo ARS.",
-        },
-    )
-    punto_venta_default = forms.RegexField(
-        label="Punto de venta predeterminado",
-        regex=r"^\d{4}$",
-        max_length=4,
-        min_length=4,
-        help_text="Cuatro dígitos. Ejemplo: 0001.",
-        error_messages={
-            "invalid": "Ingresá cuatro dígitos, por ejemplo 0001.",
         },
     )
     modo_numeracion_comprobantes = forms.ChoiceField(
@@ -70,11 +61,9 @@ class ConfiguracionEmpresaForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for nombre in (
-            "moneda_funcional",
-            "punto_venta_default",
-        ):
-            self.fields[nombre].widget.attrs["class"] = "form-control"
+        self.fields[
+            "moneda_funcional"
+        ].widget.attrs["class"] = "form-control"
 
         self.fields[
             "modo_numeracion_comprobantes"
@@ -464,6 +453,23 @@ class SucursalForm(forms.ModelForm):
                         ),
                     )
 
+        if (
+            self.instance.pk
+            and self.instance.activa
+            and not cleaned_data.get("activa")
+            and PuntoVenta.objects.filter(
+                sucursal=self.instance,
+                activo=True,
+            ).exists()
+        ):
+            self.add_error(
+                "activa",
+                (
+                    "Inactivá o reasigná los puntos de venta activos "
+                    "antes de inactivar la sucursal."
+                ),
+            )
+
         return cleaned_data
 
     def save(self, commit=True):
@@ -691,6 +697,253 @@ def _validar_vigencias_formulario(form, cleaned_data):
                 "a la vigencia desde."
             ),
         )
+
+class _PuntoVentaBaseForm(forms.Form):
+    sucursal = forms.ModelChoiceField(
+        label="Sucursal asociada",
+        queryset=Sucursal.objects.none(),
+        help_text=(
+            "El domicilio del punto de venta se obtiene de esta sucursal."
+        ),
+    )
+    nombre_fantasia = forms.CharField(
+        label="Nombre de fantasía",
+        max_length=200,
+        required=False,
+    )
+    sistema_emision = forms.ChoiceField(
+        label="Sistema de emisión",
+        choices=PuntoVenta.SistemaEmision.choices,
+    )
+    descripcion_sistema_arca = forms.CharField(
+        label="Descripción observada en ARCA",
+        max_length=200,
+        required=False,
+        help_text=(
+            "Opcional. Conservá aquí la denominación exacta mostrada por ARCA."
+        ),
+    )
+    actividad_predeterminada = forms.ModelChoiceField(
+        label="Actividad económica predeterminada",
+        queryset=EmpresaActividad.objects.none(),
+        required=False,
+    )
+    jurisdiccion_iibb_predeterminada = forms.ModelChoiceField(
+        label="Jurisdicción de IIBB predeterminada",
+        queryset=EmpresaJurisdiccionIIBB.objects.none(),
+        required=False,
+    )
+    predeterminado = forms.BooleanField(
+        label="Punto de venta predeterminado para la sucursal",
+        required=False,
+    )
+    bloqueado = forms.BooleanField(
+        label="Bloqueado en ARCA",
+        required=False,
+    )
+    fecha_alta = forms.DateField(
+        label="Fecha de alta",
+        required=False,
+        input_formats=("%Y-%m-%d", "%d/%m/%Y"),
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date"},
+        ),
+    )
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(
+        self,
+        *args,
+        empresa,
+        punto_venta=None,
+        **kwargs,
+    ):
+        self.empresa = empresa
+        self.punto_venta = punto_venta
+
+        if punto_venta is not None:
+            if punto_venta.empresa_id != empresa.pk:
+                raise ValueError(
+                    "El punto de venta no pertenece a la empresa activa."
+                )
+            if not punto_venta.activo:
+                raise ValueError(
+                    "Un punto de venta histórico inactivo no puede editarse."
+                )
+
+            if not args and "data" not in kwargs:
+                initial = kwargs.setdefault("initial", {})
+                initial.setdefault("sucursal", punto_venta.sucursal)
+                initial.setdefault(
+                    "nombre_fantasia",
+                    punto_venta.nombre_fantasia,
+                )
+                initial.setdefault(
+                    "sistema_emision",
+                    punto_venta.sistema_emision,
+                )
+                initial.setdefault(
+                    "descripcion_sistema_arca",
+                    punto_venta.descripcion_sistema_arca,
+                )
+                initial.setdefault(
+                    "actividad_predeterminada",
+                    punto_venta.actividad_predeterminada,
+                )
+                initial.setdefault(
+                    "jurisdiccion_iibb_predeterminada",
+                    punto_venta.jurisdiccion_iibb_predeterminada,
+                )
+                initial.setdefault(
+                    "predeterminado",
+                    punto_venta.predeterminado,
+                )
+                initial.setdefault("bloqueado", punto_venta.bloqueado)
+                initial.setdefault("fecha_alta", punto_venta.fecha_alta)
+                initial.setdefault(
+                    "observaciones",
+                    punto_venta.observaciones,
+                )
+
+        super().__init__(*args, **kwargs)
+
+        sucursales = Sucursal.objects.filter(
+            empresa=empresa,
+            activa=True,
+        )
+        actividades = EmpresaActividad.objects.filter(
+            empresa=empresa,
+            activa=True,
+        ).select_related("actividad")
+        jurisdicciones = (
+            EmpresaJurisdiccionIIBB.objects.filter(
+                configuracion__empresa=empresa,
+                configuracion__activa=True,
+                activa=True,
+            )
+            .select_related(
+                "configuracion",
+                "jurisdiccion",
+            )
+            .order_by(
+                "-sede",
+                "jurisdiccion__orden",
+                "codigo_registrado",
+            )
+        )
+
+        self.fields["sucursal"].queryset = sucursales.order_by(
+            "codigo",
+            "nombre",
+        )
+        self.fields[
+            "actividad_predeterminada"
+        ].queryset = actividades.order_by(
+            "-principal",
+            "orden",
+            "codigo_registrado",
+        )
+        self.fields[
+            "jurisdiccion_iibb_predeterminada"
+        ].queryset = jurisdicciones
+
+        for campo in self.fields.values():
+            if isinstance(campo.widget, forms.CheckboxInput):
+                campo.widget.attrs["class"] = "form-check-input"
+            elif isinstance(campo.widget, forms.Select):
+                campo.widget.attrs["class"] = "form-select"
+            else:
+                campo.widget.attrs["class"] = "form-control"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        sucursal = cleaned_data.get("sucursal")
+        actividad = cleaned_data.get("actividad_predeterminada")
+        jurisdiccion = cleaned_data.get(
+            "jurisdiccion_iibb_predeterminada"
+        )
+
+        if sucursal is not None:
+            if sucursal.empresa_id != self.empresa.pk:
+                self.add_error(
+                    "sucursal",
+                    "La sucursal no pertenece a la empresa activa.",
+                )
+            elif not sucursal.activa:
+                self.add_error(
+                    "sucursal",
+                    "Seleccioná una sucursal activa.",
+                )
+
+        if actividad is not None:
+            if actividad.empresa_id != self.empresa.pk:
+                self.add_error(
+                    "actividad_predeterminada",
+                    "La actividad no pertenece a la empresa activa.",
+                )
+            elif not actividad.activa:
+                self.add_error(
+                    "actividad_predeterminada",
+                    "Seleccioná una actividad activa.",
+                )
+
+        if jurisdiccion is not None:
+            if jurisdiccion.configuracion.empresa_id != self.empresa.pk:
+                self.add_error(
+                    "jurisdiccion_iibb_predeterminada",
+                    "La jurisdicción no pertenece a la empresa activa.",
+                )
+            elif (
+                not jurisdiccion.activa
+                or not jurisdiccion.configuracion.activa
+            ):
+                self.add_error(
+                    "jurisdiccion_iibb_predeterminada",
+                    "Seleccioná una jurisdicción activa.",
+                )
+
+        return cleaned_data
+
+
+class PuntoVentaCrearForm(_PuntoVentaBaseForm):
+    numero = forms.IntegerField(
+        label="Número de punto de venta",
+        min_value=1,
+        max_value=99998,
+        help_text=(
+            "ARCA admite cinco posiciones. Se mostrará con ceros "
+            "a la izquierda, por ejemplo 00001."
+        ),
+    )
+
+    def __init__(self, *args, numero_inicial=None, **kwargs):
+        if (
+            numero_inicial is not None
+            and not args
+            and "data" not in kwargs
+        ):
+            initial = kwargs.setdefault("initial", {})
+            initial.setdefault("numero", numero_inicial)
+
+        super().__init__(*args, **kwargs)
+
+        orden = ["numero"] + [
+            nombre
+            for nombre in self.fields
+            if nombre != "numero"
+        ]
+        self.order_fields(orden)
+        self.fields["numero"].widget.attrs["class"] = "form-control"
+
+
+class PuntoVentaEditarForm(_PuntoVentaBaseForm):
+    pass
+
 
 class ConfiguracionIIBBEmpresaForm(forms.Form):
     regimen = forms.ChoiceField(

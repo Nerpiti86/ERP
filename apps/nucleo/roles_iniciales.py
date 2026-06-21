@@ -43,6 +43,9 @@ PERMISOS_INICIALES = {
     "iibb.ver": "Consultar Ingresos Brutos y jurisdicciones.",
     "iibb.crear": "Crear configuraciones y jurisdicciones de IIBB.",
     "iibb.editar": "Editar o inactivar datos de IIBB.",
+    "puntos_venta.ver": "Consultar puntos de venta.",
+    "puntos_venta.crear": "Crear puntos de venta.",
+    "puntos_venta.editar": "Editar o inactivar puntos de venta.",
     "usuarios.ver": "Consultar usuarios y accesos.",
     "usuarios.crear": "Crear usuarios y accesos.",
     "usuarios.editar": "Editar usuarios y accesos.",
@@ -83,6 +86,9 @@ PERMISOS_POR_ROL = {
         "iibb.ver",
         "iibb.crear",
         "iibb.editar",
+        "puntos_venta.ver",
+        "puntos_venta.crear",
+        "puntos_venta.editar",
     ),
     "OPERADOR": (
         "empresas.ver",
@@ -110,6 +116,7 @@ PERMISOS_POR_ROL = {
         "tesoreria.ver",
         "actividades.ver",
         "iibb.ver",
+        "puntos_venta.ver",
     ),
     "SOLO_LECTURA": (
         "empresas.ver",
@@ -122,6 +129,7 @@ PERMISOS_POR_ROL = {
         "tesoreria.ver",
         "actividades.ver",
         "iibb.ver",
+        "puntos_venta.ver",
     ),
 }
 

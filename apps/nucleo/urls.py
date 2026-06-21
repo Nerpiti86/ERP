@@ -31,6 +31,27 @@ urlpatterns = [
         views.sucursal_editar,
         name="sucursal_editar",
     ),
+
+    path(
+        "configuracion/puntos-venta/",
+        views.puntos_venta,
+        name="puntos_venta",
+    ),
+    path(
+        "configuracion/puntos-venta/nuevo/",
+        views.punto_venta_crear,
+        name="punto_venta_crear",
+    ),
+    path(
+        "configuracion/puntos-venta/<int:punto_venta_id>/editar/",
+        views.punto_venta_editar,
+        name="punto_venta_editar",
+    ),
+    path(
+        "configuracion/puntos-venta/<int:punto_venta_id>/inactivar/",
+        views.punto_venta_inactivar,
+        name="punto_venta_inactivar",
+    ),
     path(
         "configuracion/actividades/",
         views.actividades_empresa,

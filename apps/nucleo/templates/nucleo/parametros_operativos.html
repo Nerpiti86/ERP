@@ -162,7 +162,7 @@
         </div>
         <div class="card-body">
           <div class="row g-3">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-6">
               <label class="form-label" for="{{ form.moneda_funcional.id_for_label }}">
                 {{ form.moneda_funcional.label }}
               </label>
@@ -175,20 +175,7 @@
               {% endfor %}
             </div>
 
-            <div class="col-12 col-md-4">
-              <label class="form-label" for="{{ form.punto_venta_default.id_for_label }}">
-                {{ form.punto_venta_default.label }}
-              </label>
-              {{ form.punto_venta_default }}
-              {% if form.punto_venta_default.help_text %}
-                <div class="form-text">{{ form.punto_venta_default.help_text }}</div>
-              {% endif %}
-              {% for error in form.punto_venta_default.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
-              {% endfor %}
-            </div>
-
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-6">
               <label class="form-label" for="{{ form.modo_numeracion_comprobantes.id_for_label }}">
                 {{ form.modo_numeracion_comprobantes.label }}
               </label>
@@ -203,6 +190,10 @@
               {% endfor %}
             </div>
           </div>
+          <div class="alert alert-light border mt-3 mb-0">
+            Los puntos de venta se administran en su sección propia y se
+            vinculan con las sucursales de la empresa.
+          </div>
         </div>
       </section>
 
@@ -213,7 +204,7 @@
         <div class="card-body">
           <div class="row g-3">
             {% for campo in form %}
-              {% if campo.name != "moneda_funcional" and campo.name != "punto_venta_default" and campo.name != "modo_numeracion_comprobantes" %}
+              {% if campo.name != "moneda_funcional" and campo.name != "modo_numeracion_comprobantes" %}
                 <div class="col-12 col-md-6">
                   <div class="form-check border rounded p-3 ps-5 h-100">
                     {{ campo }}

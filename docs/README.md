@@ -25,6 +25,7 @@ Estado del índice: 20/06/2026.
 | `16_actividades_economicas_empresa.md` | Actividades principales y secundarias por empresa | Implementado |
 | `17_lecciones_aprendidas_y_estandar_implementacion.md` | Lecciones consolidadas y estándar obligatorio para tareas futuras | Vigente |
 | `18_ingresos_brutos_jurisdicciones.md` | Configuración de IIBB, jurisdicción sede e historial por empresa | Implementado |
+| `19_puntos_venta.md` | Puntos de venta por sucursal, sistemas de emisión y baja lógica | Implementado |
 
 ## Jerarquía documental
 

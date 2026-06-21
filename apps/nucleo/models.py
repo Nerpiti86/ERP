@@ -3,7 +3,11 @@ from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import models
 from django.db.models import F, Q
 from django.utils import timezone
@@ -1091,6 +1095,16 @@ class Sucursal(models.Model):
                         f"{etiqueta.lower()}."
                     )
 
+        if (
+            self.pk
+            and not self.activa
+            and self.puntos_venta.filter(activo=True).exists()
+        ):
+            errores["activa"] = (
+                "Inactivá o reasigná los puntos de venta activos "
+                "antes de inactivar la sucursal."
+            )
+
         if errores:
             raise ValidationError(errores)
 
@@ -1185,6 +1199,284 @@ class Sucursal(models.Model):
 
     def __str__(self):
         return f"{self.empresa} - {self.nombre}"
+
+
+class PuntoVenta(models.Model):
+    class SistemaEmision(models.TextChoices):
+        WEB_SERVICE = (
+            "WEB_SERVICE",
+            "Factura electrónica - Web Services",
+        )
+        COMPROBANTES_EN_LINEA = (
+            "COMPROBANTES_EN_LINEA",
+            "Comprobantes en línea",
+        )
+        CONTROLADOR_FISCAL = (
+            "CONTROLADOR_FISCAL",
+            "Controlador fiscal",
+        )
+        FACTURADOR = (
+            "FACTURADOR",
+            "Facturador",
+        )
+        MANUAL = (
+            "MANUAL",
+            "Comprobantes manuales",
+        )
+        OTRO = (
+            "OTRO",
+            "Otro sistema",
+        )
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="puntos_venta",
+    )
+    sucursal = models.ForeignKey(
+        Sucursal,
+        on_delete=models.PROTECT,
+        related_name="puntos_venta",
+    )
+    numero = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(99998),
+        ],
+    )
+    nombre_fantasia = models.CharField(max_length=200, blank=True)
+    sistema_emision = models.CharField(
+        max_length=30,
+        choices=SistemaEmision.choices,
+    )
+    descripcion_sistema_arca = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=(
+            "Descripción exacta observada en ARCA, cuando sea necesario "
+            "conservarla."
+        ),
+    )
+    actividad_predeterminada = models.ForeignKey(
+        EmpresaActividad,
+        on_delete=models.PROTECT,
+        related_name="puntos_venta_predeterminados",
+        null=True,
+        blank=True,
+    )
+    jurisdiccion_iibb_predeterminada = models.ForeignKey(
+        EmpresaJurisdiccionIIBB,
+        on_delete=models.PROTECT,
+        related_name="puntos_venta_predeterminados",
+        null=True,
+        blank=True,
+    )
+    predeterminado = models.BooleanField(default=False)
+    bloqueado = models.BooleanField(default=False)
+    fecha_alta = models.DateField(null=True, blank=True)
+    fecha_baja = models.DateField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    observaciones = models.TextField(blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "nucleo_puntoventa"
+        verbose_name = "punto de venta"
+        verbose_name_plural = "puntos de venta"
+        ordering = [
+            "empresa__razon_social",
+            "-activo",
+            "sucursal__codigo",
+            "numero",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["empresa", "numero"],
+                name="uniq_pv_empresa_numero",
+            ),
+            models.UniqueConstraint(
+                fields=["sucursal"],
+                condition=Q(
+                    activo=True,
+                    predeterminado=True,
+                ),
+                name="uniq_pv_suc_default_activo",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    numero__gte=1,
+                    numero__lte=99998,
+                ),
+                name="chk_pv_numero_rango",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(fecha_baja__isnull=True)
+                    | Q(fecha_alta__isnull=True)
+                    | Q(fecha_baja__gte=F("fecha_alta"))
+                ),
+                name="chk_pv_fechas",
+            ),
+            models.CheckConstraint(
+                condition=Q(activo=False) | Q(fecha_baja__isnull=True),
+                name="chk_pv_activo_sin_baja",
+            ),
+            models.CheckConstraint(
+                condition=Q(predeterminado=False) | Q(activo=True),
+                name="chk_pv_default_activo",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["empresa", "activo", "numero"],
+                name="idx_pv_emp_act_num",
+            ),
+            models.Index(
+                fields=["sucursal", "activo", "predeterminado"],
+                name="idx_pv_suc_act_def",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+
+        self.nombre_fantasia = self.nombre_fantasia.strip()
+        self.descripcion_sistema_arca = (
+            self.descripcion_sistema_arca.strip()
+        )
+        self.observaciones = self.observaciones.strip()
+        errores = {}
+
+        if (
+            self.numero is not None
+            and not 1 <= self.numero <= 99998
+        ):
+            errores["numero"] = (
+                "El punto de venta debe estar comprendido entre 1 y 99998."
+            )
+
+        if self.sucursal_id:
+            if self.sucursal.empresa_id != self.empresa_id:
+                errores["sucursal"] = (
+                    "La sucursal no pertenece a la empresa del punto de venta."
+                )
+            elif self.activo and not self.sucursal.activa:
+                errores["sucursal"] = (
+                    "Un punto de venta activo requiere una sucursal activa."
+                )
+
+        if self.actividad_predeterminada_id:
+            actividad = self.actividad_predeterminada
+
+            if actividad.empresa_id != self.empresa_id:
+                errores["actividad_predeterminada"] = (
+                    "La actividad predeterminada no pertenece a la empresa."
+                )
+            elif self.activo and not actividad.activa:
+                errores["actividad_predeterminada"] = (
+                    "La actividad predeterminada debe estar activa."
+                )
+
+        if self.jurisdiccion_iibb_predeterminada_id:
+            relacion = self.jurisdiccion_iibb_predeterminada
+
+            if relacion.configuracion.empresa_id != self.empresa_id:
+                errores["jurisdiccion_iibb_predeterminada"] = (
+                    "La jurisdicción de IIBB no pertenece a la empresa."
+                )
+            elif self.activo and (
+                not relacion.activa
+                or not relacion.configuracion.activa
+            ):
+                errores["jurisdiccion_iibb_predeterminada"] = (
+                    "La jurisdicción predeterminada debe estar activa."
+                )
+
+        if (
+            self.fecha_baja is not None
+            and self.fecha_alta is not None
+            and self.fecha_baja < self.fecha_alta
+        ):
+            errores["fecha_baja"] = (
+                "La fecha de baja no puede ser anterior a la fecha de alta."
+            )
+
+        if self.activo and self.fecha_baja is not None:
+            errores["fecha_baja"] = (
+                "Un punto de venta activo no puede tener fecha de baja."
+            )
+
+        if self.predeterminado and not self.activo:
+            errores["predeterminado"] = (
+                "Un punto de venta inactivo no puede ser predeterminado."
+            )
+
+        original = None
+
+        if self.pk:
+            original = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values(
+                    "empresa_id",
+                    "numero",
+                )
+                .first()
+            )
+
+        if original:
+            if original["empresa_id"] != self.empresa_id:
+                errores["empresa"] = (
+                    "La empresa de un punto de venta existente no puede cambiar."
+                )
+            if original["numero"] != self.numero:
+                errores["numero"] = (
+                    "El número de un punto de venta existente no puede cambiar."
+                )
+
+        if self.empresa_id:
+            duplicado = type(self).objects.filter(
+                empresa_id=self.empresa_id,
+                numero=self.numero,
+            )
+
+            if self.pk:
+                duplicado = duplicado.exclude(pk=self.pk)
+
+            if duplicado.exists():
+                errores["numero"] = (
+                    "Este número de punto de venta ya fue utilizado por la "
+                    "empresa y no puede reutilizarse."
+                )
+
+        if self.sucursal_id and self.activo and self.predeterminado:
+            otro_predeterminado = type(self).objects.filter(
+                sucursal_id=self.sucursal_id,
+                activo=True,
+                predeterminado=True,
+            )
+
+            if self.pk:
+                otro_predeterminado = otro_predeterminado.exclude(pk=self.pk)
+
+            if otro_predeterminado.exists():
+                errores["predeterminado"] = (
+                    "La sucursal ya tiene otro punto de venta predeterminado."
+                )
+
+        if errores:
+            raise ValidationError(errores)
+
+    @property
+    def numero_formateado(self):
+        return f"{self.numero:05d}"
+
+    def __str__(self):
+        return (
+            f"{self.empresa} - {self.numero_formateado} - "
+            f"{self.sucursal.nombre}"
+        )
 
 
 class EjercicioFiscal(models.Model):

@@ -93,6 +93,25 @@ def permisos_funcionales(request):
             "iibb.editar",
         ),
     )
+    puede_crear_puntos_venta = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "puntos_venta.crear",
+    )
+    puede_editar_puntos_venta = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "puntos_venta.editar",
+    )
+    puede_ver_puntos_venta = usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        (
+            "puntos_venta.ver",
+            "puntos_venta.crear",
+            "puntos_venta.editar",
+        ),
+    )
     puede_editar_parametros = usuario_tiene_permiso(
         usuario,
         empresa,
@@ -121,6 +140,7 @@ def permisos_funcionales(request):
                 or puede_ver_sucursales
                 or puede_ver_actividades
                 or puede_ver_iibb
+                or puede_ver_puntos_venta
                 or puede_ver_parametros
             ),
             "empresas_ver": puede_ver_empresas,
@@ -134,6 +154,9 @@ def permisos_funcionales(request):
             "iibb_ver": puede_ver_iibb,
             "iibb_crear": puede_crear_iibb,
             "iibb_editar": puede_editar_iibb,
+            "puntos_venta_ver": puede_ver_puntos_venta,
+            "puntos_venta_crear": puede_crear_puntos_venta,
+            "puntos_venta_editar": puede_editar_puntos_venta,
             "parametros_ver": puede_ver_parametros,
             "parametros_editar": puede_editar_parametros,
             "contabilidad_ver": puede_ver_contabilidad,

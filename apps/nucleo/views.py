@@ -19,6 +19,8 @@ from .forms import (
     EmpresaActividadEditarForm,
     EmpresaJurisdiccionIIBBCrearForm,
     EmpresaJurisdiccionIIBBEditarForm,
+    PuntoVentaCrearForm,
+    PuntoVentaEditarForm,
     SucursalForm,
 )
 from .models import (
@@ -29,6 +31,7 @@ from .models import (
     ImportacionCatalogoActividad,
     JurisdiccionFiscal,
     PerfilFiscalEmpresa,
+    PuntoVenta,
     Sucursal,
     UsuarioEmpresa,
     UsuarioRolEmpresa,
@@ -57,6 +60,12 @@ from .servicios_iibb import (
     inactivar_configuracion_iibb,
     inactivar_jurisdiccion_iibb,
 )
+from .servicios_puntos_venta import (
+    actualizar_punto_venta,
+    crear_punto_venta,
+    inactivar_punto_venta,
+    obtener_numero_punto_venta_legacy,
+)
 
 
 PERMISOS_CONSULTA_CONFIGURACION = (
@@ -71,6 +80,9 @@ PERMISOS_CONSULTA_CONFIGURACION = (
     "iibb.ver",
     "iibb.crear",
     "iibb.editar",
+    "puntos_venta.ver",
+    "puntos_venta.crear",
+    "puntos_venta.editar",
     "parametros.ver",
     "parametros.editar",
 )
@@ -84,6 +96,13 @@ PERMISOS_SUCURSALES = (
     "sucursales.ver",
     "sucursales.crear",
     "sucursales.editar",
+)
+
+
+PERMISOS_PUNTOS_VENTA = (
+    "puntos_venta.ver",
+    "puntos_venta.crear",
+    "puntos_venta.editar",
 )
 
 
@@ -145,6 +164,55 @@ def _resumen_sucursales(sucursales):
             activas
             and len(completas) == len(activas)
             and casa_central is not None
+        ),
+    }
+
+
+def _resumen_puntos_venta(puntos_venta, sucursales_activas):
+    activos = [
+        punto
+        for punto in puntos_venta
+        if punto.activo
+    ]
+    predeterminados = [
+        punto
+        for punto in activos
+        if punto.predeterminado
+    ]
+    sucursales_activas_ids = {
+        sucursal.pk
+        for sucursal in sucursales_activas
+    }
+    sucursales_con_puntos = {
+        punto.sucursal_id
+        for punto in activos
+    }
+    sucursales_con_predeterminado = {
+        punto.sucursal_id
+        for punto in predeterminados
+    }
+
+    return {
+        "total": len(puntos_venta),
+        "activos": len(activos),
+        "historicos": len(puntos_venta) - len(activos),
+        "bloqueados": len(
+            [
+                punto
+                for punto in activos
+                if punto.bloqueado
+            ]
+        ),
+        "sucursales_activas": len(sucursales_activas_ids),
+        "sucursales_con_puntos": len(sucursales_con_puntos),
+        "sucursales_sin_puntos": len(
+            sucursales_activas_ids - sucursales_con_puntos
+        ),
+        "predeterminados": len(predeterminados),
+        "completa": bool(
+            activos
+            and sucursales_con_puntos.issubset(sucursales_activas_ids)
+            and sucursales_con_predeterminado == sucursales_con_puntos
         ),
     }
 
@@ -212,6 +280,11 @@ def configuracion_empresa(request):
         empresa,
         PERMISOS_IIBB,
     )
+    puede_ver_puntos_venta = usuario_tiene_alguno_de_permisos(
+        request.user,
+        empresa,
+        PERMISOS_PUNTOS_VENTA,
+    )
 
     estado_parametros = obtener_estado_parametros_empresa(empresa)
     datos_parametros = {}
@@ -231,6 +304,32 @@ def configuracion_empresa(request):
         )
     )
     resumen_sucursales = _resumen_sucursales(sucursales)
+
+    puntos_venta = list(
+        PuntoVenta.objects.filter(
+            empresa=empresa,
+        )
+        .select_related(
+            "sucursal",
+            "actividad_predeterminada",
+            "jurisdiccion_iibb_predeterminada__configuracion",
+        )
+        .order_by(
+            "-activo",
+            "sucursal__codigo",
+            "numero",
+            "pk",
+        )
+    )
+    sucursales_activas = [
+        sucursal
+        for sucursal in sucursales
+        if sucursal.activa
+    ]
+    resumen_puntos_venta = _resumen_puntos_venta(
+        puntos_venta,
+        sucursales_activas,
+    )
 
     actividades = list(
         EmpresaActividad.objects.filter(
@@ -275,6 +374,7 @@ def configuracion_empresa(request):
         empresa.activa
         and datos_contribuyente_completos
         and resumen_sucursales["completa"]
+        and resumen_puntos_venta["completa"]
         and resumen_actividades["completa"]
         and resumen_iibb["completa"]
         and estado_parametros["completa"]
@@ -296,6 +396,9 @@ def configuracion_empresa(request):
             "puede_ver_sucursales": puede_ver_sucursales,
             "sucursales": sucursales,
             "resumen_sucursales": resumen_sucursales,
+            "puede_ver_puntos_venta": puede_ver_puntos_venta,
+            "puntos_venta": puntos_venta,
+            "resumen_puntos_venta": resumen_puntos_venta,
             "puede_ver_actividades": puede_ver_actividades,
             "actividades_empresa": actividades,
             "resumen_actividades": resumen_actividades,
@@ -311,6 +414,7 @@ def configuracion_empresa(request):
             "resumen": {
                 "sucursales_total": resumen_sucursales["total"],
                 "sucursales_activas": resumen_sucursales["activas"],
+                "puntos_venta_activos": resumen_puntos_venta["activos"],
                 "actividades_activas": resumen_actividades["activas"],
                 "jurisdicciones_iibb_activas": (
                     resumen_iibb["jurisdicciones_total"]
@@ -494,6 +598,286 @@ def sucursal_editar(request, sucursal_id):
             "titulo": "Editar sucursal",
         },
     )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_alguno_requerido(*PERMISOS_PUNTOS_VENTA)
+@require_GET
+def puntos_venta(request):
+    empresa = request.empresa_activa
+    registros = list(
+        PuntoVenta.objects.filter(
+            empresa=empresa,
+        )
+        .select_related(
+            "sucursal",
+            "actividad_predeterminada",
+            "jurisdiccion_iibb_predeterminada__configuracion",
+        )
+        .order_by(
+            "-activo",
+            "sucursal__codigo",
+            "numero",
+            "pk",
+        )
+    )
+
+    sucursales_activas = list(
+        Sucursal.objects.filter(
+            empresa=empresa,
+            activa=True,
+        ).order_by("codigo", "nombre")
+    )
+
+    return render(
+        request,
+        "nucleo/puntos_venta.html",
+        {
+            "empresa": empresa,
+            "puntos_venta": registros,
+            "resumen": _resumen_puntos_venta(
+                registros,
+                sucursales_activas,
+            ),
+            "numero_legacy": obtener_numero_punto_venta_legacy(
+                empresa
+            ),
+            "sucursales_activas": len(sucursales_activas),
+            "puede_crear": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "puntos_venta.crear",
+            ),
+            "puede_editar": usuario_tiene_permiso(
+                request.user,
+                empresa,
+                "puntos_venta.editar",
+            ),
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("puntos_venta.crear")
+def punto_venta_crear(request):
+    empresa = request.empresa_activa
+
+    if not Sucursal.objects.filter(
+        empresa=empresa,
+        activa=True,
+    ).exists():
+        messages.error(
+            request,
+            (
+                "La empresa necesita al menos una sucursal activa "
+                "antes de crear puntos de venta."
+            ),
+        )
+        return redirect("nucleo:puntos_venta")
+
+    numero_legacy = obtener_numero_punto_venta_legacy(empresa)
+
+    if request.method == "POST":
+        form = PuntoVentaCrearForm(
+            request.POST,
+            empresa=empresa,
+        )
+
+        if form.is_valid():
+            try:
+                punto_venta = crear_punto_venta(
+                    empresa=empresa,
+                    sucursal=form.cleaned_data["sucursal"],
+                    numero=form.cleaned_data["numero"],
+                    sistema_emision=(
+                        form.cleaned_data["sistema_emision"]
+                    ),
+                    nombre_fantasia=(
+                        form.cleaned_data["nombre_fantasia"]
+                    ),
+                    descripcion_sistema_arca=(
+                        form.cleaned_data[
+                            "descripcion_sistema_arca"
+                        ]
+                    ),
+                    actividad_predeterminada=(
+                        form.cleaned_data[
+                            "actividad_predeterminada"
+                        ]
+                    ),
+                    jurisdiccion_iibb_predeterminada=(
+                        form.cleaned_data[
+                            "jurisdiccion_iibb_predeterminada"
+                        ]
+                    ),
+                    predeterminado=(
+                        form.cleaned_data["predeterminado"]
+                    ),
+                    bloqueado=form.cleaned_data["bloqueado"],
+                    fecha_alta=form.cleaned_data["fecha_alta"],
+                    observaciones=(
+                        form.cleaned_data["observaciones"]
+                    ),
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    (
+                        "Punto de venta "
+                        f"{punto_venta.numero_formateado} "
+                        "creado correctamente."
+                    ),
+                )
+                return redirect("nucleo:puntos_venta")
+    else:
+        form = PuntoVentaCrearForm(
+            empresa=empresa,
+            numero_inicial=numero_legacy,
+        )
+
+    return render(
+        request,
+        "nucleo/punto_venta_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "punto_venta": None,
+            "titulo": "Nuevo punto de venta",
+            "numero_legacy": numero_legacy,
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("puntos_venta.editar")
+def punto_venta_editar(request, punto_venta_id):
+    empresa = request.empresa_activa
+    punto_venta = get_object_or_404(
+        PuntoVenta.objects.select_related(
+            "sucursal",
+            "actividad_predeterminada",
+            "jurisdiccion_iibb_predeterminada__configuracion",
+        ),
+        pk=punto_venta_id,
+        empresa=empresa,
+        activo=True,
+    )
+
+    if request.method == "POST":
+        form = PuntoVentaEditarForm(
+            request.POST,
+            empresa=empresa,
+            punto_venta=punto_venta,
+        )
+
+        if form.is_valid():
+            try:
+                punto_venta = actualizar_punto_venta(
+                    empresa=empresa,
+                    punto_venta=punto_venta,
+                    sucursal=form.cleaned_data["sucursal"],
+                    sistema_emision=(
+                        form.cleaned_data["sistema_emision"]
+                    ),
+                    nombre_fantasia=(
+                        form.cleaned_data["nombre_fantasia"]
+                    ),
+                    descripcion_sistema_arca=(
+                        form.cleaned_data[
+                            "descripcion_sistema_arca"
+                        ]
+                    ),
+                    actividad_predeterminada=(
+                        form.cleaned_data[
+                            "actividad_predeterminada"
+                        ]
+                    ),
+                    jurisdiccion_iibb_predeterminada=(
+                        form.cleaned_data[
+                            "jurisdiccion_iibb_predeterminada"
+                        ]
+                    ),
+                    predeterminado=(
+                        form.cleaned_data["predeterminado"]
+                    ),
+                    bloqueado=form.cleaned_data["bloqueado"],
+                    fecha_alta=form.cleaned_data["fecha_alta"],
+                    observaciones=(
+                        form.cleaned_data["observaciones"]
+                    ),
+                    request=request,
+                )
+            except ValidationError as error:
+                _agregar_errores_validacion(form, error)
+            else:
+                messages.success(
+                    request,
+                    (
+                        "Punto de venta "
+                        f"{punto_venta.numero_formateado} "
+                        "actualizado correctamente."
+                    ),
+                )
+                return redirect("nucleo:puntos_venta")
+    else:
+        form = PuntoVentaEditarForm(
+            empresa=empresa,
+            punto_venta=punto_venta,
+        )
+
+    return render(
+        request,
+        "nucleo/punto_venta_form.html",
+        {
+            "empresa": empresa,
+            "form": form,
+            "punto_venta": punto_venta,
+            "titulo": (
+                "Editar punto de venta "
+                f"{punto_venta.numero_formateado}"
+            ),
+            "numero_legacy": None,
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("puntos_venta.editar")
+@require_POST
+def punto_venta_inactivar(request, punto_venta_id):
+    empresa = request.empresa_activa
+    punto_venta = get_object_or_404(
+        PuntoVenta,
+        pk=punto_venta_id,
+        empresa=empresa,
+    )
+
+    try:
+        punto_venta = inactivar_punto_venta(
+            empresa=empresa,
+            punto_venta=punto_venta,
+            request=request,
+        )
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+    else:
+        messages.success(
+            request,
+            (
+                "Punto de venta "
+                f"{punto_venta.numero_formateado} "
+                "inactivado correctamente."
+            ),
+        )
+
+    return redirect("nucleo:puntos_venta")
 
 
 @login_required

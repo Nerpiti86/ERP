@@ -82,7 +82,7 @@ Campos conceptuales:
 - logo
 - moneda_funcional
 - fecha_inicio_actividades
-- punto_venta_default
+- puntos de venta relacionados mediante `PuntoVenta`
 - activa
 
 Reglas:
@@ -111,7 +111,7 @@ Campos conceptuales:
 - domicilio
 - localidad
 - provincia
-- punto_de_venta
+- puntos de venta relacionados mediante `PuntoVenta`
 - activa
 
 Reglas:
@@ -285,7 +285,6 @@ Ejemplos de parametros:
 - requiere_aprobacion_pagos
 - requiere_aprobacion_compras
 - tipo_cambio_default
-- punto_venta_default
 - modo_numeracion_comprobantes
 
 Reglas:
@@ -1090,7 +1089,6 @@ Parámetros estándar:
 - usa_proyectos
 - requiere_aprobacion_pagos
 - requiere_aprobacion_compras
-- punto_venta_default
 - modo_numeracion_comprobantes
 
 No se implementan todavía permisos funcionales aplicados a la vista, auditoría automática de cambios, configuración por sucursal ni facturación electrónica.
@@ -1193,3 +1191,22 @@ Ingresos Brutos no se representa mediante un texto plano dentro de
 
 El régimen, las jurisdicciones, la sede, las vigencias y el historial se
 administran mediante modelos especializados y servicios transaccionales.
+
+
+## Actualización acumulada: TAREA 0008
+
+La configuración empresarial incorpora el modelo `PuntoVenta`.
+
+Decisiones:
+
+- un punto de venta pertenece a una empresa y a una sucursal
+- una sucursal puede tener varios puntos de venta
+- el número es único por empresa y no se reutiliza después de una baja
+- el número se almacena como entero y se presenta con cinco posiciones
+- se conserva sistema de emisión, vigencia, bloqueo y valores predeterminados
+- las operaciones pasan por servicios transaccionales y auditoría
+- el parámetro `punto_venta_default` deja de ser configuración estándar
+- los valores anteriores no se borran ni se convierten automáticamente
+
+La implementación detallada se documenta en
+`docs/19_puntos_venta.md`.

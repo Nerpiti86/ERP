@@ -602,8 +602,9 @@ La portada de configuración evolucionará hacia:
 2. Sucursales y domicilios
 3. Actividades económicas
 4. Ingresos Brutos
-5. Parámetros operativos
-6. Usuarios y accesos
+5. Puntos de venta
+6. Parámetros operativos
+7. Usuarios y accesos
 
 Cada tarjeta deberá mostrar:
 
@@ -856,3 +857,22 @@ La TAREA 0007 implementa:
 Las jurisdicciones fiscales permanecen separadas de las sucursales físicas.
 
 No se implementan liquidaciones, alícuotas ni declaraciones juradas.
+
+
+## Implementación de puntos de venta
+
+La TAREA 0008 separa los puntos de venta de los parámetros generales.
+
+Se incorpora:
+
+- modelo propio `PuntoVenta`
+- pertenencia obligatoria a empresa y sucursal
+- múltiples puntos por sucursal
+- sistema de emisión
+- actividad económica predeterminada opcional
+- jurisdicción IIBB predeterminada opcional
+- vigencia, bloqueo, baja lógica y auditoría
+- migración manual asistida desde el parámetro anterior
+
+No se implementan todavía WSFEv1, CAE, CAEA, certificados, CBU de Factura de
+Crédito ni secuencias de comprobantes.

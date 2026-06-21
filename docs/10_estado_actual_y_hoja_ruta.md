@@ -406,10 +406,35 @@ Resultado:
 - integración en Configuración de empresa
 - separación entre jurisdicción fiscal y sucursal física
 
-Suite verificada al cierre: `277` pruebas.
+Suite verificada al cierre: `237` pruebas.
 
-Próxima tarea funcional sugerida:
+El recuento anterior de 277 fue corregido al volver a ejecutar la suite completa
+sobre el commit de cierre de la TAREA 0007.
 
-```text
-TAREA 0008 — Agentes de retención y percepción
-```
+La tarea funcional siguiente se definirá mediante una decisión explícita
+posterior. Los agentes de retención y percepción continúan pendientes y no
+forman parte de la TAREA 0008.
+
+
+## Actualización posterior: TAREA 0008
+
+Se implementan puntos de venta por sucursal.
+
+Resultado:
+
+- modelo `PuntoVenta`
+- relación obligatoria con empresa y sucursal
+- varios puntos por sucursal
+- número único por empresa entre 1 y 99998
+- presentación con cinco posiciones
+- sistema de emisión
+- actividad e IIBB predeterminados opcionales
+- un predeterminado activo por sucursal
+- baja lógica sin reutilización de número
+- servicios transaccionales
+- auditoría
+- permisos `puntos_venta.*`
+- integración en Configuración de empresa
+- preservación del parámetro anterior sin conversión automática
+
+Suite verificada al cierre: `266` pruebas.

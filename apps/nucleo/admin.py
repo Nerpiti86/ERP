@@ -19,6 +19,7 @@ from .models import (
     PeriodoContable,
     ParametroSistema,
     PerfilFiscalEmpresa,
+    PuntoVenta,
     Sucursal,
     UsuarioEmpresa,
     UsuarioSucursal,
@@ -285,6 +286,71 @@ class EmpresaJurisdiccionIIBBAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+@admin.register(PuntoVenta)
+class PuntoVentaAdmin(admin.ModelAdmin):
+    list_display = (
+        "empresa",
+        "numero_formateado",
+        "sucursal",
+        "sistema_emision",
+        "predeterminado",
+        "bloqueado",
+        "activo",
+        "fecha_alta",
+        "fecha_baja",
+    )
+    list_filter = (
+        "activo",
+        "predeterminado",
+        "bloqueado",
+        "sistema_emision",
+        "empresa",
+    )
+    search_fields = (
+        "empresa__razon_social",
+        "empresa__cuit",
+        "sucursal__codigo",
+        "sucursal__nombre",
+        "nombre_fantasia",
+        "descripcion_sistema_arca",
+    )
+    readonly_fields = (
+        "empresa",
+        "sucursal",
+        "numero",
+        "nombre_fantasia",
+        "sistema_emision",
+        "descripcion_sistema_arca",
+        "actividad_predeterminada",
+        "jurisdiccion_iibb_predeterminada",
+        "predeterminado",
+        "bloqueado",
+        "fecha_alta",
+        "fecha_baja",
+        "activo",
+        "observaciones",
+        "creado_en",
+        "actualizado_en",
+    )
+    list_select_related = (
+        "empresa",
+        "sucursal",
+    )
+
+    @admin.display(description="Número", ordering="numero")
+    def numero_formateado(self, obj):
+        return obj.numero_formateado
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(Empresa)
 class EmpresaAdmin(admin.ModelAdmin):

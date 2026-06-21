@@ -141,3 +141,17 @@ No se asigna automáticamente:
 - principal lugar de actividades
 
 La carga real se completa desde la pantalla funcional.
+
+
+## Relación con puntos de venta
+
+Desde la TAREA 0008 una sucursal puede tener cero, uno o varios puntos de
+venta.
+
+Reglas:
+
+- un punto activo requiere una sucursal activa
+- no se puede inactivar una sucursal mientras conserve puntos activos
+- el domicilio del punto se obtiene de la sucursal
+- el punto de venta no duplica los campos del domicilio estructurado
+- la baja del punto conserva su relación histórica con la sucursal

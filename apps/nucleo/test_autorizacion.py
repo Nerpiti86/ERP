@@ -185,7 +185,6 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
     def datos_post(self):
         return {
             "moneda_funcional": "USD",
-            "punto_venta_default": "0007",
             "modo_numeracion_comprobantes": "manual",
             "permite_stock_negativo": "on",
             "usa_centros_costo": "",
@@ -267,7 +266,7 @@ class AutorizacionConfiguracionEmpresaTests(TestCase):
             ParametroSistema.objects.filter(
                 empresa=self.empresa
             ).count(),
-            8,
+            7,
         )
 
     def test_editor_puede_guardar(self):
