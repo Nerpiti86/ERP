@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} · ERP{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <p class="text-uppercase text-secondary small fw-semibold mb-1">
+        Gestión · Clientes y proveedores
+      </p>
+      <h1 class="h3 mb-1">{{ titulo }}</h1>
+      <p class="text-secondary mb-0">{{ empresa.razon_social }}</p>
+    </div>
+    <a
+      class="btn btn-outline-secondary"
+      href="{% if tercero %}{% url 'terceros:tercero_detail' tercero.pk %}{% else %}{% url 'terceros:tercero_list' %}{% endif %}"
+    >
+      Volver
+    </a>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Identidad y datos generales</div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for field in form %}
+            {% if field.name != "es_cliente" and field.name != "es_proveedor" and field.name != "observaciones" %}
+              <div class="{% if field.name == 'denominacion' or field.name == 'nombre_fantasia' %}col-12 col-lg-8{% else %}col-12 col-md-6 col-lg-4{% endif %}">
+                <label class="form-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                  <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                  <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Roles operativos</div>
+      <div class="card-body">
+        <p class="text-secondary">
+          Un mismo tercero puede ser cliente, proveedor o ambos.
+        </p>
+        <div class="d-flex flex-wrap gap-4">
+          {% for field in form %}
+            {% if field.name == "es_cliente" or field.name == "es_proveedor" %}
+              <div class="form-check">
+                {{ field }}
+                <label class="form-check-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                </label>
+                {% for error in field.errors %}
+                  <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Observaciones</div>
+      <div class="card-body">
+        {{ form.observaciones }}
+        {% for error in form.observaciones.errors %}
+          <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <a
+        class="btn btn-outline-secondary"
+        href="{% if tercero %}{% url 'terceros:tercero_detail' tercero.pk %}{% else %}{% url 'terceros:tercero_list' %}{% endif %}"
+      >
+        Cancelar
+      </a>
+      <button class="btn btn-primary" type="submit">
+        {% if modo_creacion %}Crear tercero{% else %}Guardar cambios{% endif %}
+      </button>
+    </div>
+  </form>
+{% endblock %}

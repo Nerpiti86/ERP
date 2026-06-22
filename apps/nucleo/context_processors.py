@@ -112,6 +112,25 @@ def permisos_funcionales(request):
             "puntos_venta.editar",
         ),
     )
+    puede_crear_terceros = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "terceros.crear",
+    )
+    puede_editar_terceros = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "terceros.editar",
+    )
+    puede_ver_terceros = usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        (
+            "terceros.ver",
+            "terceros.crear",
+            "terceros.editar",
+        ),
+    )
     puede_editar_parametros = usuario_tiene_permiso(
         usuario,
         empresa,
@@ -157,6 +176,9 @@ def permisos_funcionales(request):
             "puntos_venta_ver": puede_ver_puntos_venta,
             "puntos_venta_crear": puede_crear_puntos_venta,
             "puntos_venta_editar": puede_editar_puntos_venta,
+            "terceros_ver": puede_ver_terceros,
+            "terceros_crear": puede_crear_terceros,
+            "terceros_editar": puede_editar_terceros,
             "parametros_ver": puede_ver_parametros,
             "parametros_editar": puede_editar_parametros,
             "contabilidad_ver": puede_ver_contabilidad,

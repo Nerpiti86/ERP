@@ -56,7 +56,7 @@
             {% if user.is_authenticated %}
               <li class="nav-item dropdown">
                 <a
-                  class="nav-link dropdown-toggle"
+                  class="nav-link dropdown-toggle{% if request.resolver_match.namespace == 'terceros' %} active{% endif %}"
                   href="#"
                   role="button"
                   data-bs-toggle="dropdown"
@@ -65,15 +65,28 @@
                   Gestión
                 </a>
                 <ul class="dropdown-menu">
-                  <li>
-                    <h6 class="dropdown-header">Operación diaria</h6>
-                  </li>
-                  <li>
-                    <span class="dropdown-item-text erp-domain-description text-secondary small">
-                      Los módulos operativos se incorporarán aquí a medida que
-                      avance el ERP.
-                    </span>
-                  </li>
+                  {% if permisos_erp.terceros_ver %}
+                    <li>
+                      <h6 class="dropdown-header">Maestros</h6>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item{% if request.resolver_match.namespace == 'terceros' %} active{% endif %}"
+                        href="{% url 'terceros:tercero_list' %}"
+                      >
+                        Clientes y proveedores
+                      </a>
+                    </li>
+                  {% else %}
+                    <li>
+                      <h6 class="dropdown-header">Operación diaria</h6>
+                    </li>
+                    <li>
+                      <span class="dropdown-item-text erp-domain-description text-secondary small">
+                        No hay módulos operativos habilitados para este usuario.
+                      </span>
+                    </li>
+                  {% endif %}
                 </ul>
               </li>
 

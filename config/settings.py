@@ -23,6 +23,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     "treebeard",
     "apps.nucleo",
+    "apps.terceros",
     "apps.contabilidad",
     "apps.core",
     "django.contrib.admin",

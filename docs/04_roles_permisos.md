@@ -534,3 +534,24 @@ Matriz inicial:
 
 La seguridad se valida en backend y por empresa activa. La sucursal de cada
 punto también debe pertenecer a la empresa activa.
+
+
+## Actualización: TAREA 0009 — Maestro base de terceros
+
+Permisos incorporados:
+
+```text
+terceros.ver
+terceros.crear
+terceros.editar
+```
+
+Matriz inicial:
+
+- ADMIN: consultar, crear y editar
+- CONTADOR: consultar, crear y editar
+- OPERADOR: consultar, crear y editar
+- AUDITOR: consultar
+- SOLO_LECTURA: consultar
+
+Totales: 37 permisos y 99 relaciones rol-permiso.

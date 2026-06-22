@@ -46,6 +46,9 @@ PERMISOS_INICIALES = {
     "puntos_venta.ver": "Consultar puntos de venta.",
     "puntos_venta.crear": "Crear puntos de venta.",
     "puntos_venta.editar": "Editar o inactivar puntos de venta.",
+    "terceros.ver": "Consultar clientes y proveedores.",
+    "terceros.crear": "Crear clientes y proveedores.",
+    "terceros.editar": "Editar o inactivar clientes y proveedores.",
     "usuarios.ver": "Consultar usuarios y accesos.",
     "usuarios.crear": "Crear usuarios y accesos.",
     "usuarios.editar": "Editar usuarios y accesos.",
@@ -89,10 +92,16 @@ PERMISOS_POR_ROL = {
         "puntos_venta.ver",
         "puntos_venta.crear",
         "puntos_venta.editar",
+        "terceros.ver",
+        "terceros.crear",
+        "terceros.editar",
     ),
     "OPERADOR": (
         "empresas.ver",
         "sucursales.ver",
+        "terceros.ver",
+        "terceros.crear",
+        "terceros.editar",
         "documentos.ver",
         "documentos.adjuntar",
         "ventas.ver",
@@ -117,6 +126,7 @@ PERMISOS_POR_ROL = {
         "actividades.ver",
         "iibb.ver",
         "puntos_venta.ver",
+        "terceros.ver",
     ),
     "SOLO_LECTURA": (
         "empresas.ver",
@@ -130,6 +140,7 @@ PERMISOS_POR_ROL = {
         "actividades.ver",
         "iibb.ver",
         "puntos_venta.ver",
+        "terceros.ver",
     ),
 }
 

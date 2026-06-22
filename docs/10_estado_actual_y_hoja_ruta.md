@@ -438,3 +438,30 @@ Resultado:
 - preservación del parámetro anterior sin conversión automática
 
 Suite verificada al cierre: `266` pruebas.
+
+
+## Actualización: TAREA 0009 — Maestro base de terceros
+
+Implementado:
+
+- app `apps.terceros`
+- identidad única por empresa
+- roles de cliente y proveedor
+- catálogos de documento y condición IVA
+- domicilios y contactos múltiples
+- principales automáticos
+- baja lógica
+- servicios transaccionales y auditoría
+- permisos `terceros.*`
+- aislamiento por empresa activa
+- navegación desde Gestión
+
+Suite específica: `48` pruebas.
+Suite completa verificada: `354` pruebas.
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0010 — Productos y servicios
+Estado: PENDIENTE DE DISEÑO
+```
