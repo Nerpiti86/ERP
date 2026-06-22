@@ -89,7 +89,9 @@ class TerceroForm(forms.Form):
         self.empresa = empresa
         self.tercero = tercero
 
-        if tercero is not None and not args and "data" not in kwargs:
+        datos_recibidos = args[0] if args else kwargs.get("data")
+
+        if tercero is not None and datos_recibidos is None:
             initial = kwargs.setdefault("initial", {})
             initial.update(
                 {
@@ -124,6 +126,9 @@ class TerceroForm(forms.Form):
             )
             self.fields["codigo"].disabled = True
             self.fields["codigo"].initial = tercero.codigo
+            self.fields["codigo"].help_text = (
+                "Código interno del tercero. No puede modificarse."
+            )
 
         self.fields["tipo_documento"].queryset = tipos.order_by(
             "codigo_arca",

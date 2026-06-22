@@ -1,8 +1,11 @@
+from datetime import date
+
 from django.test import TestCase
 from django.urls import reverse
 
 from apps.nucleo.empresa_activa import SESSION_EMPRESA_ACTIVA_ID
 
+from .forms import TerceroForm
 from .models import (
     ContactoTercero,
     DomicilioTercero,
@@ -118,6 +121,150 @@ class TercerosViewsTests(TestCase):
             )
         )
         self.assertEqual(respuesta.status_code, 404)
+
+    def test_formulario_edicion_trata_none_como_no_vinculado(self):
+        form = TerceroForm(
+            None,
+            empresa=self.empresa,
+            tercero=self.tercero,
+        )
+
+        self.assertFalse(form.is_bound)
+        self.assertEqual(
+            form.initial["denominacion"],
+            self.tercero.denominacion,
+        )
+        self.assertEqual(
+            form.initial["numero_documento"],
+            self.tercero.numero_documento,
+        )
+        self.assertTrue(form.initial["es_cliente"])
+
+    def test_edicion_get_precarga_datos_actuales(self):
+        self.tercero.nombre_fantasia = "Visible"
+        self.tercero.telefono = "3415558877"
+        self.tercero.email = "visible@example.com"
+        self.tercero.sitio_web = "https://example.com"
+        self.tercero.fecha_alta = date(2025, 4, 15)
+        self.tercero.observaciones = "Datos existentes"
+        self.tercero.save(
+            update_fields=[
+                "nombre_fantasia",
+                "telefono",
+                "email",
+                "sitio_web",
+                "fecha_alta",
+                "observaciones",
+                "actualizado_en",
+            ]
+        )
+        TerceroRol.objects.get_or_create(
+            tercero=self.tercero,
+            rol=TerceroRol.Rol.PROVEEDOR,
+            defaults={
+                "fecha_alta": date(2025, 4, 15),
+                "activo": True,
+            },
+        )
+        self.tercero.refresh_from_db()
+
+        self._login_empresa(self.operador)
+        respuesta = self.client.get(
+            reverse(
+                "terceros:tercero_edit",
+                kwargs={"tercero_id": self.tercero.pk},
+            )
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        form = respuesta.context["form"]
+        self.assertFalse(form.is_bound)
+        self.assertEqual(
+            form.initial["codigo"],
+            self.tercero.codigo,
+        )
+        self.assertEqual(
+            form.initial["tipo_persona"],
+            self.tercero.tipo_persona,
+        )
+        self.assertEqual(
+            form.initial["tipo_documento"],
+            self.tercero.tipo_documento,
+        )
+        self.assertEqual(
+            form.initial["numero_documento"],
+            self.tercero.numero_documento,
+        )
+        self.assertEqual(
+            form.initial["denominacion"],
+            self.tercero.denominacion,
+        )
+        self.assertEqual(
+            form.initial["nombre_fantasia"],
+            "Visible",
+        )
+        self.assertEqual(
+            form.initial["condicion_iva"],
+            self.tercero.condicion_iva,
+        )
+        self.assertEqual(
+            form.initial["telefono"],
+            "3415558877",
+        )
+        self.assertEqual(
+            form.initial["email"],
+            "visible@example.com",
+        )
+        self.assertEqual(
+            form.initial["sitio_web"],
+            "https://example.com",
+        )
+        self.assertEqual(
+            form.initial["fecha_alta"],
+            date(2025, 4, 15),
+        )
+        self.assertTrue(form.initial["es_cliente"])
+        self.assertTrue(form.initial["es_proveedor"])
+        self.assertEqual(
+            form.initial["observaciones"],
+            "Datos existentes",
+        )
+
+    def test_edicion_get_se_distingue_visualmente_del_alta(self):
+        self._login_empresa(self.operador)
+        respuesta = self.client.get(
+            reverse(
+                "terceros:tercero_edit",
+                kwargs={"tercero_id": self.tercero.pk},
+            )
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Editar cliente/proveedor")
+        self.assertContains(respuesta, "Modo edición")
+        self.assertContains(
+            respuesta,
+            "Estás modificando un tercero existente.",
+        )
+        self.assertContains(respuesta, self.tercero.denominacion)
+        self.assertContains(respuesta, self.tercero.codigo)
+        self.assertContains(respuesta, self.tercero.identificacion)
+        self.assertContains(respuesta, "Cancelar y volver")
+        self.assertContains(respuesta, "Guardar cambios")
+
+    def test_alta_no_muestra_modo_edicion(self):
+        self._login_empresa(self.operador)
+        respuesta = self.client.get(
+            reverse("terceros:tercero_create")
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Nuevo cliente o proveedor")
+        self.assertNotContains(respuesta, "Modo edición")
+        self.assertNotContains(
+            respuesta,
+            "Estás modificando un tercero existente.",
+        )
 
     def test_operador_puede_editar(self):
         self._login_empresa(self.operador)

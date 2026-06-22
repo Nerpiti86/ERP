@@ -462,6 +462,34 @@ Suite completa verificada: `354` pruebas.
 Próximo bloque recomendado:
 
 ```text
-TAREA 0010 — Productos y servicios
+TAREA 0011 — Productos y servicios
+Estado: PENDIENTE DE DISEÑO
+```
+
+
+## Actualización: TAREA 0010 — Edición de terceros
+
+Se corrige el flujo de edición del maestro de terceros.
+
+Resultado:
+
+- el formulario GET precarga todos los datos existentes
+- `None` se interpreta correctamente como formulario no vinculado
+- la vista separa explícitamente GET y POST
+- el título identifica la edición de cliente/proveedor
+- se muestra la razón social, código y documento del tercero
+- distintivo visual `Modo edición`
+- advertencia antes de modificar un registro existente
+- acciones claras `Guardar cambios` y `Cancelar y volver`
+- el alta conserva su presentación independiente
+- no se agregan migraciones ni se modifican permisos
+
+Suite específica de terceros: `52` pruebas.
+Suite completa verificada: `358` pruebas.
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0011 — Productos y servicios
 Estado: PENDIENTE DE DISEÑO
 ```

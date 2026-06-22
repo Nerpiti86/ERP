@@ -261,11 +261,18 @@ def tercero_create(request):
 def tercero_edit(request, tercero_id):
     empresa = request.empresa_activa
     tercero = _obtener_tercero(empresa, tercero_id, activo=True)
-    form = TerceroForm(
-        request.POST if request.method == "POST" else None,
-        empresa=empresa,
-        tercero=tercero,
-    )
+
+    if request.method == "POST":
+        form = TerceroForm(
+            request.POST,
+            empresa=empresa,
+            tercero=tercero,
+        )
+    else:
+        form = TerceroForm(
+            empresa=empresa,
+            tercero=tercero,
+        )
 
     if request.method == "POST" and form.is_valid():
         try:
@@ -305,7 +312,7 @@ def tercero_edit(request, tercero_id):
             "empresa": empresa,
             "form": form,
             "tercero": tercero,
-            "titulo": f"Editar {tercero.codigo}",
+            "titulo": "Editar cliente/proveedor",
             "modo_creacion": False,
         },
     )

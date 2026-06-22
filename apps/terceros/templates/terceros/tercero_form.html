@@ -3,23 +3,52 @@
 {% block title %}{{ titulo }} · ERP{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
       <p class="text-uppercase text-secondary small fw-semibold mb-1">
         Gestión · Clientes y proveedores
       </p>
-      <h1 class="h3 mb-1">{{ titulo }}</h1>
-      <p class="text-secondary mb-0">{{ empresa.razon_social }}</p>
+      {% if modo_creacion %}
+        <h1 class="h3 mb-1">{{ titulo }}</h1>
+        <p class="text-secondary mb-0">{{ empresa.razon_social }}</p>
+      {% else %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+          <h1 class="h3 mb-0">{{ titulo }}</h1>
+          <span class="badge text-bg-warning">Modo edición</span>
+        </div>
+        <p class="fw-semibold mb-1">{{ tercero.denominacion }}</p>
+        <p class="text-secondary mb-0">
+          {{ tercero.codigo }} · {{ tercero.identificacion }}
+        </p>
+      {% endif %}
     </div>
-    <a
-      class="btn btn-outline-secondary"
-      href="{% if tercero %}{% url 'terceros:tercero_detail' tercero.pk %}{% else %}{% url 'terceros:tercero_list' %}{% endif %}"
-    >
-      Volver
-    </a>
+    <div class="d-flex flex-wrap gap-2">
+      <a
+        class="btn btn-outline-secondary"
+        href="{% if tercero %}{% url 'terceros:tercero_detail' tercero.pk %}{% else %}{% url 'terceros:tercero_list' %}{% endif %}"
+      >
+        {% if modo_creacion %}Volver{% else %}Cancelar y volver{% endif %}
+      </a>
+      {% if not modo_creacion %}
+        <button
+          class="btn btn-primary"
+          type="submit"
+          form="tercero-form"
+        >
+          Guardar cambios
+        </button>
+      {% endif %}
+    </div>
   </div>
 
-  <form method="post" novalidate>
+  {% if not modo_creacion %}
+    <div class="alert alert-warning" role="alert">
+      <strong>Estás modificando un tercero existente.</strong>
+      Revisá los datos actuales antes de guardar los cambios.
+    </div>
+  {% endif %}
+
+  <form id="tercero-form" method="post" novalidate>
     {% csrf_token %}
     {% if form.non_field_errors %}
       <div class="alert alert-danger">{{ form.non_field_errors }}</div>
@@ -88,7 +117,7 @@
         class="btn btn-outline-secondary"
         href="{% if tercero %}{% url 'terceros:tercero_detail' tercero.pk %}{% else %}{% url 'terceros:tercero_list' %}{% endif %}"
       >
-        Cancelar
+        {% if modo_creacion %}Cancelar{% else %}Cancelar y volver{% endif %}
       </a>
       <button class="btn btn-primary" type="submit">
         {% if modo_creacion %}Crear tercero{% else %}Guardar cambios{% endif %}
