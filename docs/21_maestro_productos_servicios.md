@@ -1,6 +1,6 @@
 # Maestro de productos y servicios
 
-Estado: diseño aprobado; núcleo persistente implementado en TAREA 0012. Servicios e interfaz pendientes.
+Estado: diseño aprobado; núcleo persistente, servicios transaccionales y permisos implementados. Interfaz pendiente.
 
 ## 1. Objetivo
 
@@ -257,3 +257,20 @@ Todavía no se habilita la operación funcional desde la interfaz. Permanecen
 pendientes los servicios transaccionales, la auditoría, los permisos, los
 formularios, las vistas, la navegación y la carga controlada de catálogos
 fiscales y unidades de medida.
+
+## 14. Implementación: TAREA 0013 — Servicios, auditoría y permisos
+
+Se incorpora la capa transaccional del modelo `Item`:
+
+- alta con validación y bloqueo de empresa y catálogos
+- edición de ítems activos dentro de la empresa correspondiente
+- inactivación lógica
+- snapshots de auditoría antes y después de cada cambio
+- captura de usuario, IP y agente de usuario cuando existe request
+- permisos `items.ver`, `items.crear` e `items.editar`
+- carga idempotente de la matriz ampliada de roles y permisos
+- pruebas de servicios, aislamiento, auditoría y permisos
+
+La identidad compuesta por empresa y código continúa siendo inmutable. La
+operación funcional mediante formularios, vistas y navegación permanece
+pendiente para la siguiente tarea.

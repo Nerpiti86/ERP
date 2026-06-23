@@ -555,3 +555,27 @@ Matriz inicial:
 - SOLO_LECTURA: consultar
 
 Totales: 37 permisos y 99 relaciones rol-permiso.
+
+## Actualización: TAREA 0013 — Permisos de productos y servicios
+
+Permisos incorporados:
+
+```text
+items.ver
+items.crear
+items.editar
+```
+
+Matriz inicial:
+
+- ADMIN: consultar, crear y editar
+- CONTADOR: consultar, crear y editar
+- OPERADOR: consultar, crear y editar
+- AUDITOR: consultar
+- SOLO_LECTURA: consultar
+
+Totales después de esta ampliación: 40 permisos y 110 relaciones
+rol-permiso.
+
+La carga continúa siendo idempotente mediante
+`python manage.py cargar_roles_permisos_iniciales`.

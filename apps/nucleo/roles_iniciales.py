@@ -49,6 +49,9 @@ PERMISOS_INICIALES = {
     "terceros.ver": "Consultar clientes y proveedores.",
     "terceros.crear": "Crear clientes y proveedores.",
     "terceros.editar": "Editar o inactivar clientes y proveedores.",
+    "items.ver": "Consultar productos y servicios.",
+    "items.crear": "Crear productos y servicios.",
+    "items.editar": "Editar o inactivar productos y servicios.",
     "usuarios.ver": "Consultar usuarios y accesos.",
     "usuarios.crear": "Crear usuarios y accesos.",
     "usuarios.editar": "Editar usuarios y accesos.",
@@ -95,6 +98,9 @@ PERMISOS_POR_ROL = {
         "terceros.ver",
         "terceros.crear",
         "terceros.editar",
+        "items.ver",
+        "items.crear",
+        "items.editar",
     ),
     "OPERADOR": (
         "empresas.ver",
@@ -110,6 +116,9 @@ PERMISOS_POR_ROL = {
         "compras.crear",
         "tesoreria.ver",
         "tesoreria.operar",
+        "items.ver",
+        "items.crear",
+        "items.editar",
     ),
     "AUDITOR": (
         "empresas.ver",
@@ -127,6 +136,7 @@ PERMISOS_POR_ROL = {
         "iibb.ver",
         "puntos_venta.ver",
         "terceros.ver",
+        "items.ver",
     ),
     "SOLO_LECTURA": (
         "empresas.ver",
@@ -141,6 +151,7 @@ PERMISOS_POR_ROL = {
         "iibb.ver",
         "puntos_venta.ver",
         "terceros.ver",
+        "items.ver",
     ),
 }
 

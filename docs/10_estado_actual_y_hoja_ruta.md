@@ -554,3 +554,31 @@ Próximo bloque recomendado:
 ```text
 TAREA 0013 — Servicios transaccionales, auditoría y permisos de ítems
 ```
+
+## Actualización: TAREA 0013 — Servicios, auditoría y permisos de ítems
+
+Se incorpora la capa transaccional del maestro de productos y servicios.
+
+Resultado:
+
+- servicios `crear_item`, `actualizar_item` e `inactivar_item`
+- bloqueo de empresa, ítem y catálogos durante la operación
+- aislamiento por empresa
+- auditoría con snapshots anteriores y nuevos
+- permisos `items.ver`, `items.crear` e `items.editar`
+- matriz inicial ampliada a 40 permisos y 110 relaciones
+- carga idempotente aplicada y verificada
+- pruebas específicas de servicios y permisos
+
+Estado:
+
+```text
+TAREA 0013 — SERVICIOS, AUDITORÍA Y PERMISOS IMPLEMENTADOS
+Formularios, vistas y navegación: PENDIENTES
+```
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0014 — Interfaz funcional del maestro de productos y servicios
+```
