@@ -1,6 +1,6 @@
 # Maestro de productos y servicios
 
-Estado: diseño aprobado; núcleo persistente, servicios transaccionales y permisos implementados. Interfaz pendiente.
+Estado: diseño, núcleo persistente, servicios, permisos y catálogos iniciales implementados. Interfaz pendiente.
 
 ## 1. Objetivo
 
@@ -274,3 +274,26 @@ Se incorpora la capa transaccional del modelo `Item`:
 La identidad compuesta por empresa y código continúa siendo inmutable. La
 operación funcional mediante formularios, vistas y navegación permanece
 pendiente para la siguiente tarea.
+
+## 15. Implementación: TAREA 0014 — Catálogos iniciales
+
+Se incorpora el snapshot local necesario para que el formulario de ítems pueda
+operar con valores controlados:
+
+- 46 unidades de medida de la tabla oficial ARCA
+- alícuotas IVA 0%, 2,5%, 5%, 10,5%, 21% y 27%
+- códigos ARCA asociados
+- migración de datos
+- comando idempotente `cargar_catalogos_items_iniciales`
+- verificación de consistencia sin eliminar extensiones locales
+
+Fuentes consultadas el 23/06/2026:
+
+- tabla oficial de unidades de medida:
+  `https://www.afip.gov.ar/fe/documentos/FormatoEnvioFacturadorPlus/fp_formato_archivo_tablas.html`
+- método oficial de parámetros IVA:
+  `https://servicios1.afip.gov.ar/wsfev1/service.asmx?op=FEParamGetTiposIva`
+
+Este bloque es un snapshot controlado. Una futura integración con los
+webservices de ARCA podrá sincronizar vigencias y modificaciones sin cambiar la
+identidad interna de los registros ya utilizados.

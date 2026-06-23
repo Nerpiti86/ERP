@@ -20,16 +20,8 @@ class ItemModelTests(TestCase):
             cuit="30714202959",
             razon_social="Empresa Dos SA",
         )
-        cls.unidad = UnidadMedida.objects.create(
-            codigo="UNIDAD",
-            nombre="Unidad",
-            simbolo="u",
-        )
-        cls.alicuota = AlicuotaIVA.objects.create(
-            codigo="IVA_21",
-            nombre="IVA 21",
-            porcentaje=Decimal("21.00"),
-        )
+        cls.unidad = UnidadMedida.objects.get(codigo="UNIDAD")
+        cls.alicuota = AlicuotaIVA.objects.get(codigo="IVA_21")
         cls.categoria = CategoriaItem.objects.create(
             empresa=cls.empresa,
             codigo="GENERAL",

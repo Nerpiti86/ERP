@@ -31,22 +31,13 @@ class ItemServicesTests(TestCase):
             username="operador_items",
             password="password-test",
         )
-        cls.unidad = UnidadMedida.objects.create(
-            codigo="UNIDAD",
-            nombre="Unidad",
-            simbolo="u",
-        )
+        cls.unidad = UnidadMedida.objects.get(codigo="UNIDAD")
         cls.otra_unidad = UnidadMedida.objects.create(
             codigo="HORA",
             nombre="Hora",
             simbolo="h",
         )
-        cls.alicuota = AlicuotaIVA.objects.create(
-            codigo="IVA_21",
-            nombre="IVA 21%",
-            porcentaje=Decimal("21.00"),
-            codigo_arca=5,
-        )
+        cls.alicuota = AlicuotaIVA.objects.get(codigo="IVA_21")
         cls.categoria = CategoriaItem.objects.create(
             empresa=cls.empresa,
             codigo="GENERAL",

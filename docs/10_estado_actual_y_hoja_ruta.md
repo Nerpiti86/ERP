@@ -580,5 +580,34 @@ Formularios, vistas y navegación: PENDIENTES
 Próximo bloque recomendado:
 
 ```text
-TAREA 0014 — Interfaz funcional del maestro de productos y servicios
+TAREA 0014 — Catálogos iniciales de unidades e IVA
+```
+
+## Actualización: TAREA 0014 — Catálogos iniciales de unidades e IVA
+
+Se incorpora un snapshot local controlado de los catálogos indispensables para
+habilitar posteriormente el alta funcional de productos y servicios.
+
+Resultado:
+
+- 46 unidades de medida codificadas por ARCA
+- 6 alícuotas de IVA utilizables por el maestro
+- migración de datos `items.0002_catalogos_iniciales`
+- carga idempotente mediante comando de gestión
+- verificación de consistencia del snapshot
+- preservación de registros adicionales
+- pruebas de migración, carga, reparación e idempotencia
+- fuentes oficiales y fecha del snapshot documentadas
+
+Estado:
+
+```text
+TAREA 0014 — CATÁLOGOS INICIALES IMPLEMENTADOS
+Interfaz funcional: PENDIENTE
+```
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0015 — Interfaz funcional del maestro de productos y servicios
 ```
