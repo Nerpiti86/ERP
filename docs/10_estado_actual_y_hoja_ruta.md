@@ -493,3 +493,33 @@ Próximo bloque recomendado:
 TAREA 0011 — Productos y servicios
 Estado: PENDIENTE DE DISEÑO
 ```
+
+## Actualización: TAREA 0011 — Diseño base de productos y servicios
+
+Se documenta el alcance inicial del maestro unificado de productos y servicios.
+
+Resultado:
+
+- documento específico `docs/21_maestro_productos_servicios.md`
+- entidad conceptual única `Item`
+- tipos `PRODUCTO` y `SERVICIO`
+- compra y venta independientes
+- stock permitido únicamente para productos
+- ficha principal genérica
+- categorías, marcas, unidades e IVA como catálogos relacionados
+- variantes operativas como ítems independientes
+- baja lógica, multiempresa, permisos y auditoría
+- funciones avanzadas separadas en tareas posteriores
+
+Estado:
+
+```text
+TAREA 0011 — DISEÑO DOCUMENTADO
+Implementación técnica: PENDIENTE
+```
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0012 — Implementar el núcleo del maestro de productos y servicios
+```
