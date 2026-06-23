@@ -1,6 +1,6 @@
 # Maestro de productos y servicios
 
-Estado: diseño base aprobado para implementación incremental.
+Estado: diseño aprobado; núcleo persistente implementado en TAREA 0012. Servicios e interfaz pendientes.
 
 ## 1. Objetivo
 
@@ -240,3 +240,20 @@ no se modelará anticipadamente si no afecta la integridad de la primera versió
 
 La prioridad es mantener un maestro normal, útil y entendible sin impedir su
 evolución.
+
+## 13. Implementación: TAREA 0012 — Núcleo persistente
+
+Se incorpora la primera base técnica del maestro:
+
+- app `apps.items`
+- catálogos `CategoriaItem`, `Marca`, `UnidadMedida` y `AlicuotaIVA`
+- modelo central `Item`
+- restricciones de unicidad y coherencia operativa en PostgreSQL
+- validación de pertenencia empresarial e inmutabilidad de identidad
+- administración técnica de solo lectura
+- pruebas específicas de modelos e invariantes
+
+Todavía no se habilita la operación funcional desde la interfaz. Permanecen
+pendientes los servicios transaccionales, la auditoría, los permisos, los
+formularios, las vistas, la navegación y la carga controlada de catálogos
+fiscales y unidades de medida.

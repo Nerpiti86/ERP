@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "treebeard",
     "apps.nucleo",
     "apps.terceros",
+    "apps.items",
     "apps.contabilidad",
     "apps.core",
     "django.contrib.admin",

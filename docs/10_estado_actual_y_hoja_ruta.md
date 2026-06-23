@@ -523,3 +523,34 @@ Próximo bloque recomendado:
 ```text
 TAREA 0012 — Implementar el núcleo del maestro de productos y servicios
 ```
+
+## Actualización: TAREA 0012 — Núcleo persistente de productos y servicios
+
+Se implementa la primera base técnica del maestro unificado.
+
+Resultado:
+
+- app `apps.items`
+- categorías y marcas por empresa
+- catálogos controlados de unidades de medida y alícuotas de IVA
+- modelo `Item` para productos y servicios
+- código único por empresa e identidad inmutable
+- compra y venta independientes
+- servicios sin control de stock
+- coherencia entre tratamiento de IVA y alícuota
+- restricciones PostgreSQL
+- administración técnica de solo lectura
+- pruebas específicas de modelos e invariantes
+
+Estado:
+
+```text
+TAREA 0012 — NÚCLEO PERSISTENTE IMPLEMENTADO
+Servicios, permisos e interfaz: PENDIENTES
+```
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0013 — Servicios transaccionales, auditoría y permisos de ítems
+```
