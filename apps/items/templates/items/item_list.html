@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Productos y servicios · ERP{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <p class="text-uppercase text-secondary small fw-semibold mb-1">
+        Gestión · Maestros
+      </p>
+      <h1 class="h3 mb-1">Productos y servicios</h1>
+      <p class="text-secondary mb-0">{{ empresa.razon_social }}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'items:categoria_list' %}">
+        Categorías
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'items:marca_list' %}">
+        Marcas
+      </a>
+      {% if puede_crear %}
+        <a class="btn btn-primary" href="{% url 'items:item_create' %}">
+          Nuevo ítem
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="text-secondary small">Total</div>
+        <div class="fs-4 fw-semibold">{{ resumen.total }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="text-secondary small">Activos</div>
+        <div class="fs-4 fw-semibold">{{ resumen.activos }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="text-secondary small">Productos</div>
+        <div class="fs-4 fw-semibold">{{ resumen.productos }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <div class="text-secondary small">Servicios</div>
+        <div class="fs-4 fw-semibold">{{ resumen.servicios }}</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-lg-4">
+          <label class="form-label" for="id_q">Buscar</label>
+          <input
+            class="form-control"
+            id="id_q"
+            name="q"
+            value="{{ filtros.q }}"
+            placeholder="Código, nombre, categoría o marca"
+          >
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label" for="id_tipo">Tipo</label>
+          <select class="form-select" id="id_tipo" name="tipo">
+            <option value="">Todos</option>
+            {% for valor, etiqueta in tipos %}
+              <option value="{{ valor }}"{% if filtros.tipo == valor %} selected{% endif %}>
+                {{ etiqueta }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label" for="id_operacion">Operación</label>
+          <select class="form-select" id="id_operacion" name="operacion">
+            <option value="">Todas</option>
+            <option value="compra"{% if filtros.operacion == "compra" %} selected{% endif %}>Compra</option>
+            <option value="venta"{% if filtros.operacion == "venta" %} selected{% endif %}>Venta</option>
+            <option value="ambos"{% if filtros.operacion == "ambos" %} selected{% endif %}>Compra y venta</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label" for="id_stock">Stock</label>
+          <select class="form-select" id="id_stock" name="stock">
+            <option value="">Todos</option>
+            <option value="si"{% if filtros.stock == "si" %} selected{% endif %}>Controla</option>
+            <option value="no"{% if filtros.stock == "no" %} selected{% endif %}>No controla</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label" for="id_estado">Estado</label>
+          <select class="form-select" id="id_estado" name="estado">
+            <option value="activos"{% if filtros.estado == "activos" %} selected{% endif %}>Activos</option>
+            <option value="inactivos"{% if filtros.estado == "inactivos" %} selected{% endif %}>Inactivos</option>
+            <option value="todos"{% if filtros.estado == "todos" %} selected{% endif %}>Todos</option>
+          </select>
+        </div>
+        <div class="col-12 d-flex justify-content-end gap-2">
+          {% if hay_filtros %}
+            <a class="btn btn-outline-secondary" href="{% url 'items:item_list' %}">
+              Limpiar
+            </a>
+          {% endif %}
+          <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Unidad</th>
+            <th>Operación</th>
+            <th>Estado</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+            <tr>
+              <td class="fw-semibold text-nowrap">{{ item.codigo }}</td>
+              <td>
+                <div>{{ item.nombre }}</div>
+                {% if item.categoria or item.marca %}
+                  <div class="text-secondary small">
+                    {% if item.categoria %}{{ item.categoria.nombre }}{% endif %}
+                    {% if item.categoria and item.marca %} · {% endif %}
+                    {% if item.marca %}{{ item.marca.nombre }}{% endif %}
+                  </div>
+                {% endif %}
+              </td>
+              <td>{{ item.get_tipo_display }}</td>
+              <td>{{ item.unidad_medida }}</td>
+              <td>
+                {% if item.se_compra %}<span class="badge text-bg-secondary">Compra</span>{% endif %}
+                {% if item.se_vende %}<span class="badge text-bg-primary">Venta</span>{% endif %}
+                {% if item.controla_stock %}<span class="badge text-bg-info">Stock</span>{% endif %}
+              </td>
+              <td>
+                {% if item.activo %}
+                  <span class="badge text-bg-success">Activo</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">Inactivo</span>
+                {% endif %}
+              </td>
+              <td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'items:item_detail' item.pk %}">
+                  Ver
+                </a>
+                {% if puede_editar and item.activo %}
+                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'items:item_edit' item.pk %}">
+                    Editar
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-secondary py-5">
+                No hay productos o servicios que coincidan con los filtros.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

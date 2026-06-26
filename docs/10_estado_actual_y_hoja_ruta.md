@@ -611,3 +611,31 @@ Próximo bloque recomendado:
 ```text
 TAREA 0015 — Interfaz funcional del maestro de productos y servicios
 ```
+
+## Actualización: TAREA 0015 — Interfaz funcional de productos y servicios
+
+Se completa la primera versión operativa del maestro.
+
+Resultado:
+
+- ruta funcional `/items/`
+- listado, filtros, detalle, alta, edición e inactivación de ítems
+- alta, edición e inactivación de categorías
+- alta, edición e inactivación de marcas
+- unidades e IVA mantenidos como catálogos oficiales de solo lectura
+- navegación integrada
+- seguridad backend por empresa y permisos
+- auditoría transaccional
+- pruebas de servicios, formularios, vistas y aislamiento
+
+Estado:
+
+```text
+TAREA 0015 — PRIMERA VERSIÓN FUNCIONAL IMPLEMENTADA
+```
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0016 — Proveedores, códigos externos y presentaciones de ítems
+```

@@ -27,7 +27,7 @@ Estado del índice: 23/06/2026.
 | `18_ingresos_brutos_jurisdicciones.md` | Configuración de IIBB, jurisdicción sede e historial por empresa | Implementado |
 | `19_puntos_venta.md` | Puntos de venta por sucursal, sistemas de emisión y baja lógica | Implementado |
 | `20_maestro_terceros.md` | Identidad única de clientes y proveedores, domicilios y contactos | Implementado |
-| `21_maestro_productos_servicios.md` | Diseño base del maestro unificado de productos y servicios | Núcleo, servicios, permisos y catálogos implementados; interfaz pendiente |
+| `21_maestro_productos_servicios.md` | Maestro unificado de productos y servicios | Primera versión funcional implementada |
 
 ## Jerarquía documental
 

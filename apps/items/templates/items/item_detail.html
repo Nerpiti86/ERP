@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.nombre }} · ERP{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <p class="text-uppercase text-secondary small fw-semibold mb-1">
+        Gestión · Productos y servicios
+      </p>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <h1 class="h3 mb-0">{{ item.nombre }}</h1>
+        {% if item.activo %}
+          <span class="badge text-bg-success">Activo</span>
+        {% else %}
+          <span class="badge text-bg-secondary">Inactivo</span>
+        {% endif %}
+      </div>
+      <p class="text-secondary mb-0 mt-1">{{ item.codigo }} · {{ item.get_tipo_display }}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'items:item_list' %}">Volver</a>
+      {% if puede_editar and item.activo %}
+        <a class="btn btn-primary" href="{% url 'items:item_edit' item.pk %}">Editar</a>
+        <form
+          method="post"
+          action="{% url 'items:item_deactivate' item.pk %}"
+          onsubmit="return confirm('¿Inactivar este producto o servicio?');"
+        >
+          {% csrf_token %}
+          <button class="btn btn-outline-danger" type="submit">Inactivar</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-xl-8">
+      <div class="card h-100">
+        <div class="card-header fw-semibold">Datos generales</div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Código</dt>
+            <dd class="col-sm-8">{{ item.codigo }}</dd>
+            <dt class="col-sm-4">Tipo</dt>
+            <dd class="col-sm-8">{{ item.get_tipo_display }}</dd>
+            <dt class="col-sm-4">Categoría</dt>
+            <dd class="col-sm-8">{{ item.categoria|default:"—" }}</dd>
+            <dt class="col-sm-4">Marca</dt>
+            <dd class="col-sm-8">{{ item.marca|default:"—" }}</dd>
+            <dt class="col-sm-4">Unidad base</dt>
+            <dd class="col-sm-8">{{ item.unidad_medida }}</dd>
+            <dt class="col-sm-4">Descripción</dt>
+            <dd class="col-sm-8">{{ item.descripcion|default:"—"|linebreaksbr }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-xl-4">
+      <div class="card h-100">
+        <div class="card-header fw-semibold">Operación</div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            {% if item.se_compra %}<span class="badge text-bg-secondary">Se compra</span>{% endif %}
+            {% if item.se_vende %}<span class="badge text-bg-primary">Se vende</span>{% endif %}
+            {% if item.controla_stock %}<span class="badge text-bg-info">Controla stock</span>{% endif %}
+          </div>
+          <dl class="mb-0">
+            <dt>Tratamiento de IVA</dt>
+            <dd>{{ item.get_tratamiento_iva_display }}</dd>
+            <dt>Alícuota</dt>
+            <dd>{{ item.alicuota_iva|default:"—" }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if item.observaciones %}
+    <div class="card">
+      <div class="card-header fw-semibold">Observaciones</div>
+      <div class="card-body">{{ item.observaciones|linebreaksbr }}</div>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -320,3 +320,217 @@ def inactivar_item(*, empresa, item, request=None):
         request=request,
     )
     return item
+
+
+def datos_categoria(categoria):
+    return {
+        "empresa_id": categoria.empresa_id,
+        "codigo": categoria.codigo,
+        "nombre": categoria.nombre,
+        "descripcion": categoria.descripcion,
+        "activo": categoria.activo,
+    }
+
+
+def datos_marca(marca):
+    return {
+        "empresa_id": marca.empresa_id,
+        "codigo": marca.codigo,
+        "nombre": marca.nombre,
+        "activo": marca.activo,
+    }
+
+
+def _datos_catalogo(catalogo):
+    if isinstance(catalogo, CategoriaItem):
+        return datos_categoria(catalogo)
+    return datos_marca(catalogo)
+
+
+def _catalogo_empresa_editable(modelo, *, empresa, catalogo, etiqueta):
+    bloqueado = (
+        modelo.objects.select_for_update()
+        .filter(
+            pk=getattr(catalogo, "pk", None),
+            empresa=empresa,
+            activo=True,
+        )
+        .first()
+    )
+    if bloqueado is None:
+        raise ValidationError(
+            f"La {etiqueta} no pertenece a la empresa activa o está inactiva."
+        )
+    return bloqueado
+
+
+@transaction.atomic
+def crear_categoria(
+    *,
+    empresa,
+    codigo,
+    nombre,
+    descripcion,
+    request=None,
+):
+    empresa = _empresa_activa(empresa)
+    categoria = CategoriaItem(
+        empresa=empresa,
+        codigo=codigo,
+        nombre=nombre,
+        descripcion=descripcion or "",
+        activo=True,
+    )
+    categoria.full_clean()
+    categoria.save()
+    _auditar(
+        empresa=empresa,
+        objeto=categoria,
+        accion=Auditoria.Accion.INSERT,
+        anteriores=None,
+        nuevos=datos_categoria(categoria),
+        request=request,
+    )
+    return categoria
+
+
+@transaction.atomic
+def actualizar_categoria(
+    *,
+    empresa,
+    categoria,
+    nombre,
+    descripcion,
+    request=None,
+):
+    empresa = _empresa_activa(empresa)
+    categoria = _catalogo_empresa_editable(
+        CategoriaItem,
+        empresa=empresa,
+        catalogo=categoria,
+        etiqueta="categoría",
+    )
+    anteriores = datos_categoria(categoria)
+    categoria.nombre = nombre
+    categoria.descripcion = descripcion or ""
+    categoria.full_clean()
+    categoria.save()
+    _auditar(
+        empresa=empresa,
+        objeto=categoria,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_categoria(categoria),
+        request=request,
+    )
+    return categoria
+
+
+@transaction.atomic
+def inactivar_categoria(*, empresa, categoria, request=None):
+    empresa = _empresa_activa(empresa)
+    categoria = _catalogo_empresa_editable(
+        CategoriaItem,
+        empresa=empresa,
+        catalogo=categoria,
+        etiqueta="categoría",
+    )
+    if categoria.items.filter(activo=True).exists():
+        raise ValidationError(
+            "No se puede inactivar una categoría utilizada por ítems activos."
+        )
+
+    anteriores = datos_categoria(categoria)
+    categoria.activo = False
+    categoria.full_clean()
+    categoria.save(update_fields=["activo", "actualizado_en"])
+    _auditar(
+        empresa=empresa,
+        objeto=categoria,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_categoria(categoria),
+        request=request,
+    )
+    return categoria
+
+
+@transaction.atomic
+def crear_marca(*, empresa, codigo, nombre, request=None):
+    empresa = _empresa_activa(empresa)
+    marca = Marca(
+        empresa=empresa,
+        codigo=codigo,
+        nombre=nombre,
+        activo=True,
+    )
+    marca.full_clean()
+    marca.save()
+    _auditar(
+        empresa=empresa,
+        objeto=marca,
+        accion=Auditoria.Accion.INSERT,
+        anteriores=None,
+        nuevos=datos_marca(marca),
+        request=request,
+    )
+    return marca
+
+
+@transaction.atomic
+def actualizar_marca(
+    *,
+    empresa,
+    marca,
+    nombre,
+    request=None,
+):
+    empresa = _empresa_activa(empresa)
+    marca = _catalogo_empresa_editable(
+        Marca,
+        empresa=empresa,
+        catalogo=marca,
+        etiqueta="marca",
+    )
+    anteriores = datos_marca(marca)
+    marca.nombre = nombre
+    marca.full_clean()
+    marca.save()
+    _auditar(
+        empresa=empresa,
+        objeto=marca,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_marca(marca),
+        request=request,
+    )
+    return marca
+
+
+@transaction.atomic
+def inactivar_marca(*, empresa, marca, request=None):
+    empresa = _empresa_activa(empresa)
+    marca = _catalogo_empresa_editable(
+        Marca,
+        empresa=empresa,
+        catalogo=marca,
+        etiqueta="marca",
+    )
+    if marca.items.filter(activo=True).exists():
+        raise ValidationError(
+            "No se puede inactivar una marca utilizada por ítems activos."
+        )
+
+    anteriores = datos_marca(marca)
+    marca.activo = False
+    marca.full_clean()
+    marca.save(update_fields=["activo", "actualizado_en"])
+    _auditar(
+        empresa=empresa,
+        objeto=marca,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_marca(marca),
+        request=request,
+    )
+    return marca

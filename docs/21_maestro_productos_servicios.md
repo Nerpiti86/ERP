@@ -1,6 +1,6 @@
 # Maestro de productos y servicios
 
-Estado: diseño, núcleo persistente, servicios, permisos y catálogos iniciales implementados. Interfaz pendiente.
+Estado: primera versión funcional implementada con núcleo, servicios, permisos, catálogos e interfaz ERP.
 
 ## 1. Objetivo
 
@@ -297,3 +297,24 @@ Fuentes consultadas el 23/06/2026:
 Este bloque es un snapshot controlado. Una futura integración con los
 webservices de ARCA podrá sincronizar vigencias y modificaciones sin cambiar la
 identidad interna de los registros ya utilizados.
+
+## 16. Implementación: TAREA 0015 — Interfaz funcional
+
+Se habilita la operación desde la interfaz propia del ERP:
+
+- listado, filtros y resumen de productos y servicios
+- alta, detalle, edición e inactivación lógica de ítems
+- mantenimiento de categorías por empresa
+- mantenimiento de marcas por empresa
+- códigos internos inmutables
+- selección controlada de unidades y alícuotas
+- comportamiento guiado para servicios, stock e IVA
+- navegación en `Gestión → Maestros`
+- permisos backend `items.ver`, `items.crear` e `items.editar`
+- aislamiento por empresa activa
+- auditoría de categorías, marcas e ítems
+- bloqueo de inactivación de categorías o marcas usadas por ítems activos
+- pruebas de formularios, servicios, vistas, permisos y aislamiento
+
+El Django Admin continúa como backoffice técnico de consulta. La operación
+habitual se realiza desde `/items/`.

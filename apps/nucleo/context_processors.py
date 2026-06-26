@@ -131,6 +131,21 @@ def permisos_funcionales(request):
             "terceros.editar",
         ),
     )
+    puede_crear_items = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "items.crear",
+    )
+    puede_editar_items = usuario_tiene_permiso(
+        usuario,
+        empresa,
+        "items.editar",
+    )
+    puede_ver_items = usuario_tiene_alguno_de_permisos(
+        usuario,
+        empresa,
+        ("items.ver", "items.crear", "items.editar"),
+    )
     puede_editar_parametros = usuario_tiene_permiso(
         usuario,
         empresa,
@@ -179,6 +194,9 @@ def permisos_funcionales(request):
             "terceros_ver": puede_ver_terceros,
             "terceros_crear": puede_crear_terceros,
             "terceros_editar": puede_editar_terceros,
+            "items_ver": puede_ver_items,
+            "items_crear": puede_crear_items,
+            "items_editar": puede_editar_items,
             "parametros_ver": puede_ver_parametros,
             "parametros_editar": puede_editar_parametros,
             "contabilidad_ver": puede_ver_contabilidad,
