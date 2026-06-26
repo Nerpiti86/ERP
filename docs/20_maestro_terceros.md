@@ -5,10 +5,10 @@
 
 ```text
 Aplicación: apps.terceros
-Modelos: 6
-Última migración: 0002_catalogos_iniciales
-Pruebas ejecutadas para la app: 52
-Plantillas detectadas: 5
+Modelos: 7
+Última migración: 0003_grupos_terceros
+Pruebas ejecutadas para la app: 72
+Plantillas detectadas: 7
 ```
 
 La primera versión funcional está implementada y permanece sujeta a aislamiento por empresa, permisos backend, servicios transaccionales y auditoría.
@@ -39,6 +39,7 @@ Modelos:
 
 - `TipoDocumento`
 - `CondicionIVA`
+- `GrupoTercero`
 - `Tercero`
 - `TerceroRol`
 - `DomicilioTercero`
@@ -56,6 +57,32 @@ Modelos:
 - un contacto principal activo
 - aislamiento obligatorio por empresa activa
 - auditoría mediante servicios transaccionales
+- grupo obligatorio por cada rol activo
+- grupos separados por empresa y tipo CLIENTE o PROVEEDOR
+- inactivación bloqueada cuando el grupo posee roles activos
+
+## Grupos de clientes y proveedores
+
+`GrupoTercero` clasifica cada rol comercial sin duplicar la identidad del
+tercero. La relación se almacena en `TerceroRol.grupo`.
+
+Un tercero que sea cliente y proveedor puede pertenecer a grupos diferentes:
+
+```text
+CLIENTE   → Odontólogos
+PROVEEDOR → Importadores
+```
+
+La migración 0003 crea por empresa:
+
+- `CLIENTES_GENERALES`;
+- `PROVEEDORES_GENERALES`.
+
+Todos los roles históricos son asignados automáticamente según su tipo antes de
+volver obligatorio el campo.
+
+La interfaz incorpora ABM, búsqueda, baja lógica, cantidades asignadas, filtros
+en el maestro y visualización en listado y detalle.
 
 ## Catálogos iniciales
 

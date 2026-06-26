@@ -6,6 +6,7 @@ from .models import (
     CondicionIVA,
     ContactoTercero,
     DomicilioTercero,
+    GrupoTercero,
     Tercero,
     TerceroRol,
     TipoDocumento,
@@ -46,6 +47,108 @@ class CatalogosTercerosTests(TestCase):
             ).codigo_arca,
             16,
         )
+
+
+class GrupoTerceroModelTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.empresa = crear_empresa()
+        cls.otra_empresa = crear_empresa(
+            cuit="30714202959",
+            razon_social="Empresa Dos SA",
+        )
+        cls.catalogos = obtener_catalogos()
+        cls.tercero = Tercero.objects.create(
+            empresa=cls.empresa,
+            codigo="T000001",
+            tipo_persona=Tercero.TipoPersona.PERSONA_JURIDICA,
+            tipo_documento=cls.catalogos["cuit"],
+            numero_documento="30711915695",
+            denominacion="Tercero SA",
+            condicion_iva=cls.catalogos["ri"],
+            fecha_alta="2026-06-21",
+        )
+
+    def _grupo(self, **cambios):
+        datos = {
+            "empresa": self.empresa,
+            "tipo": GrupoTercero.Tipo.CLIENTE,
+            "codigo": " minoristas ",
+            "nombre": " Minoristas ",
+            "observaciones": " Observación ",
+            "activo": True,
+        }
+        datos.update(cambios)
+        return GrupoTercero(**datos)
+
+    def test_normaliza_codigo_nombre_y_observaciones(self):
+        grupo = self._grupo()
+        grupo.full_clean()
+        self.assertEqual(grupo.codigo, "MINORISTAS")
+        self.assertEqual(grupo.nombre, "Minoristas")
+        self.assertEqual(grupo.observaciones, "Observación")
+
+    def test_codigo_unico_por_empresa_y_tipo(self):
+        primero = self._grupo()
+        primero.full_clean()
+        primero.save()
+        segundo = self._grupo(nombre="Otro")
+        with self.assertRaises(ValidationError):
+            segundo.full_clean()
+
+    def test_mismo_codigo_permitido_en_otro_tipo(self):
+        primero = self._grupo()
+        primero.full_clean()
+        primero.save()
+        segundo = self._grupo(
+            tipo=GrupoTercero.Tipo.PROVEEDOR,
+            nombre="Proveedores minoristas",
+        )
+        segundo.full_clean()
+        segundo.save()
+        self.assertNotEqual(primero.pk, segundo.pk)
+
+    def test_empresa_tipo_y_codigo_son_inmutables(self):
+        grupo = self._grupo()
+        grupo.full_clean()
+        grupo.save()
+        grupo.tipo = GrupoTercero.Tipo.PROVEEDOR
+        with self.assertRaises(ValidationError):
+            grupo.full_clean()
+
+    def test_rol_rechaza_grupo_de_otro_tipo(self):
+        grupo = self._grupo(
+            tipo=GrupoTercero.Tipo.PROVEEDOR,
+            codigo="PROVEEDORES",
+            nombre="Proveedores",
+        )
+        grupo.full_clean()
+        grupo.save()
+        rol = TerceroRol(
+            tercero=self.tercero,
+            grupo=grupo,
+            rol=TerceroRol.Rol.CLIENTE,
+            fecha_alta="2026-06-21",
+        )
+        with self.assertRaises(ValidationError):
+            rol.full_clean()
+
+    def test_rol_rechaza_grupo_de_otra_empresa(self):
+        grupo = self._grupo(
+            empresa=self.otra_empresa,
+            codigo="OTRA_EMPRESA",
+            nombre="Otra empresa",
+        )
+        grupo.full_clean()
+        grupo.save()
+        rol = TerceroRol(
+            tercero=self.tercero,
+            grupo=grupo,
+            rol=TerceroRol.Rol.CLIENTE,
+            fecha_alta="2026-06-21",
+        )
+        with self.assertRaises(ValidationError):
+            rol.full_clean()
 
 
 class NormalizacionDocumentoTests(TestCase):
@@ -198,6 +301,12 @@ class RelacionesTerceroModelTests(TestCase):
     def setUpTestData(cls):
         empresa = crear_empresa()
         catalogos = obtener_catalogos()
+        cls.grupo_cliente = GrupoTercero.objects.create(
+            empresa=empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="CLIENTES",
+            nombre="Clientes",
+        )
         cls.tercero = Tercero.objects.create(
             empresa=empresa,
             codigo="T000001",
@@ -212,11 +321,13 @@ class RelacionesTerceroModelTests(TestCase):
     def test_un_solo_rol_activo_del_mismo_tipo(self):
         TerceroRol.objects.create(
             tercero=self.tercero,
+            grupo=self.grupo_cliente,
             rol=TerceroRol.Rol.CLIENTE,
             fecha_alta="2026-06-21",
         )
         duplicado = TerceroRol(
             tercero=self.tercero,
+            grupo=self.grupo_cliente,
             rol=TerceroRol.Rol.CLIENTE,
             fecha_alta="2026-06-21",
         )

@@ -20,6 +20,22 @@
             Clientes y proveedores
           </a>
         </li>
+        <li>
+          <a
+            class="dropdown-item"
+            href="{% url 'terceros:grupo_cliente_list' %}"
+          >
+            Grupos de clientes
+          </a>
+        </li>
+        <li>
+          <a
+            class="dropdown-item"
+            href="{% url 'terceros:grupo_proveedor_list' %}"
+          >
+            Grupos de proveedores
+          </a>
+        </li>
       {% endif %}
       {% if permisos_erp.items_ver %}
         <li>

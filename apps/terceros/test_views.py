@@ -9,6 +9,7 @@ from .forms import TerceroForm
 from .models import (
     ContactoTercero,
     DomicilioTercero,
+    GrupoTercero,
     Tercero,
     TerceroRol,
 )
@@ -18,6 +19,10 @@ from .tests_support import (
     crear_tercero_prueba,
     crear_usuario,
     obtener_catalogos,
+)
+from .services import (
+    asegurar_grupos_generales,
+    crear_grupo_tercero,
 )
 
 
@@ -50,6 +55,13 @@ class TercerosViewsTests(TestCase):
             denominacion="Cliente Oculto SA",
         )
         cls.catalogos = obtener_catalogos()
+        cls.grupo_cliente = GrupoTercero.objects.get(
+            empresa=cls.empresa,
+            codigo="CLIENTES_GENERALES",
+        )
+        cls.grupo_proveedor = asegurar_grupos_generales(
+            cls.empresa
+        )[TerceroRol.Rol.PROVEEDOR]
 
     def _login_empresa(self, usuario):
         self.client.force_login(usuario)
@@ -71,6 +83,8 @@ class TercerosViewsTests(TestCase):
             "sitio_web": "",
             "fecha_alta": "2026-06-21",
             "es_cliente": "on",
+            "grupo_cliente": self.grupo_cliente.pk,
+            "grupo_proveedor": self.grupo_proveedor.pk,
             "observaciones": "",
         }
         datos.update(cambios)
@@ -167,6 +181,7 @@ class TercerosViewsTests(TestCase):
             tercero=self.tercero,
             rol=TerceroRol.Rol.PROVEEDOR,
             defaults={
+                "grupo": self.grupo_proveedor,
                 "fecha_alta": date(2025, 4, 15),
                 "activo": True,
             },
@@ -293,6 +308,42 @@ class TercerosViewsTests(TestCase):
         )
         self.assertTrue(self.tercero.es_proveedor)
 
+    def test_formulario_alta_muestra_grupos_por_rol(self):
+        self._login_empresa(self.operador)
+        respuesta = self.client.get(reverse("terceros:tercero_create"))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Grupo de cliente", count=1)
+        self.assertContains(respuesta, "Grupo de proveedor", count=1)
+        self.assertContains(respuesta, self.grupo_cliente.nombre)
+        self.assertContains(respuesta, self.grupo_proveedor.nombre)
+
+    def test_listado_filtra_y_muestra_grupo(self):
+        grupo = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="ODONTOLOGOS",
+            nombre="Odontólogos",
+            observaciones="",
+        )
+        relacion = self.tercero.roles.get(
+            rol=TerceroRol.Rol.CLIENTE,
+            activo=True,
+        )
+        relacion.grupo = grupo
+        relacion.full_clean()
+        relacion.save()
+
+        self._login_empresa(self.operador)
+        respuesta = self.client.get(
+            reverse("terceros:tercero_list"),
+            {"grupo": grupo.pk},
+        )
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Cliente Visible SA")
+        self.assertContains(respuesta, "Odontólogos")
+        self.assertNotContains(respuesta, "Cliente Oculto SA")
+
+
     def test_inactivar_solo_acepta_post(self):
         self._login_empresa(self.operador)
         respuesta = self.client.get(
@@ -302,6 +353,130 @@ class TercerosViewsTests(TestCase):
             )
         )
         self.assertEqual(respuesta.status_code, 405)
+
+
+class GruposTerceroViewsTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.empresa = crear_empresa()
+        cls.otra_empresa = crear_empresa(
+            cuit="30714202959",
+            razon_social="Empresa Dos SA",
+        )
+        cls.operador = crear_usuario(username="operador_grupos")
+        cls.lector = crear_usuario(username="lector_grupos")
+        asignar_rol(
+            usuario=cls.operador,
+            empresa=cls.empresa,
+            codigo_rol="OPERADOR",
+        )
+        asignar_rol(
+            usuario=cls.lector,
+            empresa=cls.empresa,
+            codigo_rol="SOLO_LECTURA",
+        )
+        asegurar_grupos_generales(cls.empresa)
+        asegurar_grupos_generales(cls.otra_empresa)
+
+    def _login(self, usuario):
+        self.client.force_login(usuario)
+        session = self.client.session
+        session[SESSION_EMPRESA_ACTIVA_ID] = self.empresa.pk
+        session.save()
+
+    def test_listado_clientes_aisla_tipo_y_empresa(self):
+        cliente = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="CLIENTES_TEST",
+            nombre="Clientes test",
+            observaciones="",
+        )
+        proveedor = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.PROVEEDOR,
+            codigo="PROVEEDORES_TEST",
+            nombre="Proveedores test",
+            observaciones="",
+        )
+        oculto = crear_grupo_tercero(
+            empresa=self.otra_empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="OTRA_EMPRESA",
+            nombre="Otra empresa",
+            observaciones="",
+        )
+        self._login(self.operador)
+        respuesta = self.client.get(
+            reverse("terceros:grupo_cliente_list")
+        )
+        self.assertContains(respuesta, cliente.nombre)
+        self.assertNotContains(respuesta, proveedor.nombre)
+        self.assertNotContains(respuesta, oculto.nombre)
+
+    def test_operador_crea_grupo_cliente(self):
+        self._login(self.operador)
+        respuesta = self.client.post(
+            reverse("terceros:grupo_cliente_create"),
+            {
+                "codigo": "MAYORISTAS",
+                "nombre": "Mayoristas",
+                "observaciones": "",
+            },
+        )
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertTrue(
+            GrupoTercero.objects.filter(
+                empresa=self.empresa,
+                tipo=GrupoTercero.Tipo.CLIENTE,
+                codigo="MAYORISTAS",
+            ).exists()
+        )
+
+    def test_lector_no_puede_crear_grupo(self):
+        self._login(self.lector)
+        respuesta = self.client.get(
+            reverse("terceros:grupo_cliente_create")
+        )
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_edicion_grupo_otra_empresa_devuelve_404(self):
+        grupo = GrupoTercero.objects.get(
+            empresa=self.otra_empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="CLIENTES_GENERALES",
+        )
+        self._login(self.operador)
+        respuesta = self.client.get(
+            reverse(
+                "terceros:grupo_cliente_edit",
+                kwargs={"grupo_id": grupo.pk},
+            )
+        )
+        self.assertEqual(respuesta.status_code, 404)
+
+    def test_no_inactiva_grupo_utilizado(self):
+        grupo = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="UTILIZADO",
+            nombre="Utilizado",
+            observaciones="",
+        )
+        crear_tercero_prueba(
+            empresa=self.empresa,
+            grupos_por_rol={TerceroRol.Rol.CLIENTE: grupo},
+        )
+        self._login(self.operador)
+        respuesta = self.client.post(
+            reverse(
+                "terceros:grupo_cliente_deactivate",
+                kwargs={"grupo_id": grupo.pk},
+            )
+        )
+        self.assertEqual(respuesta.status_code, 302)
+        grupo.refresh_from_db()
+        self.assertTrue(grupo.activo)
 
 
 class RelacionesViewsTests(TestCase):

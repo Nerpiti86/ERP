@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Clientes y proveedores · ERP{% endblock %}
+{% block title %}Clientes y proveedores{% endblock %}
 
 {% block content %}
   <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -44,6 +44,30 @@
               {{ etiqueta }}
             </option>
           {% endfor %}
+        </select>
+      </div>
+      <div class="erp-list-filter-field">
+        <label class="form-label" for="id_grupo">Grupo</label>
+        <select class="form-select" id="id_grupo" name="grupo">
+          <option value="">Todos</option>
+          {% if grupos_cliente %}
+            <optgroup label="Grupos de clientes">
+              {% for grupo in grupos_cliente %}
+                <option value="{{ grupo.pk }}"{% if filtros.grupo == grupo.pk|stringformat:"s" %} selected{% endif %}>
+                  {{ grupo.nombre }}
+                </option>
+              {% endfor %}
+            </optgroup>
+          {% endif %}
+          {% if grupos_proveedor %}
+            <optgroup label="Grupos de proveedores">
+              {% for grupo in grupos_proveedor %}
+                <option value="{{ grupo.pk }}"{% if filtros.grupo == grupo.pk|stringformat:"s" %} selected{% endif %}>
+                  {{ grupo.nombre }}
+                </option>
+              {% endfor %}
+            </optgroup>
+          {% endif %}
         </select>
       </div>
       <div class="erp-list-filter-field">
@@ -99,7 +123,12 @@
               <td>{{ tercero.condicion_iva.nombre }}</td>
               <td>
                 {% for relacion in tercero.roles_activos %}
-                  <span class="badge text-bg-secondary">{{ relacion.get_rol_display }}</span>
+                  <div class="mb-1">
+                    <span class="badge text-bg-secondary">
+                      {{ relacion.get_rol_display }}
+                    </span>
+                    <span class="small">{{ relacion.grupo.nombre }}</span>
+                  </div>
                 {% empty %}
                   <span class="text-secondary">Sin rol activo</span>
                 {% endfor %}

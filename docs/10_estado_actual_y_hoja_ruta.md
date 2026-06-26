@@ -751,3 +751,31 @@ Estado:
 TAREA 0020 — IDENTIDAD Y NAVEGACIÓN DIFERENCIADAS
 ```
 <!-- END TAREA_0020_IDENTIDAD_APLICACIONES -->
+
+
+<!-- BEGIN TAREA_0021_GRUPOS_TERCEROS -->
+## Actualización: TAREA 0021 — Grupos de clientes y proveedores
+
+Se incorpora `GrupoTercero` y su relación obligatoria con `TerceroRol`.
+
+Resultado:
+
+- catálogos separados de grupos de clientes y proveedores;
+- aislamiento por empresa;
+- grupos generales creados automáticamente;
+- migración de todos los roles históricos;
+- asignación obligatoria por rol;
+- ABM con auditoría y baja lógica;
+- inactivación protegida por uso;
+- filtro por grupo en clientes y proveedores;
+- grupo visible en listado y detalle;
+- navegación y portada de Gestión actualizadas;
+- 72 pruebas de `apps.terceros`;
+- 460 pruebas completas esperadas.
+
+Estado:
+
+```text
+TAREA 0021 — GRUPOS DE TERCEROS IMPLEMENTADOS
+```
+<!-- END TAREA_0021_GRUPOS_TERCEROS -->

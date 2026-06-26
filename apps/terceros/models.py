@@ -11,6 +11,11 @@ from apps.nucleo.models import Empresa
 
 DOCUMENTOS_NUMERICOS = {"CUIT", "CUIL", "CDI", "DNI", "LC", "LE"}
 
+VALIDADOR_CODIGO_GRUPO = RegexValidator(
+    regex=r"^[A-Z0-9_-]+$",
+    message="El código debe usar mayúsculas, números, guion o guion bajo.",
+)
+
 
 def normalizar_numero_documento(codigo_tipo, valor):
     codigo = str(codigo_tipo or "").strip().upper()
@@ -121,6 +126,129 @@ class CondicionIVA(models.Model):
 
     def __str__(self):
         return self.nombre
+
+
+class GrupoTercero(models.Model):
+    class Tipo(models.TextChoices):
+        CLIENTE = "CLIENTE", "Cliente"
+        PROVEEDOR = "PROVEEDOR", "Proveedor"
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="grupos_terceros",
+    )
+    tipo = models.CharField(max_length=20, choices=Tipo.choices)
+    codigo = models.CharField(
+        max_length=30,
+        validators=[VALIDADOR_CODIGO_GRUPO],
+    )
+    nombre = models.CharField(max_length=160)
+    observaciones = models.TextField(blank=True)
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "terceros_grupotercero"
+        verbose_name = "grupo de tercero"
+        verbose_name_plural = "grupos de terceros"
+        ordering = [
+            "empresa__razon_social",
+            "tipo",
+            "-activo",
+            "nombre",
+            "codigo",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["empresa", "tipo", "codigo"],
+                name="uniq_grupo_ter_emp_tipo_cod",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa", "tipo", "nombre"],
+                name="uniq_grupo_ter_emp_tipo_nom",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["empresa", "tipo", "activo", "nombre"],
+                name="idx_grupo_ter_tipo_act",
+            )
+        ]
+
+    def _normalizar_campos(self):
+        self.codigo = self.codigo.strip().upper()
+        self.nombre = self.nombre.strip()
+        self.observaciones = self.observaciones.strip()
+
+    def clean_fields(self, exclude=None):
+        self._normalizar_campos()
+        super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        super().clean()
+        self._normalizar_campos()
+        errores = {}
+
+        original = None
+        if self.pk:
+            original = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values("empresa_id", "tipo", "codigo")
+                .first()
+            )
+
+        if original:
+            if original["empresa_id"] != self.empresa_id:
+                errores["empresa"] = (
+                    "La empresa de un grupo existente no puede cambiar."
+                )
+            if original["tipo"] != self.tipo:
+                errores["tipo"] = (
+                    "El tipo de un grupo existente no puede cambiar."
+                )
+            if original["codigo"] != self.codigo:
+                errores["codigo"] = (
+                    "El código de un grupo existente no puede cambiar."
+                )
+
+        if self.empresa_id and self.tipo and self.codigo:
+            duplicado = type(self).objects.filter(
+                empresa_id=self.empresa_id,
+                tipo=self.tipo,
+                codigo=self.codigo,
+            )
+            if self.pk:
+                duplicado = duplicado.exclude(pk=self.pk)
+            if duplicado.exists():
+                errores["codigo"] = (
+                    "Ya existe este código para el tipo y la empresa."
+                )
+
+        if self.empresa_id and self.tipo and self.nombre:
+            duplicado = type(self).objects.filter(
+                empresa_id=self.empresa_id,
+                tipo=self.tipo,
+                nombre__iexact=self.nombre,
+            )
+            if self.pk:
+                duplicado = duplicado.exclude(pk=self.pk)
+            if duplicado.exists():
+                errores["nombre"] = (
+                    "Ya existe este nombre para el tipo y la empresa."
+                )
+
+        if errores:
+            raise ValidationError(errores)
+
+    def save(self, *args, **kwargs):
+        self._normalizar_campos()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
 
 
 class Tercero(models.Model):
@@ -380,6 +508,11 @@ class TerceroRol(models.Model):
         on_delete=models.PROTECT,
         related_name="roles",
     )
+    grupo = models.ForeignKey(
+        GrupoTercero,
+        on_delete=models.PROTECT,
+        related_name="roles_terceros",
+    )
     rol = models.CharField(max_length=20, choices=Rol.choices)
     fecha_alta = models.DateField(default=timezone.localdate)
     fecha_baja = models.DateField(null=True, blank=True)
@@ -419,6 +552,23 @@ class TerceroRol(models.Model):
     def clean(self):
         super().clean()
         errores = {}
+
+        if not self.grupo_id:
+            errores["grupo"] = "El rol requiere un grupo."
+        elif self.tercero_id:
+            if self.grupo.empresa_id != self.tercero.empresa_id:
+                errores["grupo"] = (
+                    "El grupo debe pertenecer a la misma empresa "
+                    "que el tercero."
+                )
+            if self.grupo.tipo != self.rol:
+                errores["grupo"] = (
+                    "El tipo del grupo debe coincidir con el rol."
+                )
+            if self.activo and not self.grupo.activo:
+                errores["grupo"] = (
+                    "Un rol activo requiere un grupo activo."
+                )
 
         if self.activo and self.fecha_baja is not None:
             errores["fecha_baja"] = (

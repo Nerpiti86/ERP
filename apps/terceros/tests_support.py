@@ -9,7 +9,12 @@ from apps.nucleo.models import (
 )
 from apps.nucleo.roles_iniciales import cargar_roles_permisos_iniciales
 
-from .models import CondicionIVA, TerceroRol, TipoDocumento
+from .models import (
+    CondicionIVA,
+    GrupoTercero,
+    TerceroRol,
+    TipoDocumento,
+)
 from .services import crear_tercero
 
 
@@ -97,6 +102,7 @@ def crear_tercero_prueba(
     numero_documento="30711915695",
     denominacion="Cliente de Prueba SA",
     roles=None,
+    grupos_por_rol=None,
     request=None,
 ):
     catalogos = obtener_catalogos()
@@ -118,6 +124,7 @@ def crear_tercero_prueba(
         sitio_web="",
         fecha_alta="2026-06-21",
         roles=roles,
+        grupos_por_rol=grupos_por_rol,
         observaciones="",
         request=request,
     )

@@ -4,6 +4,7 @@ from .models import (
     CondicionIVA,
     ContactoTercero,
     DomicilioTercero,
+    GrupoTercero,
     Tercero,
     TerceroRol,
     TipoDocumento,
@@ -41,6 +42,20 @@ class CondicionIVAAdmin(SoloLecturaAdmin):
     search_fields = ("codigo", "nombre")
 
 
+@admin.register(GrupoTercero)
+class GrupoTerceroAdmin(SoloLecturaAdmin):
+    list_display = (
+        "empresa",
+        "tipo",
+        "codigo",
+        "nombre",
+        "activo",
+    )
+    list_filter = ("tipo", "activo", "empresa")
+    search_fields = ("codigo", "nombre")
+    list_select_related = ("empresa",)
+
+
 @admin.register(Tercero)
 class TerceroAdmin(SoloLecturaAdmin):
     list_display = (
@@ -75,7 +90,14 @@ class TerceroAdmin(SoloLecturaAdmin):
 
 @admin.register(TerceroRol)
 class TerceroRolAdmin(SoloLecturaAdmin):
-    list_display = ("tercero", "rol", "fecha_alta", "fecha_baja", "activo")
+    list_display = (
+        "tercero",
+        "rol",
+        "grupo",
+        "fecha_alta",
+        "fecha_baja",
+        "activo",
+    )
     list_filter = ("rol", "activo")
 
 

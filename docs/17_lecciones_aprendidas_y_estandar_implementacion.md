@@ -852,3 +852,19 @@ una validación, una prueba o una decisión documentada.
 - los lanzadores especializados abren la portada;
 - la navegación visible no reemplaza los permisos backend.
 <!-- END ESTANDAR_IDENTIDAD_APLICACIONES_TAREA_0020 -->
+
+
+<!-- BEGIN ESTANDAR_GRUPOS_TERCEROS_TAREA_0021 -->
+## Estándar de clasificación de terceros incorporado por la TAREA 0021
+
+- las clasificaciones comerciales pertenecen al rol y no a la identidad base;
+- un tercero con dos roles puede usar dos grupos diferentes;
+- todo catálogo empresarial se aísla por empresa;
+- el tipo del grupo debe coincidir con el rol;
+- las migraciones que vuelven obligatorio un dato deben completar primero todos
+  los registros históricos;
+- los grupos utilizados no se eliminan ni se inactivan;
+- la interfaz y el servicio validan la regla, pero el servicio es la autoridad;
+- los grupos generales garantizan compatibilidad con integraciones existentes;
+- la auditoría registra altas, modificaciones e inactivaciones.
+<!-- END ESTANDAR_GRUPOS_TERCEROS_TAREA_0021 -->

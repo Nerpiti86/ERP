@@ -8,6 +8,7 @@ from .models import (
     CondicionIVA,
     ContactoTercero,
     DomicilioTercero,
+    GrupoTercero,
     Tercero,
     TerceroRol,
     TipoDocumento,
@@ -74,6 +75,10 @@ def datos_tercero(tercero):
             .order_by("rol")
             .values_list("rol", flat=True)
         ),
+        "grupos_roles": {
+            relacion.rol: relacion.grupo_id
+            for relacion in tercero.roles.filter(activo=True).order_by("rol")
+        },
     }
 
 
@@ -145,6 +150,169 @@ def _catalogo_activo(modelo, objeto, campo):
     return encontrado
 
 
+GRUPOS_GENERALES = {
+    TerceroRol.Rol.CLIENTE: {
+        "codigo": "CLIENTES_GENERALES",
+        "nombre": "Clientes generales",
+    },
+    TerceroRol.Rol.PROVEEDOR: {
+        "codigo": "PROVEEDORES_GENERALES",
+        "nombre": "Proveedores generales",
+    },
+}
+
+
+def datos_grupo_tercero(grupo):
+    return {
+        "empresa_id": grupo.empresa_id,
+        "tipo": grupo.tipo,
+        "codigo": grupo.codigo,
+        "nombre": grupo.nombre,
+        "observaciones": grupo.observaciones,
+        "activo": grupo.activo,
+    }
+
+
+@transaction.atomic
+def asegurar_grupos_generales(empresa):
+    empresa = _empresa_activa(empresa)
+    grupos = {}
+
+    for tipo, datos in GRUPOS_GENERALES.items():
+        grupo, _ = GrupoTercero.objects.get_or_create(
+            empresa=empresa,
+            tipo=tipo,
+            codigo=datos["codigo"],
+            defaults={
+                "nombre": datos["nombre"],
+                "observaciones": "Grupo general creado por el sistema.",
+                "activo": True,
+            },
+        )
+        if not grupo.activo:
+            grupo.activo = True
+            grupo.save(update_fields=["activo", "actualizado_en"])
+        grupos[tipo] = grupo
+
+    return grupos
+
+
+def _grupo_editable(*, empresa, grupo, tipo=None):
+    consulta = GrupoTercero.objects.select_for_update().filter(
+        pk=getattr(grupo, "pk", None),
+        empresa=empresa,
+        activo=True,
+    )
+    if tipo is not None:
+        consulta = consulta.filter(tipo=tipo)
+
+    bloqueado = consulta.first()
+    if bloqueado is None:
+        raise ValidationError(
+            "El grupo no pertenece a la empresa activa, "
+            "no coincide con el tipo o está inactivo."
+        )
+    return bloqueado
+
+
+@transaction.atomic
+def crear_grupo_tercero(
+    *,
+    empresa,
+    tipo,
+    codigo,
+    nombre,
+    observaciones,
+    request=None,
+):
+    empresa = _empresa_activa(empresa)
+    grupo = GrupoTercero(
+        empresa=empresa,
+        tipo=tipo,
+        codigo=codigo,
+        nombre=nombre,
+        observaciones=observaciones or "",
+        activo=True,
+    )
+    grupo.full_clean()
+    grupo.save()
+    _auditar(
+        empresa=empresa,
+        objeto=grupo,
+        accion=Auditoria.Accion.INSERT,
+        anteriores=None,
+        nuevos=datos_grupo_tercero(grupo),
+        request=request,
+    )
+    return grupo
+
+
+@transaction.atomic
+def actualizar_grupo_tercero(
+    *,
+    empresa,
+    grupo,
+    nombre,
+    observaciones,
+    request=None,
+):
+    empresa = _empresa_activa(empresa)
+    grupo = _grupo_editable(
+        empresa=empresa,
+        grupo=grupo,
+        tipo=grupo.tipo,
+    )
+    anteriores = datos_grupo_tercero(grupo)
+    grupo.nombre = nombre
+    grupo.observaciones = observaciones or ""
+    grupo.full_clean()
+    grupo.save()
+    _auditar(
+        empresa=empresa,
+        objeto=grupo,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_grupo_tercero(grupo),
+        request=request,
+    )
+    return grupo
+
+
+@transaction.atomic
+def inactivar_grupo_tercero(*, empresa, grupo, request=None):
+    empresa = _empresa_activa(empresa)
+    grupo = _grupo_editable(
+        empresa=empresa,
+        grupo=grupo,
+        tipo=grupo.tipo,
+    )
+
+    general = GRUPOS_GENERALES.get(grupo.tipo)
+    if general and grupo.codigo == general["codigo"]:
+        raise ValidationError(
+            "El grupo general del tipo no puede inactivarse."
+        )
+
+    if grupo.roles_terceros.filter(activo=True).exists():
+        raise ValidationError(
+            "No se puede inactivar un grupo utilizado por roles activos."
+        )
+
+    anteriores = datos_grupo_tercero(grupo)
+    grupo.activo = False
+    grupo.full_clean()
+    grupo.save(update_fields=["activo", "actualizado_en"])
+    _auditar(
+        empresa=empresa,
+        objeto=grupo,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_grupo_tercero(grupo),
+        request=request,
+    )
+    return grupo
+
+
 def _roles_validos(roles):
     validos = set(TerceroRol.Rol.values)
     seleccionados = {
@@ -186,30 +354,99 @@ def _siguiente_codigo(empresa):
     return f"T{maximo + 1:06d}"
 
 
-def _sincronizar_roles(*, tercero, roles):
+def _resolver_grupos_por_rol(
+    *,
+    tercero,
+    roles,
+    grupos_por_rol=None,
+):
     seleccionados = _roles_validos(roles)
+    informados = {
+        str(rol).strip().upper(): grupo
+        for rol, grupo in (grupos_por_rol or {}).items()
+    }
+
+    sobrantes = set(informados) - seleccionados
+    if sobrantes:
+        raise ValidationError(
+            {
+                "grupos": (
+                    "Se informaron grupos para roles no seleccionados: "
+                    + ", ".join(sorted(sobrantes))
+                )
+            }
+        )
+
+    generales = asegurar_grupos_generales(tercero.empresa)
+    resueltos = {}
+
+    for rol in seleccionados:
+        grupo = informados.get(rol) or generales[rol]
+        encontrado = (
+            GrupoTercero.objects.select_for_update()
+            .filter(
+                pk=getattr(grupo, "pk", None),
+                empresa=tercero.empresa,
+                tipo=rol,
+                activo=True,
+            )
+            .first()
+        )
+        if encontrado is None:
+            raise ValidationError(
+                {
+                    "grupos": (
+                        f"El grupo del rol {rol} no pertenece a la "
+                        "empresa, no coincide con el tipo o está inactivo."
+                    )
+                }
+            )
+        resueltos[rol] = encontrado
+
+    return seleccionados, resueltos
+
+
+def _sincronizar_roles(
+    *,
+    tercero,
+    roles,
+    grupos_por_rol=None,
+):
+    seleccionados, grupos = _resolver_grupos_por_rol(
+        tercero=tercero,
+        roles=roles,
+        grupos_por_rol=grupos_por_rol,
+    )
     actuales = {
         relacion.rol: relacion
         for relacion in (
             TerceroRol.objects.select_for_update()
             .filter(tercero=tercero, activo=True)
+            .select_related("grupo")
             .order_by("pk")
         )
     }
 
     for rol, relacion in actuales.items():
-        if rol in seleccionados:
+        if rol not in seleccionados:
+            relacion.activo = False
+            relacion.fecha_baja = _fecha_baja(relacion.fecha_alta)
+            relacion.full_clean()
+            relacion.save(
+                update_fields=["activo", "fecha_baja", "actualizado_en"]
+            )
             continue
-        relacion.activo = False
-        relacion.fecha_baja = _fecha_baja(relacion.fecha_alta)
-        relacion.full_clean()
-        relacion.save(
-            update_fields=["activo", "fecha_baja", "actualizado_en"]
-        )
+
+        grupo = grupos[rol]
+        if relacion.grupo_id != grupo.pk:
+            relacion.grupo = grupo
+            relacion.full_clean()
+            relacion.save(update_fields=["grupo", "actualizado_en"])
 
     for rol in sorted(seleccionados - set(actuales)):
         relacion = TerceroRol(
             tercero=tercero,
+            grupo=grupos[rol],
             rol=rol,
             fecha_alta=timezone.localdate(),
             activo=True,
@@ -235,6 +472,7 @@ def crear_tercero(
     fecha_alta,
     roles,
     observaciones,
+    grupos_por_rol=None,
     request=None,
 ):
     empresa = _empresa_activa(empresa)
@@ -270,7 +508,11 @@ def crear_tercero(
     )
     tercero.full_clean()
     tercero.save()
-    _sincronizar_roles(tercero=tercero, roles=roles)
+    _sincronizar_roles(
+        tercero=tercero,
+        roles=roles,
+        grupos_por_rol=grupos_por_rol,
+    )
     tercero.refresh_from_db()
 
     _auditar(
@@ -301,6 +543,7 @@ def actualizar_tercero(
     fecha_alta,
     roles,
     observaciones,
+    grupos_por_rol=None,
     request=None,
 ):
     empresa = _empresa_activa(empresa)
@@ -336,7 +579,11 @@ def actualizar_tercero(
     tercero.observaciones = observaciones or ""
     tercero.full_clean()
     tercero.save()
-    _sincronizar_roles(tercero=tercero, roles=roles)
+    _sincronizar_roles(
+        tercero=tercero,
+        roles=roles,
+        grupos_por_rol=grupos_por_rol,
+    )
     tercero.refresh_from_db()
 
     _auditar(

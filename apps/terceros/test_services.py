@@ -6,18 +6,23 @@ from apps.nucleo.models import Auditoria
 from .models import (
     ContactoTercero,
     DomicilioTercero,
+    GrupoTercero,
     Tercero,
     TerceroRol,
 )
 from .services import (
     actualizar_contacto,
     actualizar_domicilio,
+    actualizar_grupo_tercero,
     actualizar_tercero,
+    asegurar_grupos_generales,
     crear_contacto,
     crear_domicilio,
+    crear_grupo_tercero,
     crear_tercero,
     inactivar_contacto,
     inactivar_domicilio,
+    inactivar_grupo_tercero,
     inactivar_tercero,
 )
 from .tests_support import (
@@ -228,6 +233,177 @@ class TerceroServicesTests(TestCase):
         self.assertFalse(
             tercero.roles.filter(activo=True).exists()
         )
+
+
+    def test_crea_roles_con_grupos_explicitos(self):
+        cliente = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="ODONTOLOGOS",
+            nombre="Odontólogos",
+            observaciones="",
+            request=self.request,
+        )
+        proveedor = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.PROVEEDOR,
+            codigo="IMPORTADORES",
+            nombre="Importadores",
+            observaciones="",
+            request=self.request,
+        )
+        tercero = crear_tercero_prueba(
+            empresa=self.empresa,
+            roles={
+                TerceroRol.Rol.CLIENTE,
+                TerceroRol.Rol.PROVEEDOR,
+            },
+            grupos_por_rol={
+                TerceroRol.Rol.CLIENTE: cliente,
+                TerceroRol.Rol.PROVEEDOR: proveedor,
+            },
+            request=self.request,
+        )
+        self.assertEqual(
+            tercero.roles.get(rol=TerceroRol.Rol.CLIENTE).grupo,
+            cliente,
+        )
+        self.assertEqual(
+            tercero.roles.get(rol=TerceroRol.Rol.PROVEEDOR).grupo,
+            proveedor,
+        )
+
+    def test_actualiza_grupo_de_rol_existente(self):
+        tercero = crear_tercero_prueba(
+            empresa=self.empresa,
+            request=self.request,
+        )
+        grupo = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="CUENTAS_ESPECIALES",
+            nombre="Cuentas especiales",
+            observaciones="",
+            request=self.request,
+        )
+        actualizar_tercero(
+            empresa=self.empresa,
+            tercero=tercero,
+            tipo_persona=tercero.tipo_persona,
+            tipo_documento=tercero.tipo_documento,
+            numero_documento=tercero.numero_documento,
+            denominacion=tercero.denominacion,
+            nombre_fantasia=tercero.nombre_fantasia,
+            condicion_iva=tercero.condicion_iva,
+            telefono=tercero.telefono,
+            email=tercero.email,
+            sitio_web=tercero.sitio_web,
+            fecha_alta=tercero.fecha_alta,
+            roles={TerceroRol.Rol.CLIENTE},
+            grupos_por_rol={TerceroRol.Rol.CLIENTE: grupo},
+            observaciones=tercero.observaciones,
+            request=self.request,
+        )
+        relacion = tercero.roles.get(
+            rol=TerceroRol.Rol.CLIENTE,
+            activo=True,
+        )
+        self.assertEqual(relacion.grupo, grupo)
+
+
+class GrupoTerceroServicesTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.empresa = crear_empresa()
+        cls.usuario = crear_usuario(username="grupos")
+        cls.catalogos = obtener_catalogos()
+
+    def setUp(self):
+        self.request = crear_request(self.usuario)
+
+    def test_asegura_grupos_generales(self):
+        grupos = asegurar_grupos_generales(self.empresa)
+        cliente = grupos[TerceroRol.Rol.CLIENTE]
+        proveedor = grupos[TerceroRol.Rol.PROVEEDOR]
+        self.assertEqual(cliente.codigo, "CLIENTES_GENERALES")
+        self.assertEqual(proveedor.codigo, "PROVEEDORES_GENERALES")
+
+        cliente.activo = False
+        cliente.save(update_fields=["activo", "actualizado_en"])
+        reactivados = asegurar_grupos_generales(self.empresa)
+        self.assertTrue(reactivados[TerceroRol.Rol.CLIENTE].activo)
+
+    def test_crea_grupo_y_audita(self):
+        grupo = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="MAYORISTAS",
+            nombre="Mayoristas",
+            observaciones="Prueba",
+            request=self.request,
+        )
+        auditoria = Auditoria.objects.get(
+            tabla=GrupoTercero._meta.db_table,
+            registro_id=str(grupo.pk),
+            accion=Auditoria.Accion.INSERT,
+        )
+        self.assertEqual(auditoria.usuario, self.usuario)
+
+    def test_actualiza_grupo(self):
+        grupo = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="REVENDEDORES",
+            nombre="Revendedores",
+            observaciones="",
+            request=self.request,
+        )
+        actualizado = actualizar_grupo_tercero(
+            empresa=self.empresa,
+            grupo=grupo,
+            nombre="Revendedores especiales",
+            observaciones="Actualizado",
+            request=self.request,
+        )
+        self.assertEqual(actualizado.nombre, "Revendedores especiales")
+
+    def test_inactiva_grupo_sin_uso(self):
+        grupo = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.PROVEEDOR,
+            codigo="SERVICIOS",
+            nombre="Servicios",
+            observaciones="",
+            request=self.request,
+        )
+        inactivar_grupo_tercero(
+            empresa=self.empresa,
+            grupo=grupo,
+            request=self.request,
+        )
+        grupo.refresh_from_db()
+        self.assertFalse(grupo.activo)
+
+    def test_no_inactiva_grupo_con_rol_activo(self):
+        grupo = crear_grupo_tercero(
+            empresa=self.empresa,
+            tipo=GrupoTercero.Tipo.CLIENTE,
+            codigo="ODONTOLOGOS",
+            nombre="Odontólogos",
+            observaciones="",
+            request=self.request,
+        )
+        crear_tercero_prueba(
+            empresa=self.empresa,
+            grupos_por_rol={TerceroRol.Rol.CLIENTE: grupo},
+            request=self.request,
+        )
+        with self.assertRaises(ValidationError):
+            inactivar_grupo_tercero(
+                empresa=self.empresa,
+                grupo=grupo,
+                request=self.request,
+            )
 
 
 class DomiciliosServicesTests(TestCase):

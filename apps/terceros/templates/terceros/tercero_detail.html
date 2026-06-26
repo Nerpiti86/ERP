@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tercero.denominacion }} · ERP{% endblock %}
+{% block title %}{{ tercero.denominacion }}{% endblock %}
 
 {% block content %}
   <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -80,7 +80,12 @@
         <div class="card-body">
           {% for relacion in tercero.roles.all %}
             <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-              <span>{{ relacion.get_rol_display }}</span>
+              <span>
+                {{ relacion.get_rol_display }}
+                <span class="text-secondary small d-block">
+                  {{ relacion.grupo.nombre }}
+                </span>
+              </span>
               {% if relacion.activo %}
                 <span class="badge text-bg-success">Activo</span>
               {% else %}

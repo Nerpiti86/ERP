@@ -6,6 +6,7 @@ from .models import (
     CondicionIVA,
     ContactoTercero,
     DomicilioTercero,
+    GrupoTercero,
     Tercero,
     TerceroRol,
     TipoDocumento,
@@ -20,6 +21,41 @@ def aplicar_estilo(form):
             campo.widget.attrs["class"] = "form-select"
         else:
             campo.widget.attrs["class"] = "form-control"
+
+
+class GrupoTerceroForm(forms.Form):
+    codigo = forms.CharField(label="Código", max_length=30)
+    nombre = forms.CharField(label="Nombre", max_length=160)
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(self, *args, grupo=None, **kwargs):
+        self.grupo = grupo
+        datos = args[0] if args else kwargs.get("data")
+
+        if grupo is not None:
+            initial = kwargs.setdefault("initial", {})
+            initial["codigo"] = grupo.codigo
+            if datos is None:
+                initial.update(
+                    {
+                        "nombre": grupo.nombre,
+                        "observaciones": grupo.observaciones,
+                    }
+                )
+
+        super().__init__(*args, **kwargs)
+
+        if grupo is not None:
+            self.fields["codigo"].disabled = True
+            self.fields["codigo"].help_text = (
+                "El código identifica al grupo y no puede modificarse."
+            )
+
+        aplicar_estilo(self)
 
 
 class TerceroForm(forms.Form):
@@ -78,7 +114,19 @@ class TerceroForm(forms.Form):
         initial=timezone.localdate,
     )
     es_cliente = forms.BooleanField(label="Cliente", required=False)
+    grupo_cliente = forms.ModelChoiceField(
+        label="Grupo de cliente",
+        queryset=GrupoTercero.objects.none(),
+        required=False,
+        empty_label="Seleccionar grupo de cliente",
+    )
     es_proveedor = forms.BooleanField(label="Proveedor", required=False)
+    grupo_proveedor = forms.ModelChoiceField(
+        label="Grupo de proveedor",
+        queryset=GrupoTercero.objects.none(),
+        required=False,
+        empty_label="Seleccionar grupo de proveedor",
+    )
     observaciones = forms.CharField(
         label="Observaciones",
         required=False,
@@ -92,6 +140,10 @@ class TerceroForm(forms.Form):
         datos_recibidos = args[0] if args else kwargs.get("data")
 
         if tercero is not None and datos_recibidos is None:
+            roles_activos = {
+                relacion.rol: relacion
+                for relacion in tercero.roles_activos
+            }
             initial = kwargs.setdefault("initial", {})
             initial.update(
                 {
@@ -107,7 +159,17 @@ class TerceroForm(forms.Form):
                     "sitio_web": tercero.sitio_web,
                     "fecha_alta": tercero.fecha_alta,
                     "es_cliente": tercero.es_cliente,
+                    "grupo_cliente": (
+                        roles_activos[TerceroRol.Rol.CLIENTE].grupo
+                        if TerceroRol.Rol.CLIENTE in roles_activos
+                        else None
+                    ),
                     "es_proveedor": tercero.es_proveedor,
+                    "grupo_proveedor": (
+                        roles_activos[TerceroRol.Rol.PROVEEDOR].grupo
+                        if TerceroRol.Rol.PROVEEDOR in roles_activos
+                        else None
+                    ),
                     "observaciones": tercero.observaciones,
                 }
             )
@@ -138,29 +200,66 @@ class TerceroForm(forms.Form):
             "codigo_arca",
             "nombre",
         )
+        self.fields["grupo_cliente"].queryset = (
+            GrupoTercero.objects.filter(
+                empresa=empresa,
+                tipo=GrupoTercero.Tipo.CLIENTE,
+                activo=True,
+            ).order_by("nombre", "codigo")
+        )
+        self.fields["grupo_proveedor"].queryset = (
+            GrupoTercero.objects.filter(
+                empresa=empresa,
+                tipo=GrupoTercero.Tipo.PROVEEDOR,
+                activo=True,
+            ).order_by("nombre", "codigo")
+        )
         aplicar_estilo(self)
 
     def clean(self):
         cleaned_data = super().clean()
+        es_cliente = cleaned_data.get("es_cliente")
+        es_proveedor = cleaned_data.get("es_proveedor")
 
-        if (
-            not cleaned_data.get("es_cliente")
-            and not cleaned_data.get("es_proveedor")
-        ):
+        if not es_cliente and not es_proveedor:
             mensaje = "Seleccioná al menos un rol: cliente o proveedor."
             self.add_error("es_cliente", mensaje)
             self.add_error("es_proveedor", mensaje)
+
+        if es_cliente and cleaned_data.get("grupo_cliente") is None:
+            self.add_error(
+                "grupo_cliente",
+                "Un cliente requiere un grupo de cliente.",
+            )
+        elif not es_cliente:
+            cleaned_data["grupo_cliente"] = None
+
+        if es_proveedor and cleaned_data.get("grupo_proveedor") is None:
+            self.add_error(
+                "grupo_proveedor",
+                "Un proveedor requiere un grupo de proveedor.",
+            )
+        elif not es_proveedor:
+            cleaned_data["grupo_proveedor"] = None
 
         return cleaned_data
 
     @property
     def roles_seleccionados(self):
-        roles = set()
+        return set(self.grupos_por_rol)
+
+    @property
+    def grupos_por_rol(self):
+        grupos = {}
         if self.cleaned_data.get("es_cliente"):
-            roles.add(TerceroRol.Rol.CLIENTE)
+            grupos[TerceroRol.Rol.CLIENTE] = self.cleaned_data.get(
+                "grupo_cliente"
+            )
         if self.cleaned_data.get("es_proveedor"):
-            roles.add(TerceroRol.Rol.PROVEEDOR)
-        return roles
+            grupos[TerceroRol.Rol.PROVEEDOR] = self.cleaned_data.get(
+                "grupo_proveedor"
+            )
+        return grupos
 
 
 class DomicilioTerceroForm(forms.Form):
