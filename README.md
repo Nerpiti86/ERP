@@ -92,8 +92,8 @@ Cada cambio se ejecuta como una única tarea lógica mediante un `.txt` para Git
 ## Doble entrada local
 
 ```text
-ERP_GESTION.pyw      → http://127.0.0.1:8001/items/
-ERP_CONTABILIDAD.pyw → http://127.0.0.1:8002/contabilidad/plan-de-cuentas/
+ERP_GESTION.pyw      → http://127.0.0.1:8001/
+ERP_CONTABILIDAD.pyw → http://127.0.0.1:8002/
 ```
 
 Ambos accesos comparten la misma base PostgreSQL, usuarios, empresas, modelos y

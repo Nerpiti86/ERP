@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}ERP{% endblock %}</title>
+  <title>{{ erp_aplicacion.nombre }} | {% block title %}Inicio{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -27,7 +27,7 @@
           href="{% url 'core:home' %}"
         >
           <span class="erp-brand-name fw-semibold">NeriSoft</span>
-          <span class="erp-brand-product">ERP</span>
+          <span class="erp-brand-product">{{ erp_aplicacion.producto }}</span>
         </a>
 
         <button
@@ -54,103 +54,12 @@
             </li>
 
             {% if user.is_authenticated %}
-              {% if erp_aplicacion.gestion %}
-                <li class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle{% if request.resolver_match.namespace == 'terceros' or request.resolver_match.namespace == 'items' %} active{% endif %}"
-                    href="#"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    Gestión
-                  </a>
-                  <ul class="dropdown-menu">
-                    {% if permisos_erp.terceros_ver or permisos_erp.items_ver %}
-                      <li>
-                        <h6 class="dropdown-header">Maestros</h6>
-                      </li>
-                      {% if permisos_erp.terceros_ver %}
-                        <li>
-                          <a
-                            class="dropdown-item{% if request.resolver_match.namespace == 'terceros' %} active{% endif %}"
-                            href="{% url 'terceros:tercero_list' %}"
-                          >
-                            Clientes y proveedores
-                          </a>
-                        </li>
-                      {% endif %}
-                      {% if permisos_erp.items_ver %}
-                        <li>
-                          <a
-                            class="dropdown-item{% if request.resolver_match.namespace == 'items' and request.resolver_match.url_name == 'item_list' %} active{% endif %}"
-                            href="{% url 'items:item_list' %}"
-                          >
-                            Productos y servicios
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            class="dropdown-item{% if request.resolver_match.url_name == 'categoria_list' %} active{% endif %}"
-                            href="{% url 'items:categoria_list' %}"
-                          >
-                            Categorías de ítems
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            class="dropdown-item{% if request.resolver_match.url_name == 'marca_list' %} active{% endif %}"
-                            href="{% url 'items:marca_list' %}"
-                          >
-                            Marcas
-                          </a>
-                        </li>
-                      {% endif %}
-                    {% else %}
-                      <li>
-                        <h6 class="dropdown-header">Operación diaria</h6>
-                      </li>
-                      <li>
-                        <span class="dropdown-item-text erp-domain-description text-secondary small">
-                          No hay módulos operativos habilitados para este usuario.
-                        </span>
-                      </li>
-                    {% endif %}
-                  </ul>
-                </li>
-              {% endif %}
-
-              {% if erp_aplicacion.contabilidad and permisos_erp.contabilidad_ver %}
-                {% if erp_aplicacion.gestion %}
-                  <li class="nav-item d-none d-lg-flex" aria-hidden="true">
-                    <span class="erp-flow-indicator">→</span>
-                  </li>
-                {% endif %}
-
-                <li class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle{% if request.resolver_match.namespace == 'contabilidad' %} active{% endif %}"
-                    href="#"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    Contabilidad
-                  </a>
-                  <ul class="dropdown-menu">
-                    <li>
-                      <h6 class="dropdown-header">Representación contable</h6>
-                    </li>
-                    <li>
-                      <a
-                        class="dropdown-item{% if request.resolver_match.url_name == 'plan_cuentas' %} active{% endif %}"
-                        href="{% url 'contabilidad:plan_cuentas' %}"
-                      >
-                        Plan de cuentas
-                      </a>
-                    </li>
-                  </ul>
-                </li>
+              {% if erp_aplicacion.modo == "gestion" %}
+                {% include "components/nav_gestion.html" %}
+              {% elif erp_aplicacion.modo == "contabilidad" %}
+                {% include "components/nav_contabilidad.html" %}
+              {% else %}
+                {% include "components/nav_integrado.html" %}
               {% endif %}
             {% endif %}
           </ul>

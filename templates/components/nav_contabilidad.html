@@ -1,0 +1,10 @@
+{% if permisos_erp.contabilidad_ver %}
+  <li class="nav-item">
+    <a
+      class="nav-link{% if request.resolver_match.namespace == 'contabilidad' %} active{% endif %}"
+      href="{% url 'contabilidad:plan_cuentas' %}"
+    >
+      Plan de cuentas
+    </a>
+  </li>
+{% endif %}

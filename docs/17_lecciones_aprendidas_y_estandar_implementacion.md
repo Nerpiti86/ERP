@@ -837,3 +837,18 @@ una validación, una prueba o una decisión documentada.
 - paginación, ordenamiento dinámico y búsqueda asincrónica requieren tareas
   independientes.
 <!-- END ESTANDAR_LISTADOS_TAREA_0018 -->
+
+
+<!-- BEGIN ESTANDAR_IDENTIDAD_APLICACIONES_TAREA_0020 -->
+## Estándar de identidad por aplicación incorporado por la TAREA 0020
+
+- toda superficie especializada se identifica en la marca y en el título;
+- el nombre de la aplicación se coloca al comienzo del `<title>`;
+- una aplicación no muestra ni resuelve menús de otro dominio;
+- las portadas contienen accesos funcionales, no métricas decorativas;
+- las opciones futuras no se muestran hasta que exista funcionalidad;
+- el modo integrado conserva navegación agrupada y métricas del núcleo;
+- login y selectores heredan la identidad desde un context processor;
+- los lanzadores especializados abren la portada;
+- la navegación visible no reemplaza los permisos backend.
+<!-- END ESTANDAR_IDENTIDAD_APLICACIONES_TAREA_0020 -->

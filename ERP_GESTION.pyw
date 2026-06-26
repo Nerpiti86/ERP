@@ -7,7 +7,7 @@ CONFIGURACION = ConfiguracionLanzador(
     modo="gestion",
     settings_module="config.settings_gestion",
     puerto=8001,
-    ruta_inicial="/items/",
+    ruta_inicial="/",
 )
 
 

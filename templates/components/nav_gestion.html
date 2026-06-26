@@ -1,0 +1,37 @@
+{% if permisos_erp.terceros_ver %}
+  <li class="nav-item">
+    <a
+      class="nav-link{% if request.resolver_match.namespace == 'terceros' %} active{% endif %}"
+      href="{% url 'terceros:tercero_list' %}"
+    >
+      Clientes y proveedores
+    </a>
+  </li>
+{% endif %}
+
+{% if permisos_erp.items_ver %}
+  <li class="nav-item">
+    <a
+      class="nav-link{% if request.resolver_match.namespace == 'items' and request.resolver_match.url_name == 'item_list' %} active{% endif %}"
+      href="{% url 'items:item_list' %}"
+    >
+      Productos y servicios
+    </a>
+  </li>
+  <li class="nav-item">
+    <a
+      class="nav-link{% if request.resolver_match.url_name == 'categoria_list' %} active{% endif %}"
+      href="{% url 'items:categoria_list' %}"
+    >
+      Categorías
+    </a>
+  </li>
+  <li class="nav-item">
+    <a
+      class="nav-link{% if request.resolver_match.url_name == 'marca_list' %} active{% endif %}"
+      href="{% url 'items:marca_list' %}"
+    >
+      Marcas
+    </a>
+  </li>
+{% endif %}

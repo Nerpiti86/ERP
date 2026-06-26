@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
@@ -115,34 +116,39 @@ def cerrar_sesion(request):
 
 @login_required
 def home(request):
-    empresa = request.empresa_activa
+    modo = getattr(settings, "ERP_APP_MODE", "integrado")
+    plantillas = {
+        "gestion": "core/home_gestion.html",
+        "contabilidad": "core/home_contabilidad.html",
+    }
+    plantilla = plantillas.get(modo, "core/home.html")
+    contexto = {}
 
-    if empresa is None:
-        metricas = {
-            "empresas": request.empresas_disponibles.count(),
-            "sucursales": 0,
-            "ejercicios": 0,
-            "periodos": 0,
-        }
-    else:
-        metricas = {
-            "empresas": 1,
-            "sucursales": request.sucursales_disponibles.count(),
-            "ejercicios": EjercicioFiscal.objects.filter(
-                empresa=empresa,
-            ).count(),
-            "periodos": PeriodoContable.objects.filter(
-                ejercicio__empresa=empresa,
-            ).count(),
-        }
+    if modo == "integrado":
+        empresa = request.empresa_activa
 
-    return render(
-        request,
-        "core/home.html",
-        {
-            "metricas": metricas,
-        },
-    )
+        if empresa is None:
+            metricas = {
+                "empresas": request.empresas_disponibles.count(),
+                "sucursales": 0,
+                "ejercicios": 0,
+                "periodos": 0,
+            }
+        else:
+            metricas = {
+                "empresas": 1,
+                "sucursales": request.sucursales_disponibles.count(),
+                "ejercicios": EjercicioFiscal.objects.filter(
+                    empresa=empresa,
+                ).count(),
+                "periodos": PeriodoContable.objects.filter(
+                    ejercicio__empresa=empresa,
+                ).count(),
+            }
+
+        contexto["metricas"] = metricas
+
+    return render(request, plantilla, contexto)
 
 
 @login_required

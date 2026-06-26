@@ -727,3 +727,27 @@ Próximo bloque recomendado:
 TAREA 0020 — Portadas y navegación especializadas por aplicación
 ```
 <!-- END TAREA_0019_DOBLE_ENTRADA -->
+
+
+<!-- BEGIN TAREA_0020_IDENTIDAD_APLICACIONES -->
+## Actualización: TAREA 0020 — Identidad, portadas y menús diferenciados
+
+Resultado:
+
+- `NeriSoft Gestión` como marca y prefijo de títulos en el puerto 8001;
+- `NeriSoft Contabilidad` como marca y prefijo de títulos en el puerto 8002;
+- `NeriSoft ERP` conservado para el modo integrado;
+- portadas específicas sin métricas decorativas;
+- menús directos y exclusivos para cada aplicación;
+- menús agrupados conservados en el modo integrado;
+- login y selectores identificados según la aplicación;
+- ambos lanzadores abren la portada raíz `/`;
+- métricas generales calculadas únicamente en el modo integrado;
+- pruebas de títulos, menús, portadas, aislamiento y lanzadores.
+
+Estado:
+
+```text
+TAREA 0020 — IDENTIDAD Y NAVEGACIÓN DIFERENCIADAS
+```
+<!-- END TAREA_0020_IDENTIDAD_APLICACIONES -->

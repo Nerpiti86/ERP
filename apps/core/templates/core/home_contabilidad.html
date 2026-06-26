@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div class="p-4 p-md-5 bg-white border rounded-3 shadow-sm">
+      <p class="text-uppercase text-secondary small fw-semibold mb-2">
+        NeriSoft Contabilidad
+      </p>
+      <h1 class="display-6 fw-bold mb-2">Contabilidad</h1>
+      <p class="lead mb-0">
+        Estructura y representación contable de la empresa activa.
+      </p>
+    </div>
+  </section>
+
+  {% if not empresa_activa %}
+    <div class="alert alert-warning d-flex justify-content-between gap-3 align-items-center">
+      <div>
+        <strong>Falta seleccionar una empresa.</strong>
+        Elegí el contexto antes de comenzar.
+      </div>
+      <a class="btn btn-warning" href="{% url 'core:seleccionar_empresa' %}">
+        Seleccionar empresa
+      </a>
+    </div>
+  {% elif not sucursal_activa %}
+    <div class="alert alert-warning d-flex justify-content-between gap-3 align-items-center">
+      <div>
+        <strong>Falta seleccionar una sucursal.</strong>
+        Elegí el punto operativo para esta sesión.
+      </div>
+      <a class="btn btn-warning" href="{% url 'core:seleccionar_sucursal' %}">
+        Seleccionar sucursal
+      </a>
+    </div>
+  {% endif %}
+
+  <section>
+    <h2 class="h4 mb-3">Accesos de Contabilidad</h2>
+
+    {% if permisos_erp.contabilidad_ver %}
+      <div class="row g-3">
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+              <h3 class="h5">Plan de cuentas</h3>
+              <p class="text-secondary">
+                Estructura jerárquica y clasificación de cuentas contables.
+              </p>
+              <a class="btn btn-outline-primary mt-auto" href="{% url 'contabilidad:plan_cuentas' %}">
+                Abrir plan de cuentas
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">
+        No tenés permisos para consultar módulos contables.
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

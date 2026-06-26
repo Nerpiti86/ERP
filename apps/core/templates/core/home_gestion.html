@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+  <section class="mb-4">
+    <div class="p-4 p-md-5 bg-white border rounded-3 shadow-sm">
+      <p class="text-uppercase text-secondary small fw-semibold mb-2">
+        NeriSoft Gestión
+      </p>
+      <h1 class="display-6 fw-bold mb-2">Gestión</h1>
+      <p class="lead mb-0">
+        Clientes, proveedores, productos, servicios y catálogos comerciales.
+      </p>
+    </div>
+  </section>
+
+  {% if not empresa_activa %}
+    <div class="alert alert-warning d-flex justify-content-between gap-3 align-items-center">
+      <div>
+        <strong>Falta seleccionar una empresa.</strong>
+        Elegí el contexto antes de comenzar.
+      </div>
+      <a class="btn btn-warning" href="{% url 'core:seleccionar_empresa' %}">
+        Seleccionar empresa
+      </a>
+    </div>
+  {% elif not sucursal_activa %}
+    <div class="alert alert-warning d-flex justify-content-between gap-3 align-items-center">
+      <div>
+        <strong>Falta seleccionar una sucursal.</strong>
+        Elegí el punto operativo para esta sesión.
+      </div>
+      <a class="btn btn-warning" href="{% url 'core:seleccionar_sucursal' %}">
+        Seleccionar sucursal
+      </a>
+    </div>
+  {% endif %}
+
+  <section>
+    <h2 class="h4 mb-3">Accesos de Gestión</h2>
+
+    {% if permisos_erp.terceros_ver or permisos_erp.items_ver %}
+      <div class="row g-3">
+        {% if permisos_erp.terceros_ver %}
+          <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body d-flex flex-column">
+                <h3 class="h5">Clientes y proveedores</h3>
+                <p class="text-secondary">
+                  Identidades, roles, domicilios y contactos.
+                </p>
+                <a class="btn btn-outline-primary mt-auto" href="{% url 'terceros:tercero_list' %}">
+                  Abrir clientes y proveedores
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if permisos_erp.items_ver %}
+          <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body d-flex flex-column">
+                <h3 class="h5">Productos y servicios</h3>
+                <p class="text-secondary">
+                  Maestro comercial de ítems comprables y vendibles.
+                </p>
+                <a class="btn btn-outline-primary mt-auto" href="{% url 'items:item_list' %}">
+                  Abrir productos y servicios
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body d-flex flex-column">
+                <h3 class="h5">Categorías</h3>
+                <p class="text-secondary">
+                  Clasificación funcional de productos y servicios.
+                </p>
+                <a class="btn btn-outline-primary mt-auto" href="{% url 'items:categoria_list' %}">
+                  Abrir categorías
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body d-flex flex-column">
+                <h3 class="h5">Marcas</h3>
+                <p class="text-secondary">
+                  Catálogo de marcas utilizadas por los ítems.
+                </p>
+                <a class="btn btn-outline-primary mt-auto" href="{% url 'items:marca_list' %}">
+                  Abrir marcas
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">
+        No hay módulos de Gestión habilitados para este usuario.
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
