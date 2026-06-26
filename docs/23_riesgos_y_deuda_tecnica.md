@@ -8,7 +8,7 @@ Este registro documenta hallazgos. No autoriza a corregirlos dentro de una tarea
 
 | ID | Severidad | Módulo | Evidencia | Impacto | Recomendación |
 |---|---|---|---|---|---|
-| R-001 | Media | apps.terceros | El primer contenido no vacío de apps/terceros/models.py es una barra invertida aislada. | Construcción sintáctica frágil y anómala; puede afectar herramientas de análisis o futuras ediciones. | Corregir en una tarea técnica independiente con pruebas completas. |
+| R-001 | Media | apps.terceros | El archivo comenzaba con una barra invertida aislada antes de `import re`. | La construcción sintáctica era frágil y podía afectar herramientas de análisis o futuras ediciones. | **RESUELTO — TAREA 0017:** se eliminó exclusivamente la primera línea anómala y se validó el módulo con pruebas específicas y suite completa. |
 | R-002 | Baja | Seguridad funcional | 16 permisos iniciales no aparecen consumidos por el código actual. Módulos: auditoria, compras, documentos, empresas, eventos, tesoreria, usuarios, ventas. | La matriz contiene permisos reservados para módulos todavía no implementados. | Mantenerlos identificados como reservados; no presentarlos como funcionalidad disponible. |
 | R-003 | Media | Calidad | No se detectaron workflows de GitHub Actions versionados. | La validación depende de la ejecución local y del contrato operativo. | Evaluar CI en una tarea futura sin reemplazar las validaciones locales. |
 | R-004 | Baja | Documentación | Los documentos acumulativos conservan cortes históricos con cifras antiguas. | Una lectura fuera de contexto puede confundir estado histórico con estado vigente. | Usar docs/22_estado_real_integral_erp.md como fotografía canónica y respetar la jerarquía de docs/README.md. |
