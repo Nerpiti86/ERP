@@ -9,7 +9,7 @@ Se agregan dos superficies locales:
 
 ```text
 ERP_GESTION.pyw      → http://127.0.0.1:8001/items/
-ERP_CONTABILIDAD.pyw → http://127.0.0.1:8002/contabilidad/
+ERP_CONTABILIDAD.pyw → http://127.0.0.1:8002/contabilidad/plan-de-cuentas/
 ```
 
 ## Componentes compartidos

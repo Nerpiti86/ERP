@@ -83,10 +83,9 @@ class ModosAplicacionTests(TestCase):
     )
     def test_urlconf_contabilidad_publica_solo_contabilidad(self):
         clear_url_caches()
-        self.assertTrue(
-            reverse("contabilidad:plan_cuentas").startswith(
-                "/contabilidad/"
-            )
+        self.assertEqual(
+            reverse("contabilidad:plan_cuentas"),
+            "/contabilidad/plan-de-cuentas/",
         )
         with self.assertRaises(NoReverseMatch):
             reverse("items:item_list")
@@ -134,6 +133,19 @@ class ModosAplicacionTests(TestCase):
                 str(ruta),
                 "exec",
             )
+
+    def test_lanzador_contable_abre_plan_de_cuentas(self):
+        contenido = (
+            Path(settings.BASE_DIR) / "ERP_CONTABILIDAD.pyw"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            'ruta_inicial="/contabilidad/plan-de-cuentas/"',
+            contenido,
+        )
+        self.assertNotIn(
+            'ruta_inicial="/contabilidad/"',
+            contenido,
+        )
 
     @override_settings(
         ROOT_URLCONF="config.urls_gestion",

@@ -7,7 +7,7 @@ CONFIGURACION = ConfiguracionLanzador(
     modo="contabilidad",
     settings_module="config.settings_contabilidad",
     puerto=8002,
-    ruta_inicial="/contabilidad/",
+    ruta_inicial="/contabilidad/plan-de-cuentas/",
 )
 
 

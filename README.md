@@ -93,7 +93,7 @@ Cada cambio se ejecuta como una única tarea lógica mediante un `.txt` para Git
 
 ```text
 ERP_GESTION.pyw      → http://127.0.0.1:8001/items/
-ERP_CONTABILIDAD.pyw → http://127.0.0.1:8002/contabilidad/
+ERP_CONTABILIDAD.pyw → http://127.0.0.1:8002/contabilidad/plan-de-cuentas/
 ```
 
 Ambos accesos comparten la misma base PostgreSQL, usuarios, empresas, modelos y
