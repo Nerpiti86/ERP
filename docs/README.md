@@ -46,6 +46,7 @@ docs/23_riesgos_y_deuda_tecnica.md
 | README.md | Índice de documentación del ERP | Referencia documental | Revisar según su contenido |
 | 22_estado_real_integral_erp.md | Estado real integral del ERP | Estado integral canónico | Vigente |
 | 23_riesgos_y_deuda_tecnica.md | Riesgos y deuda técnica | Registro de riesgos | Vigente |
+| 25_doble_entrada_gestion_contabilidad.md | Doble entrada local: Gestión y Contabilidad | Arquitectura de ejecución | Implementado |
 
 ## Jerarquía documental
 

@@ -87,3 +87,15 @@ git diff --check
 ## Mecánica de trabajo
 
 Cada cambio se ejecuta como una única tarea lógica mediante un `.txt` para Git Bash. La tarea valida repositorio, rama, sincronización, working tree, migraciones y pruebas. Solo después realiza commit, push y verificación remota. Si una validación falla, no se publica.
+
+
+## Doble entrada local
+
+```text
+ERP_GESTION.pyw      → http://127.0.0.1:8001/items/
+ERP_CONTABILIDAD.pyw → http://127.0.0.1:8002/contabilidad/
+```
+
+Ambos accesos comparten la misma base PostgreSQL, usuarios, empresas, modelos y
+migraciones. El detalle está en
+`docs/25_doble_entrada_gestion_contabilidad.md`.

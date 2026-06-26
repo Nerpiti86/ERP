@@ -65,6 +65,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.nucleo.context_processors.empresa_activa",
                 "apps.nucleo.context_processors.permisos_funcionales",
+                "apps.core.context_processors.modo_aplicacion",
             ],
         },
     },
@@ -105,6 +106,8 @@ STATICFILES_DIRS = [
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+ERP_APP_MODE = "integrado"
 
 LOGIN_URL = "core:login"
 LOGIN_REDIRECT_URL = "core:home"

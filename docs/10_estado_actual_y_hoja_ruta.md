@@ -698,3 +698,32 @@ Estado:
 TAREA 0018 — LISTADOS, BÚSQUEDA Y FILTROS UNIFICADOS
 ```
 <!-- END TAREA_0018_LISTADOS -->
+
+
+<!-- BEGIN TAREA_0019_DOBLE_ENTRADA -->
+## Actualización: TAREA 0019 — Doble entrada para Gestión y Contabilidad
+
+Resultado:
+
+- modo integrado conservado;
+- `ERP_GESTION.pyw` en el puerto 8001;
+- `ERP_CONTABILIDAD.pyw` en el puerto 8002;
+- settings y URLconf especializados;
+- cookies independientes;
+- control de identidad mediante `/_estado/`;
+- rutas de dominio separadas;
+- una sola base PostgreSQL y un solo conjunto de migraciones;
+- diez pruebas nuevas de modos, rutas, navegación y lanzadores.
+
+Estado:
+
+```text
+TAREA 0019 — INFRAESTRUCTURA DE DOBLE ENTRADA IMPLEMENTADA
+```
+
+Próximo bloque recomendado:
+
+```text
+TAREA 0020 — Portadas y navegación especializadas por aplicación
+```
+<!-- END TAREA_0019_DOBLE_ENTRADA -->
