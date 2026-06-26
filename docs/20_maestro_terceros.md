@@ -1,5 +1,24 @@
 # Maestro base de terceros
 
+<!-- BEGIN ESTADO_VERIFICADO_TERCEROS_TAREA_0016 -->
+## Estado verificado del maestro de terceros — TAREA 0016
+
+```text
+Aplicación: apps.terceros
+Modelos: 6
+Última migración: 0002_catalogos_iniciales
+Pruebas ejecutadas para la app: 52
+Plantillas detectadas: 5
+```
+
+La primera versión funcional está implementada y permanece sujeta a aislamiento por empresa, permisos backend, servicios transaccionales y auditoría.
+
+No incorpora todavía relaciones comerciales específicas con ítems, condiciones de compra ni cuentas corrientes.
+
+El detalle de modelos, rutas, migraciones y pruebas se encuentra en `docs/22_estado_real_integral_erp.md`.
+<!-- END ESTADO_VERIFICADO_TERCEROS_TAREA_0016 -->
+
+
 Estado: implementado por TAREA 0009.
 
 ## Objetivo

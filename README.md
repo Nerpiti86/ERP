@@ -2,12 +2,6 @@
 
 ERP administrativo, contable, fiscal, financiero y operativo orientado a empresas argentinas.
 
-## Objetivo
-
-Construir un sistema ERP modular para gestionar operaciones comerciales, compras, stock, tesorería, cuentas corrientes, contabilidad, impuestos, documentos, auditoría y reportes.
-
-La implementación inicial se ejecuta en una PC Windows local que funciona como equipo de desarrollo y servidor interno. El acceso remoto previsto es mediante Tailscale y navegador web, sin exponer PostgreSQL ni abrir puertos públicos del router.
-
 ## Arquitectura
 
 ```text
@@ -16,20 +10,19 @@ Monolito modular local
 + PostgreSQL
 + Django Templates
 + Bootstrap
-+ HTMX cuando corresponda
-+ servidor WSGI compatible con Windows
-+ acceso remoto privado por Tailscale
++ acceso remoto privado previsto mediante Tailscale
 ```
 
 Decisiones vigentes:
 
-- una aplicación principal organizada por módulos
-- sin microservicios en la etapa inicial
-- sin Docker en la etapa inicial
-- PostgreSQL como base principal
-- Django Admin como backoffice técnico, no como interfaz final
-- seguridad y permisos validados en backend
-- autenticación propia del ERP sobre Django Auth
+- rama única `main`;
+- PostgreSQL como base principal;
+- Django Admin como backoffice técnico;
+- seguridad validada en backend;
+- autenticación propia sobre Django Auth;
+- roles funcionales por empresa;
+- contexto activo de empresa y sucursal;
+- servicios transaccionales y auditoría para cambios de dominio.
 
 ## Repositorio
 
@@ -39,149 +32,58 @@ Remoto: https://github.com/Nerpiti86/ERP.git
 Rama:   main
 ```
 
-## Estado actual
-
-Corte documental: 19/06/2026.
-
-Último cierre funcional:
+## Estado real verificado
 
 ```text
-TAREA 49 — Definir obligatoriedad del contexto operativo
-Mensaje: Definir contexto operativo obligatorio
-Tests: 142 OK
-Sincronización final: origin/main...HEAD = 0 0
+Fecha del corte: 26/06/2026
+Base auditada: 0f9712ff85cb38deb2a5442bcbed5b5598f8b959
+Aplicaciones propias: 5
+Modelos propios: 34
+Roles iniciales: 5
+Permisos iniciales: 40
+Relaciones rol-permiso: 110
+Suite completa: 425 pruebas
+Migraciones pendientes: 0
 ```
 
-El ERP ya cuenta con:
+Módulos funcionales disponibles:
 
-- proyecto Django conectado a PostgreSQL
-- apps `core` y `nucleo`
-- Empresa y Sucursal
-- EjercicioFiscal y PeriodoContable
-- accesos UsuarioEmpresa y UsuarioSucursal
-- ParametroSistema
-- Auditoria
-- EventoNegocio
-- DocumentoAdjunto
-- roles y permisos funcionales propios
-- cinco roles iniciales y veinticinco permisos
-- empresa activa por sesión
-- sucursal activa por sesión
-- selección automática o manual según accesos
-- autenticación propia mediante `/ingresar/`
-- cierre de sesión mediante POST en `/salir/`
-- portada protegida
-- métricas acotadas al contexto del usuario
-- configuración estándar por empresa desde `/nucleo/configuracion/`
-- inicialización idempotente de ocho parámetros estándar
-- edición amigable sin exponer claves ni tipos técnicos
-- autorización funcional backend para consulta y edición de parámetros
-- navegación condicionada por permisos efectivos en la empresa activa
-- contrato obligatorio de contexto para vistas por empresa y por sucursal
-- aislamiento reutilizable de querysets y objetos por contexto activo
-- Django Admin visible únicamente para usuarios `staff`
+- núcleo empresarial, accesos, contexto de empresa y sucursal, parámetros y auditoría;
+- configuración fiscal de empresa, actividades económicas, Ingresos Brutos y puntos de venta;
+- autenticación propia y autorización funcional por empresa;
+- maestro de terceros con roles de cliente/proveedor, domicilios y contactos;
+- maestro de productos y servicios con categorías, marcas, unidades, IVA e interfaz funcional.
 
-Estado operativo local relevado el 19/06/2026:
+Todavía no existen como circuitos operativos completos:
 
-```text
-Usuarios reales: ADMIN y Laura
-Empresas activas: Empresa Demo SA y ESREQUIS LAURA
-ESREQUIS LAURA: ocho parámetros estándar activos
-Laura: acceso activo y rol OPERADOR en ESREQUIS LAURA
-```
+- ventas
+- compras
+- stock
+- tesoreria
+- cuentas corrientes
+- impuestos
+- reportes
 
-Próxima tarea funcional:
+El detalle canónico está en `docs/22_estado_real_integral_erp.md`. Los riesgos y deudas detectados están en `docs/23_riesgos_y_deuda_tecnica.md`.
 
-```text
-TAREA 50 — Diseñar maestro de terceros
-Estado: pendiente de diseño
-```
-
-## Documentación
-
-Índice documental:
-
-```text
-docs/README.md
-```
-
-Documentos rectores principales:
-
-- `docs/00_decision_implementacion.md`
-- `docs/01_nucleo_erp.md`
-- `docs/02_politica_operativa_logs.md`
-- `docs/03_contrato_operativo.md`
-- `docs/04_roles_permisos.md`
-- `docs/05_usuario_custom.md`
-- `docs/06_empresa_activa_sesion.md`
-- `docs/07_sucursal_activa_sesion.md`
-- `docs/08_autenticacion_erp.md`
-- `docs/09_mecanica_trabajo_tareas_txt.md`
-- `docs/10_estado_actual_y_hoja_ruta.md`
-- `docs/11_parametros_empresa.md`
-- `docs/12_contexto_operativo.md`
-
-## Mecánica de trabajo
-
-Se trabaja mediante tareas ejecutables `.txt`:
-
-```text
-tareaNN_descripcion.txt
-tareaNN_resumen_operativo.txt
-```
-
-Flujo:
-
-1. Se define una sola tarea.
-2. Se revisa `main` remoto antes de diseñarla.
-3. Se entrega un script `.txt` ejecutable desde Git Bash.
-4. El script valida Git, crea log y backup, realiza el cambio y ejecuta validaciones.
-5. Solo si todo pasa hace commit y push.
-6. Se devuelve el log completo.
-7. Se verifica el commit contra GitHub.
-8. Recién entonces la tarea se considera cerrada.
-
-La mecánica completa está documentada en:
-
-```text
-docs/09_mecanica_trabajo_tareas_txt.md
-```
-
-## Reglas operativas esenciales
-
-- una tarea lógica por vez
-- rama única `main`
-- working tree limpio al iniciar, salvo continuación explícita
-- sincronización esperada `0 0` antes y después
-- logs locales obligatorios en `logs/`
-- backups locales por tarea en `logs/backup/`
-- no versionar `.env`, secretos, logs, backups, dumps ni `.venv`
-- commit claro y específico
-- push automático únicamente después de validar
-- si algo falla, no hacer commit ni push
-- una continuación trabaja sobre el estado local dejado por la tarea fallida
-
-## Validaciones Django mínimas
+## Ejecución y validaciones
 
 ```bash
 .venv/Scripts/python.exe manage.py check
 .venv/Scripts/python.exe manage.py makemigrations --check --dry-run
-.venv/Scripts/python.exe manage.py test apps.core apps.nucleo
+.venv/Scripts/python.exe manage.py test
 .venv/Scripts/python.exe -m compileall config apps
-```
-
-Las tareas documentales ejecutan además:
-
-```bash
 git diff --check
 ```
 
-## Logs
+## Documentación
 
-Los logs locales se guardan en:
+- índice y jerarquía: `docs/README.md`;
+- contrato operativo: `docs/03_contrato_operativo.md`;
+- mecánica de tareas: `docs/09_mecanica_trabajo_tareas_txt.md`;
+- estado integral vigente: `docs/22_estado_real_integral_erp.md`;
+- riesgos y deuda: `docs/23_riesgos_y_deuda_tecnica.md`.
 
-```text
-D:\NeriSoft2\ERP\logs
-```
+## Mecánica de trabajo
 
-No se versionan. Cada log debe permitir reconstruir qué se hizo, qué se validó y si la tarea terminó sincronizada con `origin/main`.
+Cada cambio se ejecuta como una única tarea lógica mediante un `.txt` para Git Bash. La tarea valida repositorio, rama, sincronización, working tree, migraciones y pruebas. Solo después realiza commit, push y verificación remota. Si una validación falla, no se publica.

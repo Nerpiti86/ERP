@@ -1,5 +1,18 @@
 # DOCUMENTO 01 - NUCLEO ERP
 
+<!-- BEGIN CORTE_INTEGRAL_TAREA_0016 -->
+## Corte integral vigente — TAREA 0016
+
+La base auditada es `0f9712ff85cb38deb2a5442bcbed5b5598f8b959`.
+
+El sistema posee `5` apps propias, `34` modelos propios, `40` permisos iniciales y `110` relaciones rol-permiso.
+
+La suite completa verificada por esta tarea ejecuta `425` pruebas y no detecta migraciones pendientes.
+
+El inventario técnico canónico está en `docs/22_estado_real_integral_erp.md`. Las cifras de cortes anteriores se conservan como historia.
+<!-- END CORTE_INTEGRAL_TAREA_0016 -->
+
+
 ## 1. Objetivo del modulo
 
 El Nucleo ERP es la base funcional y tecnica del sistema.

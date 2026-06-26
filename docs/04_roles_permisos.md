@@ -1,5 +1,32 @@
 # Estrategia de roles y permisos propios
 
+<!-- BEGIN MATRIZ_VIGENTE_TAREA_0016 -->
+## Estado vigente de la matriz funcional — TAREA 0016
+
+Fuente operativa: `apps/nucleo/roles_iniciales.py`.
+
+```text
+Roles iniciales: 5
+Permisos iniciales: 40
+Relaciones rol-permiso: 110
+Permisos encontrados en uso operativo: 24
+Permisos definidos sin consumo directo detectado: 16
+```
+
+| Rol | Permisos en la matriz inicial |
+|---|---|
+| ADMIN | 40 |
+| CONTADOR | 25 |
+| OPERADOR | 16 |
+| AUDITOR | 16 |
+| SOLO_LECTURA | 13 |
+
+Los permisos sin consumo directo se consideran reservados para módulos futuros o pendientes de integración. No prueban que el módulo correspondiente esté implementado.
+
+Las secciones históricas siguientes explican la evolución de la estrategia. Ante diferencias numéricas, este corte y `apps/nucleo/roles_iniciales.py` prevalecen.
+<!-- END MATRIZ_VIGENTE_TAREA_0016 -->
+
+
 Estado: definido documentalmente al cierre de la Tarea 40.
 
 ## 1. Objetivo

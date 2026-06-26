@@ -1,5 +1,35 @@
 # Estado actual y hoja de ruta del ERP
 
+<!-- BEGIN ESTADO_VIGENTE_TAREA_0016 -->
+## Estado vigente — Corte integral TAREA 0016
+
+Fecha: `26/06/2026`.
+
+```text
+Base auditada: 0f9712ff85cb38deb2a5442bcbed5b5598f8b959
+Apps propias: 5
+Modelos propios: 34
+Roles iniciales: 5
+Permisos iniciales: 40
+Relaciones rol-permiso: 110
+Suite completa: 425 pruebas
+Migraciones pendientes: 0
+```
+
+Estado funcional vigente:
+
+- núcleo empresarial, accesos, contexto de empresa y sucursal, parámetros y auditoría;
+- configuración fiscal de empresa, actividades económicas, Ingresos Brutos y puntos de venta;
+- autenticación propia y autorización funcional por empresa;
+- maestro de terceros con roles de cliente/proveedor, domicilios y contactos;
+- maestro de productos y servicios con categorías, marcas, unidades, IVA e interfaz funcional.
+
+Los módulos transaccionales completos de ventas, compras, stock, tesorería, cuentas corrientes y contabilidad operativa continúan pendientes.
+
+La fotografía técnica completa se encuentra en `docs/22_estado_real_integral_erp.md`. Las secciones posteriores de este documento conservan la evolución histórica y no deben leerse como un único estado vigente.
+<!-- END ESTADO_VIGENTE_TAREA_0016 -->
+
+
 Fecha del corte: 20/06/2026.
 
 Base verificada:

@@ -806,3 +806,15 @@ El objetivo es que:
 
 El aprendizaje solo queda incorporado cuando se convierte en una regla,
 una validación, una prueba o una decisión documentada.
+
+<!-- BEGIN LECCIONES_TAREA_0016 -->
+## Lecciones incorporadas por la TAREA 0016
+
+- una sincronización documental integral debe relevar código, migraciones, rutas, permisos, comandos, plantillas y pruebas;
+- los números de pruebas, permisos y relaciones deben obtenerse de fuentes ejecutables, no copiarse de cortes anteriores;
+- la documentación histórica debe conservarse, pero debe quedar subordinada a una fotografía vigente claramente identificada;
+- un permiso definido para un módulo futuro no convierte ese módulo en funcionalidad implementada;
+- los hallazgos técnicos detectados durante una tarea documental se registran y se corrigen en tareas independientes;
+- el README debe ser una síntesis actual y no una acumulación de estados obsoletos;
+- el documento canónico de estado no reemplaza los documentos rectores de dominio ni el contrato operativo.
+<!-- END LECCIONES_TAREA_0016 -->

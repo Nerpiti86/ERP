@@ -1,5 +1,24 @@
 # Maestro de productos y servicios
 
+<!-- BEGIN ESTADO_VERIFICADO_ITEMS_TAREA_0016 -->
+## Estado verificado del maestro de productos y servicios — TAREA 0016
+
+```text
+Aplicación: apps.items
+Modelos: 5
+Última migración: 0002_catalogos_iniciales
+Pruebas ejecutadas para la app: 67
+Plantillas detectadas: 5
+```
+
+La primera versión funcional está implementada y permanece sujeta a aislamiento por empresa, permisos backend, servicios transaccionales y auditoría.
+
+No incorpora todavía proveedores por ítem, identificadores externos, códigos de barras ni presentaciones.
+
+El detalle de modelos, rutas, migraciones y pruebas se encuentra en `docs/22_estado_real_integral_erp.md`.
+<!-- END ESTADO_VERIFICADO_ITEMS_TAREA_0016 -->
+
+
 Estado: primera versión funcional implementada con núcleo, servicios, permisos, catálogos e interfaz ERP.
 
 ## 1. Objetivo
