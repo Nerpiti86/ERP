@@ -261,3 +261,31 @@ body {
   }
 }
 /* END TAREA 0018: LISTADOS Y FILTROS */
+
+/* BEGIN TAREA 0022: CARDS Y BADGES */
+.card > .card-header {
+  background-color: #000 !important;
+  border-bottom-color: #000 !important;
+  color: #fff !important;
+}
+
+.card > .card-header .text-secondary,
+.card > .card-header .text-muted {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.card > .card-header a:not(.btn):not(.badge) {
+  color: inherit;
+}
+
+.badge {
+  font-weight: 400 !important;
+  line-height: 1.2;
+  padding: 0.42em 0.72em;
+}
+
+.badge.rounded-pill {
+  padding-left: 0.9em;
+  padding-right: 0.9em;
+}
+/* END TAREA 0022: CARDS Y BADGES */
