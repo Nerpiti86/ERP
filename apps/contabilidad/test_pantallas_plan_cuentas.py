@@ -159,7 +159,11 @@ class PantallasPlanCuentasTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Activo empresa principal")
         self.assertNotContains(response, "Activo empresa ajena")
-        self.assertEqual(response.context["resumen"]["total"], 1)
+        self.assertNotIn("resumen", response.context)
+        self.assertEqual(response.context["cantidad_resultados"], 1)
+        self.assertContains(response, 'class="erp-list-filter-panel')
+        self.assertContains(response, 'type="search"')
+        self.assertContains(response, "1 resultado")
 
     def test_lector_consulta_pero_no_puede_crear(self):
         crear_cuenta_contable(
@@ -338,6 +342,9 @@ class PantallasPlanCuentasTests(TestCase):
         self.assertContains(response, "Cajas y bancos")
         self.assertNotContains(response, ">Pasivo<")
         self.assertEqual(len(response.context["cuentas"]), 2)
+        self.assertEqual(response.context["cantidad_resultados"], 2)
+        self.assertContains(response, "2 resultados")
+        self.assertContains(response, "Limpiar")
 
     def test_menu_respeta_permiso_contable(self):
         self.ingresar(self.lector)

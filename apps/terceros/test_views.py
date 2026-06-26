@@ -90,6 +90,11 @@ class TercerosViewsTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Cliente Visible SA")
         self.assertNotContains(respuesta, "Cliente Oculto SA")
+        self.assertNotIn("resumen", respuesta.context)
+        self.assertEqual(respuesta.context["cantidad_resultados"], 1)
+        self.assertContains(respuesta, 'class="erp-list-filter-panel')
+        self.assertContains(respuesta, 'type="search"')
+        self.assertContains(respuesta, "1 resultado")
 
     def test_operador_puede_crear(self):
         self._login_empresa(self.operador)

@@ -669,3 +669,32 @@ Próximo bloque recomendado:
 ```text
 TAREA 0016 — Proveedores, códigos externos y presentaciones de ítems
 ```
+
+
+<!-- BEGIN TAREA_0018_LISTADOS -->
+## Actualización: TAREA 0018 — Unificación de listados, búsqueda y filtros
+
+Se unifica el patrón visual y operativo de los listados funcionales existentes.
+
+Resultado:
+
+- eliminación de cards estadísticas sin acción en ítems, terceros, categorías,
+  marcas y plan de cuentas;
+- bloque compacto y común de búsqueda y filtros;
+- campo principal `q` presentado siempre como entrada de búsqueda;
+- acciones consistentes `Buscar` y `Limpiar`;
+- contador único de resultados filtrados junto a cada tabla;
+- conservación exacta de la semántica de los parámetros GET;
+- eliminación de consultas de resumen que dejaron de utilizarse;
+- comportamiento responsive común mediante `static/css/erp.css`;
+- pruebas de presentación, filtros, permisos y aislamiento conservadas.
+
+Quedan expresamente fuera de alcance la paginación, el ordenamiento por columnas,
+HTMX, filtros guardados y el diseño de `ItemProveedor` registrado en el issue #3.
+
+Estado:
+
+```text
+TAREA 0018 — LISTADOS, BÚSQUEDA Y FILTROS UNIFICADOS
+```
+<!-- END TAREA_0018_LISTADOS -->

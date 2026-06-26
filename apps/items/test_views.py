@@ -99,6 +99,11 @@ class ItemsViewsTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Ítem visible")
         self.assertNotContains(respuesta, "Ítem oculto")
+        self.assertNotIn("resumen", respuesta.context)
+        self.assertEqual(respuesta.context["cantidad_resultados"], 1)
+        self.assertContains(respuesta, 'class="erp-list-filter-panel')
+        self.assertContains(respuesta, 'type="search"')
+        self.assertContains(respuesta, "1 resultado")
 
     def test_navegacion_muestra_items_categorias_y_marcas(self):
         self._login_empresa(self.operador)
@@ -258,14 +263,18 @@ class ItemsViewsTests(TestCase):
 
     def test_lector_ve_catalogos_pero_no_puede_crearlos(self):
         self._login_empresa(self.lector)
-        self.assertEqual(
-            self.client.get(reverse("items:categoria_list")).status_code,
-            200,
-        )
-        self.assertEqual(
-            self.client.get(reverse("items:marca_list")).status_code,
-            200,
-        )
+        categorias = self.client.get(reverse("items:categoria_list"))
+        marcas = self.client.get(reverse("items:marca_list"))
+
+        self.assertEqual(categorias.status_code, 200)
+        self.assertEqual(marcas.status_code, 200)
+        for respuesta in (categorias, marcas):
+            self.assertNotIn("resumen", respuesta.context)
+            self.assertEqual(respuesta.context["cantidad_resultados"], 1)
+            self.assertContains(respuesta, 'class="erp-list-filter-panel')
+            self.assertContains(respuesta, 'type="search"')
+            self.assertContains(respuesta, "1 resultado")
+
         self.assertEqual(
             self.client.get(reverse("items:categoria_create")).status_code,
             403,

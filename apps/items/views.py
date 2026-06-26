@@ -78,8 +78,7 @@ def _obtener_catalogo(modelo, empresa, catalogo_id, *, activo=None):
 @require_GET
 def item_list(request):
     empresa = request.empresa_activa
-    base = Item.objects.filter(empresa=empresa)
-    items = base.select_related(
+    items = Item.objects.filter(empresa=empresa).select_related(
         "categoria",
         "marca",
         "unidad_medida",
@@ -131,19 +130,7 @@ def item_list(request):
         items = items.filter(activo=True)
 
     items = items.order_by("nombre", "codigo")
-
-    resumen = {
-        "total": base.count(),
-        "activos": base.filter(activo=True).count(),
-        "productos": base.filter(
-            activo=True,
-            tipo=Item.Tipo.PRODUCTO,
-        ).count(),
-        "servicios": base.filter(
-            activo=True,
-            tipo=Item.Tipo.SERVICIO,
-        ).count(),
-    }
+    cantidad_resultados = items.count()
 
     return render(
         request,
@@ -151,7 +138,7 @@ def item_list(request):
         {
             "empresa": empresa,
             "items": items,
-            "resumen": resumen,
+            "cantidad_resultados": cantidad_resultados,
             "tipos": Item.Tipo.choices,
             "filtros": {
                 "q": busqueda,
@@ -360,8 +347,7 @@ def _catalogo_list(
     muestra_descripcion,
 ):
     empresa = request.empresa_activa
-    base = modelo.objects.filter(empresa=empresa)
-    objetos = base
+    objetos = modelo.objects.filter(empresa=empresa)
     busqueda = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "activos").strip().lower()
 
@@ -381,23 +367,22 @@ def _catalogo_list(
         estado = "activos"
         objetos = objetos.filter(activo=True)
 
+    objetos = objetos.order_by("nombre", "codigo")
+    cantidad_resultados = objetos.count()
+
     return render(
         request,
         "items/catalogo_list.html",
         {
             "empresa": empresa,
-            "objetos": objetos.order_by("nombre", "codigo"),
+            "objetos": objetos,
+            "cantidad_resultados": cantidad_resultados,
             "titulo": titulo,
             "singular": singular,
             "crear_url": crear_url,
             "editar_url": editar_url,
             "inactivar_url": inactivar_url,
             "muestra_descripcion": muestra_descripcion,
-            "resumen": {
-                "total": base.count(),
-                "activos": base.filter(activo=True).count(),
-                "inactivos": base.filter(activo=False).count(),
-            },
             "filtros": {"q": busqueda, "estado": estado},
             "hay_filtros": bool(busqueda or estado != "activos"),
             "puede_crear": usuario_tiene_permiso(

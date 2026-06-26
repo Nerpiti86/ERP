@@ -88,13 +88,13 @@ def _obtener_tercero(empresa, tercero_id, *, activo=None):
 @require_GET
 def tercero_list(request):
     empresa = request.empresa_activa
-    base = Tercero.objects.filter(empresa=empresa)
     busqueda = request.GET.get("q", "").strip()
     rol = request.GET.get("rol", "").strip().upper()
     estado = request.GET.get("estado", "activos").strip().lower()
 
     terceros = (
-        base.select_related("tipo_documento", "condicion_iva")
+        Tercero.objects.filter(empresa=empresa)
+        .select_related("tipo_documento", "condicion_iva")
         .prefetch_related(
             Prefetch(
                 "roles",
@@ -133,28 +133,16 @@ def tercero_list(request):
         estado = "activos"
         terceros = terceros.filter(activo=True)
 
-    resumen = {
-        "total": base.count(),
-        "activos": base.filter(activo=True).count(),
-        "clientes": base.filter(
-            activo=True,
-            roles__rol=TerceroRol.Rol.CLIENTE,
-            roles__activo=True,
-        ).distinct().count(),
-        "proveedores": base.filter(
-            activo=True,
-            roles__rol=TerceroRol.Rol.PROVEEDOR,
-            roles__activo=True,
-        ).distinct().count(),
-    }
+    terceros = list(terceros)
+    cantidad_resultados = len(terceros)
 
     return render(
         request,
         "terceros/tercero_list.html",
         {
             "empresa": empresa,
-            "terceros": list(terceros),
-            "resumen": resumen,
+            "terceros": terceros,
+            "cantidad_resultados": cantidad_resultados,
             "roles_opciones": TerceroRol.Rol.choices,
             "filtros": {"q": busqueda, "rol": rol, "estado": estado},
             "hay_filtros": any(

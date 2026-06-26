@@ -18,86 +18,60 @@
     {% endif %}
   </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-      <div class="card h-100"><div class="card-body">
-        <div class="text-secondary small">Total</div>
-        <div class="fs-4 fw-semibold">{{ resumen.total }}</div>
-      </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card h-100"><div class="card-body">
-        <div class="text-secondary small">Activos</div>
-        <div class="fs-4 fw-semibold">{{ resumen.activos }}</div>
-      </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card h-100"><div class="card-body">
-        <div class="text-secondary small">Clientes</div>
-        <div class="fs-4 fw-semibold">{{ resumen.clientes }}</div>
-      </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card h-100"><div class="card-body">
-        <div class="text-secondary small">Proveedores</div>
-        <div class="fs-4 fw-semibold">{{ resumen.proveedores }}</div>
-      </div></div>
-    </div>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-body">
-      <form method="get" class="row g-3 align-items-end">
-        <div class="col-12 col-lg-5">
-          <label class="form-label" for="id_q">Buscar</label>
-          <input
-            class="form-control"
-            id="id_q"
-            name="q"
-            value="{{ filtros.q }}"
-            placeholder="Código, documento, denominación o correo"
-          >
-        </div>
-        <div class="col-12 col-md-5 col-lg-3">
-          <label class="form-label" for="id_rol">Rol</label>
-          <select class="form-select" id="id_rol" name="rol">
-            <option value="">Todos</option>
-            {% for valor, etiqueta in roles_opciones %}
-              <option value="{{ valor }}"{% if filtros.rol == valor %} selected{% endif %}>
-                {{ etiqueta }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-12 col-md-4 col-lg-2">
-          <label class="form-label" for="id_estado">Estado</label>
-          <select class="form-select" id="id_estado" name="estado">
-            <option value="activos"{% if filtros.estado == "activos" %} selected{% endif %}>
-              Activos
+  <section
+    class="erp-list-filter-panel mb-4"
+    aria-labelledby="tercero-filter-title"
+  >
+    <h2 class="h6 mb-3" id="tercero-filter-title">Buscar y filtrar</h2>
+    <form method="get" class="erp-list-filter-form">
+      <div class="erp-list-filter-search">
+        <label class="form-label" for="id_q">Buscar</label>
+        <input
+          class="form-control"
+          id="id_q"
+          name="q"
+          type="search"
+          value="{{ filtros.q }}"
+          placeholder="Código, documento, denominación o correo"
+        >
+      </div>
+      <div class="erp-list-filter-field">
+        <label class="form-label" for="id_rol">Rol</label>
+        <select class="form-select" id="id_rol" name="rol">
+          <option value="">Todos</option>
+          {% for valor, etiqueta in roles_opciones %}
+            <option value="{{ valor }}"{% if filtros.rol == valor %} selected{% endif %}>
+              {{ etiqueta }}
             </option>
-            <option value="inactivos"{% if filtros.estado == "inactivos" %} selected{% endif %}>
-              Inactivos
-            </option>
-            <option value="todos"{% if filtros.estado == "todos" %} selected{% endif %}>
-              Todos
-            </option>
-          </select>
-        </div>
-        <div class="col-12 col-md-3 col-lg-2 d-flex gap-2">
-          <button class="btn btn-outline-primary flex-fill" type="submit">
-            Filtrar
-          </button>
-          {% if hay_filtros %}
-            <a class="btn btn-outline-secondary" href="{% url 'terceros:tercero_list' %}">
-              Limpiar
-            </a>
-          {% endif %}
-        </div>
-      </form>
-    </div>
-  </div>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="erp-list-filter-field">
+        <label class="form-label" for="id_estado">Estado</label>
+        <select class="form-select" id="id_estado" name="estado">
+          <option value="activos"{% if filtros.estado == "activos" %} selected{% endif %}>Activos</option>
+          <option value="inactivos"{% if filtros.estado == "inactivos" %} selected{% endif %}>Inactivos</option>
+          <option value="todos"{% if filtros.estado == "todos" %} selected{% endif %}>Todos</option>
+        </select>
+      </div>
+      <div class="erp-list-filter-actions">
+        <button class="btn btn-primary" type="submit">Buscar</button>
+        {% if hay_filtros %}
+          <a class="btn btn-outline-secondary" href="{% url 'terceros:tercero_list' %}">
+            Limpiar
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
 
   <div class="card">
+    <div class="card-header bg-white erp-list-results-header">
+      <h2 class="h6 mb-0">Clientes y proveedores</h2>
+      <span class="text-secondary small">
+        {{ cantidad_resultados }} resultado{{ cantidad_resultados|pluralize }}
+      </span>
+    </div>
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">

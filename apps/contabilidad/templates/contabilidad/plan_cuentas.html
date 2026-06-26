@@ -18,7 +18,7 @@
       </div>
       <div class="d-flex flex-wrap gap-2">
         {% if puede_crear %}
-          <a class="btn btn-dark" href="{% url 'contabilidad:crear_cuenta' %}">
+          <a class="btn btn-primary" href="{% url 'contabilidad:crear_cuenta' %}">
             Nueva cuenta
           </a>
         {% else %}
@@ -33,98 +33,67 @@
     </div>
   </section>
 
-  <section class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100"><div class="card-body">
-        <div class="text-secondary small text-uppercase fw-semibold">Total</div>
-        <div class="fs-3 fw-semibold">{{ resumen.total }}</div>
-      </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100"><div class="card-body">
-        <div class="text-secondary small text-uppercase fw-semibold">Habilitadas</div>
-        <div class="fs-3 fw-semibold">{{ resumen.habilitadas }}</div>
-      </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100"><div class="card-body">
-        <div class="text-secondary small text-uppercase fw-semibold">Agrupadoras</div>
-        <div class="fs-3 fw-semibold">{{ resumen.agrupadoras }}</div>
-      </div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100"><div class="card-body">
-        <div class="text-secondary small text-uppercase fw-semibold">Imputables</div>
-        <div class="fs-3 fw-semibold">{{ resumen.imputables }}</div>
-      </div></div>
-    </div>
-  </section>
-
-  <section class="card shadow-sm mb-4">
-    <div class="card-header bg-white">
-      <h2 class="h5 mb-0">Buscar y filtrar</h2>
-    </div>
-    <div class="card-body">
-      <form method="get" class="row g-3 align-items-end">
-        <div class="col-12 col-lg-4">
-          <label class="form-label" for="id_q">Código o nombre</label>
-          <input class="form-control" id="id_q" name="q" type="search"
-                 value="{{ filtros.q }}" placeholder="Ejemplo: caja o 1.1.01">
-        </div>
-        <div class="col-12 col-sm-4 col-lg-3">
-          <label class="form-label" for="id_tipo">Tipo contable</label>
-          <select class="form-select" id="id_tipo" name="tipo">
-            <option value="">Todos</option>
-            {% for valor, etiqueta in tipo_opciones %}
-              <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>
-                {{ etiqueta }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-12 col-sm-4 col-lg-2">
-          <label class="form-label" for="id_clase">Clase</label>
-          <select class="form-select" id="id_clase" name="clase">
-            <option value="">Todas</option>
-            <option value="agrupadoras" {% if filtros.clase == "agrupadoras" %}selected{% endif %}>
-              Agrupadoras
+  <section
+    class="erp-list-filter-panel mb-4"
+    aria-labelledby="cuenta-filter-title"
+  >
+    <h2 class="h6 mb-3" id="cuenta-filter-title">Buscar y filtrar</h2>
+    <form method="get" class="erp-list-filter-form">
+      <div class="erp-list-filter-search">
+        <label class="form-label" for="id_q">Buscar</label>
+        <input
+          class="form-control"
+          id="id_q"
+          name="q"
+          type="search"
+          value="{{ filtros.q }}"
+          placeholder="Código o nombre, por ejemplo: caja o 1.1.01"
+        >
+      </div>
+      <div class="erp-list-filter-field">
+        <label class="form-label" for="id_tipo">Tipo contable</label>
+        <select class="form-select" id="id_tipo" name="tipo">
+          <option value="">Todos</option>
+          {% for valor, etiqueta in tipo_opciones %}
+            <option value="{{ valor }}"{% if filtros.tipo == valor %} selected{% endif %}>
+              {{ etiqueta }}
             </option>
-            <option value="imputables" {% if filtros.clase == "imputables" %}selected{% endif %}>
-              Imputables
-            </option>
-          </select>
-        </div>
-        <div class="col-12 col-sm-4 col-lg-2">
-          <label class="form-label" for="id_estado">Estado</label>
-          <select class="form-select" id="id_estado" name="estado">
-            <option value="">Todos</option>
-            <option value="habilitadas" {% if filtros.estado == "habilitadas" %}selected{% endif %}>
-              Habilitadas
-            </option>
-            <option value="deshabilitadas" {% if filtros.estado == "deshabilitadas" %}selected{% endif %}>
-              Deshabilitadas
-            </option>
-          </select>
-        </div>
-        <div class="col-12 col-lg-1 d-grid">
-          <button class="btn btn-dark" type="submit">Aplicar</button>
-        </div>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="erp-list-filter-field">
+        <label class="form-label" for="id_clase">Clase</label>
+        <select class="form-select" id="id_clase" name="clase">
+          <option value="">Todas</option>
+          <option value="agrupadoras"{% if filtros.clase == "agrupadoras" %} selected{% endif %}>Agrupadoras</option>
+          <option value="imputables"{% if filtros.clase == "imputables" %} selected{% endif %}>Imputables</option>
+        </select>
+      </div>
+      <div class="erp-list-filter-field">
+        <label class="form-label" for="id_estado">Estado</label>
+        <select class="form-select" id="id_estado" name="estado">
+          <option value="">Todos</option>
+          <option value="habilitadas"{% if filtros.estado == "habilitadas" %} selected{% endif %}>Habilitadas</option>
+          <option value="deshabilitadas"{% if filtros.estado == "deshabilitadas" %} selected{% endif %}>Deshabilitadas</option>
+        </select>
+      </div>
+      <div class="erp-list-filter-actions">
+        <button class="btn btn-primary" type="submit">Buscar</button>
         {% if hay_filtros %}
-          <div class="col-12">
-            <a class="btn btn-sm btn-outline-secondary"
-               href="{% url 'contabilidad:plan_cuentas' %}">
-              Limpiar filtros
-            </a>
-          </div>
+          <a class="btn btn-outline-secondary" href="{% url 'contabilidad:plan_cuentas' %}">
+            Limpiar
+          </a>
         {% endif %}
-      </form>
-    </div>
+      </div>
+    </form>
   </section>
 
   <section class="card shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between gap-3">
-      <h2 class="h5 mb-0">Cuentas de {{ empresa.razon_social }}</h2>
-      <span class="text-secondary small">{{ cuentas|length }} resultados</span>
+    <div class="card-header bg-white erp-list-results-header">
+      <h2 class="h6 mb-0">Cuentas de {{ empresa.razon_social }}</h2>
+      <span class="text-secondary small">
+        {{ cantidad_resultados }} resultado{{ cantidad_resultados|pluralize }}
+      </span>
     </div>
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">

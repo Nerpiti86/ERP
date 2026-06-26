@@ -818,3 +818,22 @@ una validación, una prueba o una decisión documentada.
 - el README debe ser una síntesis actual y no una acumulación de estados obsoletos;
 - el documento canónico de estado no reemplaza los documentos rectores de dominio ni el contrato operativo.
 <!-- END LECCIONES_TAREA_0016 -->
+
+
+<!-- BEGIN ESTANDAR_LISTADOS_TAREA_0018 -->
+## Estándar de listados incorporado por la TAREA 0018
+
+- las métricas sin acción inmediata no deben desplazar la tabla principal;
+- cada listado debe presentar primero el título y las acciones principales;
+- la búsqueda principal utiliza `GET`, parámetro `q` y entrada `type="search"`;
+- los filtros específicos del dominio conservan su semántica backend;
+- las acciones se denominan `Buscar` y `Limpiar` y mantienen un orden uniforme;
+- `Limpiar` se muestra únicamente cuando existen filtros efectivos;
+- cada tabla informa la cantidad de resultados después de aplicar los filtros;
+- los contenedores visuales compartidos se resuelven con clases de
+  `static/css/erp.css`, sin duplicar reglas entre módulos;
+- la unificación visual no autoriza a alterar permisos, aislamiento,
+  parámetros, modelos ni servicios de dominio;
+- paginación, ordenamiento dinámico y búsqueda asincrónica requieren tareas
+  independientes.
+<!-- END ESTANDAR_LISTADOS_TAREA_0018 -->

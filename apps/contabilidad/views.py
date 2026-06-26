@@ -32,13 +32,6 @@ def plan_cuentas(request):
     empresa = request.empresa_activa
     base = CuentaContable.objects.filter(empresa=empresa)
 
-    resumen = {
-        "total": base.count(),
-        "habilitadas": base.filter(habilitada=True).count(),
-        "agrupadoras": base.filter(codigo__endswith=".000").count(),
-        "imputables": base.exclude(codigo__endswith=".000").count(),
-    }
-
     busqueda = request.GET.get("q", "").strip()
     tipo_contable = request.GET.get("tipo", "").strip()
     estado = request.GET.get("estado", "").strip()
@@ -72,6 +65,9 @@ def plan_cuentas(request):
     else:
         clase = ""
 
+    cuentas = list(cuentas)
+    cantidad_resultados = len(cuentas)
+
     puede_crear = usuario_tiene_permiso(
         request.user,
         empresa,
@@ -83,8 +79,8 @@ def plan_cuentas(request):
         "contabilidad/plan_cuentas.html",
         {
             "empresa": empresa,
-            "cuentas": list(cuentas),
-            "resumen": resumen,
+            "cuentas": cuentas,
+            "cantidad_resultados": cantidad_resultados,
             "puede_crear": puede_crear,
             "tipo_opciones": CuentaContable.TipoContable.choices,
             "filtros": {
