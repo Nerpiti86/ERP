@@ -1,11 +1,14 @@
 # Relación entre ítems y proveedores
 
 ```text
-Estado: DISEÑO FUNCIONAL Y TÉCNICO APROBADO
-Tarea: 0024
-Fecha: 2026-06-29
-Base auditada antes del commit documental: 11b4b4cc68e544de49f9fab63031a410ce58059d
-Implementación persistente: PENDIENTE
+Estado: IMPLEMENTADO
+Diseño: TAREA 0024
+Implementación: TAREA 0025
+Fecha de implementación: 2026-06-29
+Base auditada antes del commit funcional: c71ee89c22901543e7b4a2328efe3b13da30407c
+Migración: 0003_item_proveedor
+Pruebas de apps.items: 95
+Suite completa: 488
 Issue de origen: #3
 ```
 
@@ -534,6 +537,23 @@ La implementación posterior será aceptable cuando:
 
 ```text
 DISEÑO APROBADO
-IMPLEMENTACIÓN PENDIENTE
-NO HAY CAMBIOS DE BASE DE DATOS EN LA TAREA 0024
+IMPLEMENTACIÓN COMPLETADA EN TAREA 0025
+MIGRACIÓN APLICADA Y FUNCIONALIDAD OPERATIVA
 ```
+
+<!-- BEGIN TAREA_0025_IMPLEMENTACION -->
+## 24. Implementación verificada — TAREA 0025
+
+```text
+Modelo: apps.items.models.ItemProveedor
+Tabla: items_itemproveedor
+Migración: 0003_item_proveedor
+Servicios: crear, actualizar, inactivar y reactivar
+Interfaz: card Proveedores en el detalle del ítem
+Pruebas apps.items: 95
+Suite completa: 488
+```
+
+Se implementó el contrato sin incorporar precios, costos, monedas,
+presentaciones ni condiciones comerciales.
+<!-- END TAREA_0025_IMPLEMENTACION -->

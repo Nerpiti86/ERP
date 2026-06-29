@@ -76,6 +76,111 @@
     </div>
   </div>
 
+  <div class="card mb-4">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <span class="fw-semibold">Proveedores</span>
+      {% if puede_editar and item.activo and item.se_compra %}
+        <a
+          class="btn btn-sm btn-light"
+          href="{% url 'items:item_proveedor_create' item.pk %}"
+        >
+          Agregar proveedor
+        </a>
+      {% endif %}
+    </div>
+    <div class="card-body p-0">
+      {% if not item.se_compra %}
+        <div class="alert alert-warning m-3 mb-0">
+          El ítem no está habilitado para compra. Se conserva el historial,
+          pero no pueden crearse ni reactivarse relaciones.
+        </div>
+      {% endif %}
+
+      {% if relaciones_proveedores %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Proveedor</th>
+                <th>Grupo</th>
+                <th>Código del proveedor</th>
+                <th>Estado</th>
+                <th>Disponibilidad</th>
+                {% if puede_editar %}<th class="text-end">Acciones</th>{% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for relacion in relaciones_proveedores %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ relacion.proveedor.denominacion }}</div>
+                    <div class="small text-secondary">{{ relacion.proveedor.codigo }}</div>
+                  </td>
+                  <td>{{ relacion.grupo_proveedor|default:"—" }}</td>
+                  <td>{{ relacion.codigo_proveedor|default:"—" }}</td>
+                  <td>
+                    {% if relacion.activo %}
+                      <span class="badge text-bg-success">Activa</span>
+                    {% else %}
+                      <span class="badge text-bg-secondary">Inactiva</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if relacion.disponible_operativamente %}
+                      <span class="badge text-bg-success">Disponible</span>
+                    {% else %}
+                      <span class="badge text-bg-warning">
+                        {{ relacion.motivo_indisponibilidad }}
+                      </span>
+                    {% endif %}
+                  </td>
+                  {% if puede_editar %}
+                    <td class="text-end">
+                      <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                        {% if relacion.activo %}
+                          {% if relacion.disponible_operativamente %}
+                            <a
+                              class="btn btn-sm btn-outline-primary"
+                              href="{% url 'items:item_proveedor_edit' item.pk relacion.pk %}"
+                            >
+                              Editar
+                            </a>
+                          {% endif %}
+                          <form
+                            method="post"
+                            action="{% url 'items:item_proveedor_deactivate' item.pk relacion.pk %}"
+                            onsubmit="return confirm('¿Inactivar esta relación con el proveedor?');"
+                          >
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-danger" type="submit">
+                              Inactivar
+                            </button>
+                          </form>
+                        {% else %}
+                          <form
+                            method="post"
+                            action="{% url 'items:item_proveedor_reactivate' item.pk relacion.pk %}"
+                          >
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-success" type="submit">
+                              Reactivar
+                            </button>
+                          </form>
+                        {% endif %}
+                      </div>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-secondary m-3">No hay proveedores asociados.</p>
+      {% endif %}
+    </div>
+  </div>
+
   {% if item.observaciones %}
     <div class="card">
       <div class="card-header fw-semibold">Observaciones</div>

@@ -1,24 +1,22 @@
 # Maestro de productos y servicios
 
 <!-- BEGIN ESTADO_VERIFICADO_ITEMS -->
-## Estado verificado del maestro de productos y servicios — TAREA 0023
+## Estado verificado del maestro de productos y servicios — TAREA 0025
 
 ```text
 Aplicación: apps.items
-Modelos: 5
-Última migración: 0002_catalogos_iniciales
-Pruebas ejecutadas para la app: 67
-Plantillas detectadas: 5
+Modelos: 6
+Última migración: 0003_item_proveedor
+Pruebas ejecutadas para la app: 95
+Plantillas detectadas: 6
 ```
 
-La primera versión funcional está implementada con aislamiento por empresa,
-permisos backend, servicios transaccionales, auditoría, catálogos e interfaz.
+El maestro está implementado con aislamiento por empresa, permisos backend,
+servicios transaccionales, auditoría, catálogos, interfaz y relaciones entre
+ítems comprables y terceros proveedores.
 
-No incorpora todavía el modelo persistente de proveedores por ítem,
-identificadores externos, códigos de barras ni presentaciones.
-
-La TAREA 0024 aprueba exclusivamente el diseño de `ItemProveedor` en
-`docs/24_relacion_items_proveedores.md`. La implementación sigue pendiente.
+No incorpora todavía precios, costos, monedas, códigos de barras ni
+presentaciones.
 
 El detalle técnico vigente está en `docs/22_estado_real_integral_erp.md`.
 <!-- END ESTADO_VERIFICADO_ITEMS -->
@@ -371,6 +369,26 @@ Estado:
 
 ```text
 DISEÑO APROBADO
-IMPLEMENTACIÓN PENDIENTE
+IMPLEMENTACIÓN COMPLETADA EN TAREA 0025
 ```
 <!-- END TAREA_0024_DISENO_ITEM_PROVEEDOR -->
+
+<!-- BEGIN TAREA_0025_IMPLEMENTACION_ITEM_PROVEEDOR -->
+## 18. Implementación: TAREA 0025 — ItemProveedor
+
+Se incorpora:
+
+- modelo y migración `0003_item_proveedor`;
+- relación inmutable entre empresa, ítem y tercero proveedor;
+- código externo opcional y normalizado;
+- unicidad del código por proveedor;
+- estado histórico y disponibilidad calculada;
+- servicios transaccionales;
+- auditoría;
+- formulario, rutas y vistas;
+- card de proveedores en el detalle del ítem;
+- bloqueo de quitar la capacidad de compra con relaciones activas;
+- 95 pruebas de la app y 488 pruebas completas.
+
+Precios, costos, monedas y condiciones comerciales permanecen fuera de alcance.
+<!-- END TAREA_0025_IMPLEMENTACION_ITEM_PROVEEDOR -->

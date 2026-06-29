@@ -1,7 +1,16 @@
 from django import forms
 from django.db.models import Q
 
-from .models import AlicuotaIVA, CategoriaItem, Item, Marca, UnidadMedida
+from apps.terceros.models import Tercero, TerceroRol
+
+from .models import (
+    AlicuotaIVA,
+    CategoriaItem,
+    Item,
+    ItemProveedor,
+    Marca,
+    UnidadMedida,
+)
 
 
 def aplicar_estilo(form):
@@ -218,3 +227,68 @@ class ItemForm(forms.Form):
             )
 
         return cleaned_data
+
+class ItemProveedorForm(forms.Form):
+    proveedor = forms.ModelChoiceField(
+        label="Proveedor",
+        queryset=Tercero.objects.none(),
+        empty_label="Seleccionar proveedor",
+    )
+    codigo_proveedor = forms.CharField(
+        label="Código del proveedor",
+        max_length=80,
+        required=False,
+        help_text="Código utilizado por el proveedor para identificar el ítem.",
+    )
+    observaciones = forms.CharField(
+        label="Observaciones",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+
+    def __init__(
+        self,
+        *args,
+        empresa,
+        item,
+        relacion=None,
+        **kwargs,
+    ):
+        self.empresa = empresa
+        self.item = item
+        self.relacion = relacion
+        datos = args[0] if args else kwargs.get("data")
+
+        if relacion is not None:
+            initial = kwargs.setdefault("initial", {})
+            initial["proveedor"] = relacion.proveedor
+            if datos is None:
+                initial["codigo_proveedor"] = relacion.codigo_proveedor
+                initial["observaciones"] = relacion.observaciones
+
+        super().__init__(*args, **kwargs)
+
+        if relacion is None:
+            proveedores = (
+                Tercero.objects.filter(
+                    empresa=empresa,
+                    activo=True,
+                    roles__rol=TerceroRol.Rol.PROVEEDOR,
+                    roles__activo=True,
+                )
+                .exclude(relaciones_items_proveedor__item=item)
+                .distinct()
+                .order_by("denominacion", "codigo")
+            )
+        else:
+            proveedores = Tercero.objects.filter(
+                pk=relacion.proveedor_id,
+                empresa=empresa,
+            )
+            self.fields["proveedor"].disabled = True
+            self.fields["proveedor"].help_text = (
+                "El proveedor identifica la relación y no puede modificarse."
+            )
+
+        self.fields["proveedor"].queryset = proveedores
+        aplicar_estilo(self)

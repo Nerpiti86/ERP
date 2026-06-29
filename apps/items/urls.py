@@ -36,6 +36,26 @@ urlpatterns = [
         views.marca_deactivate,
         name="marca_deactivate",
     ),
+    path(
+        "<int:item_id>/proveedores/nuevo/",
+        views.item_proveedor_create,
+        name="item_proveedor_create",
+    ),
+    path(
+        "<int:item_id>/proveedores/<int:relacion_id>/editar/",
+        views.item_proveedor_edit,
+        name="item_proveedor_edit",
+    ),
+    path(
+        "<int:item_id>/proveedores/<int:relacion_id>/inactivar/",
+        views.item_proveedor_deactivate,
+        name="item_proveedor_deactivate",
+    ),
+    path(
+        "<int:item_id>/proveedores/<int:relacion_id>/reactivar/",
+        views.item_proveedor_reactivate,
+        name="item_proveedor_reactivate",
+    ),
     path("<int:item_id>/", views.item_detail, name="item_detail"),
     path(
         "<int:item_id>/editar/",

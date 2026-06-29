@@ -15,10 +15,10 @@ La primera versión funcional está implementada con identidad compartida,
 roles CLIENTE/PROVEEDOR, grupos obligatorios por rol, domicilios, contactos,
 aislamiento por empresa, permisos backend, servicios y auditoría.
 
-No incorpora todavía relaciones persistentes con ítems, condiciones de compra
-ni cuentas corrientes. El diseño de la futura relación `ItemProveedor` está
-aprobado en `docs/24_relacion_items_proveedores.md`, pero su implementación
-permanece pendiente. El estado técnico vigente está en
+Incorpora relaciones persistentes con ítems mediante `ItemProveedor`.
+Condiciones de compra, precios y cuentas corrientes continúan pendientes.
+El contrato e implementación se documentan en
+`docs/24_relacion_items_proveedores.md`. El estado técnico vigente está en
 `docs/22_estado_real_integral_erp.md`.
 <!-- END ESTADO_VERIFICADO_TERCEROS -->
 
@@ -88,15 +88,16 @@ volver obligatorio el campo.
 La interfaz incorpora ABM, búsqueda, baja lógica, cantidades asignadas, filtros
 en el maestro y visualización en listado y detalle.
 
-## Relación futura con ítems
+## Relación con ítems
 
-La futura entidad `ItemProveedor` referenciará `Tercero` y comprobará como
-condición operativa la existencia de un rol activo `PROVEEDOR`.
+`ItemProveedor` referencia `Tercero` y comprueba como condición operativa la
+existencia de un rol activo `PROVEEDOR`.
 
-La inactivación del tercero o del rol no borrará la relación comercial: la
-volverá temporalmente no disponible y conservará su historia.
+La inactivación del tercero o del rol no borra la relación comercial: la vuelve
+temporalmente no disponible y conserva su historia.
 
-El contrato completo está en `docs/24_relacion_items_proveedores.md`.
+El contrato e implementación están en
+`docs/24_relacion_items_proveedores.md`.
 
 ## Catálogos iniciales
 

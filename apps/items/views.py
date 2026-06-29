@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
@@ -11,9 +11,22 @@ from apps.nucleo.autorizacion import (
     permiso_funcional_requerido,
 )
 from apps.nucleo.permisos import usuario_tiene_permiso
+from apps.terceros.models import TerceroRol
 
-from .forms import CategoriaItemForm, ItemForm, MarcaForm
-from .models import AlicuotaIVA, CategoriaItem, Item, Marca, UnidadMedida
+from .forms import (
+    CategoriaItemForm,
+    ItemForm,
+    ItemProveedorForm,
+    MarcaForm,
+)
+from .models import (
+    AlicuotaIVA,
+    CategoriaItem,
+    Item,
+    ItemProveedor,
+    Marca,
+    UnidadMedida,
+)
 from .services import (
     actualizar_categoria,
     actualizar_item,
@@ -23,7 +36,11 @@ from .services import (
     crear_marca,
     inactivar_categoria,
     inactivar_item,
+    inactivar_item_proveedor,
     inactivar_marca,
+    crear_item_proveedor,
+    actualizar_item_proveedor,
+    reactivar_item_proveedor,
 )
 
 
@@ -66,6 +83,44 @@ def _obtener_catalogo(modelo, empresa, catalogo_id, *, activo=None):
     consulta = modelo.objects.filter(
         pk=catalogo_id,
         empresa=empresa,
+    )
+    if activo is not None:
+        consulta = consulta.filter(activo=activo)
+    return get_object_or_404(consulta)
+
+
+def _consulta_relaciones_proveedores():
+    roles = TerceroRol.objects.filter(
+        rol=TerceroRol.Rol.PROVEEDOR,
+        activo=True,
+    ).select_related("grupo")
+    return (
+        ItemProveedor.objects.select_related(
+            "empresa",
+            "item",
+            "proveedor",
+        )
+        .prefetch_related(
+            Prefetch(
+                "proveedor__roles",
+                queryset=roles,
+                to_attr="roles_proveedor_activos_precargados",
+            )
+        )
+    )
+
+
+def _obtener_relacion_proveedor(
+    empresa,
+    item,
+    relacion_id,
+    *,
+    activo=None,
+):
+    consulta = _consulta_relaciones_proveedores().filter(
+        pk=relacion_id,
+        empresa=empresa,
+        item=item,
     )
     if activo is not None:
         consulta = consulta.filter(activo=activo)
@@ -177,12 +232,18 @@ def item_list(request):
 def item_detail(request, item_id):
     empresa = request.empresa_activa
     item = _obtener_item(empresa, item_id)
+    relaciones_proveedores = list(
+        _consulta_relaciones_proveedores()
+        .filter(empresa=empresa, item=item)
+        .order_by("-activo", "proveedor__denominacion", "proveedor__codigo")
+    )
     return render(
         request,
         "items/item_detail.html",
         {
             "empresa": empresa,
             "item": item,
+            "relaciones_proveedores": relaciones_proveedores,
             "puede_editar": usuario_tiene_permiso(
                 request.user,
                 empresa,
@@ -190,6 +251,164 @@ def item_detail(request, item_id):
             ),
         },
     )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("items.editar")
+def item_proveedor_create(request, item_id):
+    empresa = request.empresa_activa
+    item = _obtener_item(empresa, item_id, activo=True)
+
+    if not item.se_compra:
+        messages.error(
+            request,
+            "El ítem no está habilitado para compra.",
+        )
+        return redirect("items:item_detail", item_id=item.pk)
+
+    form = ItemProveedorForm(
+        request.POST if request.method == "POST" else None,
+        empresa=empresa,
+        item=item,
+    )
+    if request.method == "POST" and form.is_valid():
+        try:
+            relacion = crear_item_proveedor(
+                empresa=empresa,
+                item=item,
+                proveedor=form.cleaned_data["proveedor"],
+                codigo_proveedor=form.cleaned_data["codigo_proveedor"],
+                observaciones=form.cleaned_data["observaciones"],
+                request=request,
+            )
+        except ValidationError as error:
+            _agregar_errores(form, error)
+        else:
+            messages.success(
+                request,
+                f"Proveedor {relacion.proveedor.denominacion} asociado.",
+            )
+            return redirect("items:item_detail", item_id=item.pk)
+
+    return render(
+        request,
+        "items/item_proveedor_form.html",
+        {
+            "empresa": empresa,
+            "item": item,
+            "relacion": None,
+            "form": form,
+            "titulo": "Asociar proveedor",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("items.editar")
+def item_proveedor_edit(request, item_id, relacion_id):
+    empresa = request.empresa_activa
+    item = _obtener_item(empresa, item_id)
+    relacion = _obtener_relacion_proveedor(
+        empresa,
+        item,
+        relacion_id,
+        activo=True,
+    )
+
+    if not relacion.disponible_operativamente:
+        messages.error(
+            request,
+            "La relación no está disponible para edición. "
+            "Restablecé sus dependencias o inactivala.",
+        )
+        return redirect("items:item_detail", item_id=item.pk)
+
+    form = ItemProveedorForm(
+        request.POST if request.method == "POST" else None,
+        empresa=empresa,
+        item=item,
+        relacion=relacion,
+    )
+    if request.method == "POST" and form.is_valid():
+        try:
+            relacion = actualizar_item_proveedor(
+                empresa=empresa,
+                relacion=relacion,
+                codigo_proveedor=form.cleaned_data["codigo_proveedor"],
+                observaciones=form.cleaned_data["observaciones"],
+                request=request,
+            )
+        except ValidationError as error:
+            _agregar_errores(form, error)
+        else:
+            messages.success(request, "Relación con proveedor actualizada.")
+            return redirect("items:item_detail", item_id=item.pk)
+
+    return render(
+        request,
+        "items/item_proveedor_form.html",
+        {
+            "empresa": empresa,
+            "item": item,
+            "relacion": relacion,
+            "form": form,
+            "titulo": "Editar proveedor asociado",
+        },
+    )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("items.editar")
+@require_POST
+def item_proveedor_deactivate(request, item_id, relacion_id):
+    empresa = request.empresa_activa
+    item = _obtener_item(empresa, item_id)
+    relacion = _obtener_relacion_proveedor(
+        empresa,
+        item,
+        relacion_id,
+        activo=True,
+    )
+    try:
+        inactivar_item_proveedor(
+            empresa=empresa,
+            relacion=relacion,
+            request=request,
+        )
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+    else:
+        messages.success(request, "Relación con proveedor inactivada.")
+    return redirect("items:item_detail", item_id=item.pk)
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("items.editar")
+@require_POST
+def item_proveedor_reactivate(request, item_id, relacion_id):
+    empresa = request.empresa_activa
+    item = _obtener_item(empresa, item_id)
+    relacion = _obtener_relacion_proveedor(
+        empresa,
+        item,
+        relacion_id,
+        activo=False,
+    )
+    try:
+        reactivar_item_proveedor(
+            empresa=empresa,
+            relacion=relacion,
+            request=request,
+        )
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+    else:
+        messages.success(request, "Relación con proveedor reactivada.")
+    return redirect("items:item_detail", item_id=item.pk)
 
 
 @login_required

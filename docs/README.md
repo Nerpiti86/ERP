@@ -45,11 +45,11 @@ docs/23_riesgos_y_deuda_tecnica.md
 | `21_maestro_productos_servicios.md` | Documento rector de ítems | Primera versión funcional implementada |
 | `22_estado_real_integral_erp.md` | Estado integral canónico | Vigente al corte 2026-06-29 |
 | `23_riesgos_y_deuda_tecnica.md` | Registro de riesgos | Vigente |
-| `24_relacion_items_proveedores.md` | Diseño de relación comercial | Diseño aprobado; implementación pendiente |
+| `24_relacion_items_proveedores.md` | Relación comercial de ítems | Implementado |
 | `25_doble_entrada_gestion_contabilidad.md` | Arquitectura de ejecución | Implementado |
 
-`docs/24_relacion_items_proveedores.md` es un contrato de diseño. Su presencia
-no implica que el modelo o la interfaz estén implementados.
+`docs/24_relacion_items_proveedores.md` documenta el diseño y la
+implementación vigente de `ItemProveedor`.
 
 ## Jerarquía documental
 

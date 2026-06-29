@@ -38,13 +38,13 @@ Rama:   main
 Fecha del corte: 2026-06-29
 Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
 Aplicaciones propias: 5
-Modelos propios: 35
-Tablas propias detectadas: 35
-Migraciones propias aplicadas: 21
+Modelos propios: 36
+Tablas propias detectadas: 36
+Migraciones propias aplicadas: 22
 Roles funcionales activos: 5
 Permisos funcionales activos: 40
 Relaciones rol-permiso activas: 110
-Suite completa: 460 pruebas
+Suite completa: 488 pruebas
 Migraciones pendientes: 0
 ```
 
@@ -55,7 +55,7 @@ Módulos funcionales disponibles:
 - autenticación propia y autorización funcional por empresa;
 - Plan de cuentas mínimo con listado, filtros y alta;
 - maestro de terceros con roles, grupos de clientes/proveedores, domicilios y contactos;
-- maestro de productos y servicios con categorías, marcas, unidades, IVA e interfaz funcional;
+- maestro de productos y servicios con proveedores asociados, categorías, marcas, unidades, IVA e interfaz funcional;
 - entradas locales especializadas `NeriSoft Gestión` y `NeriSoft Contabilidad`.
 
 Todavía no existen como circuitos operativos completos:

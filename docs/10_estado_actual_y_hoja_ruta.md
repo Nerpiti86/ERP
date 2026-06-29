@@ -1,20 +1,20 @@
 # Estado actual y hoja de ruta del ERP
 
 <!-- BEGIN ESTADO_VIGENTE -->
-## Estado vigente — Corte integral TAREA 0023
+## Estado vigente — Corte funcional TAREA 0025
 
 Fecha: `2026-06-29`.
 
 ```text
-Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
+Base auditada antes del commit funcional: c71ee89c22901543e7b4a2328efe3b13da30407c
 Apps propias: 5
-Modelos propios: 35
-Tablas propias: 35
-Migraciones propias aplicadas: 21
+Modelos propios: 36
+Tablas propias: 36
+Migraciones propias aplicadas: 22
 Roles funcionales: 5
 Permisos funcionales: 40
 Relaciones rol-permiso: 110
-Suite completa: 460 pruebas
+Suite completa: 488 pruebas
 Migraciones pendientes: 0
 ```
 
@@ -23,16 +23,16 @@ Estado funcional vigente:
 - núcleo empresarial, configuración fiscal, seguridad y contexto operativo;
 - Plan de cuentas mínimo;
 - maestro de terceros con grupos independientes por rol;
-- maestro de productos y servicios;
+- maestro de productos y servicios con relaciones `ItemProveedor`;
 - doble entrada local de Gestión y Contabilidad;
 - interfaz común con listados, filtros y housekeeping visual.
 
 Continúan pendientes los circuitos transaccionales completos de ventas,
 compras, stock, tesorería, cuentas corrientes y contabilidad operativa.
 
-La TAREA 0024 aprueba el diseño de `ItemProveedor` en
-`docs/24_relacion_items_proveedores.md`. La implementación permanece pendiente
-y no existen todavía modelo, migración, servicios ni interfaz para esa relación.
+`ItemProveedor` está implementado con modelo, migración, servicios, auditoría,
+interfaz, permisos reutilizados y pruebas. No incorpora precios, costos ni
+condiciones comerciales.
 
 La fotografía técnica canónica está en
 `docs/22_estado_real_integral_erp.md`. Las secciones posteriores son historia.
@@ -863,3 +863,28 @@ TAREA 0024 — DISEÑO APROBADO
 IMPLEMENTACIÓN PENDIENTE
 ```
 <!-- END TAREA_0024_DISENO_ITEM_PROVEEDOR -->
+
+<!-- BEGIN TAREA_0025_IMPLEMENTACION_ITEM_PROVEEDOR -->
+## Actualización: TAREA 0025 — Implementación de ItemProveedor
+
+Resultado:
+
+- modelo `ItemProveedor` en `apps.items`;
+- migración `0003_item_proveedor`;
+- unicidad histórica y de código externo por proveedor;
+- validación multiempresa y de rol `PROVEEDOR`;
+- disponibilidad operativa calculada;
+- servicios de alta, edición, inactivación y reactivación;
+- bloqueo de `se_compra=False` con relaciones activas;
+- auditoría;
+- card de proveedores en el detalle del ítem;
+- permisos `items.ver` e `items.editar`;
+- 95 pruebas de `apps.items`;
+- 488 pruebas completas.
+
+Estado:
+
+```text
+TAREA 0025 — ITEMPROVEEDOR IMPLEMENTADO
+```
+<!-- END TAREA_0025_IMPLEMENTACION_ITEM_PROVEEDOR -->

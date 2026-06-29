@@ -1,6 +1,6 @@
 # Estado real integral del ERP
 
-> Fotografía canónica generada por la TAREA 0023 a partir del repositorio local,
+> Fotografía canónica actualizada por la TAREA 0025 a partir del repositorio local,
 > la base migrada y las pruebas. El historial previo permanece disponible en
 > Git y en los documentos acumulativos.
 
@@ -10,18 +10,18 @@
 Fecha: 2026-06-29
 Repositorio: Nerpiti86/ERP
 Rama: main
-Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
+Base auditada antes del commit funcional: c71ee89c22901543e7b4a2328efe3b13da30407c
 Python: 3.13.9
 Django: 5.2.15
 Base de datos: django.db.backends.postgresql
 Apps propias: 5
-Modelos propios: 35
-Tablas propias detectadas: 35
-Migraciones propias aplicadas: 21
+Modelos propios: 36
+Tablas propias detectadas: 36
+Migraciones propias aplicadas: 22
 Roles funcionales activos: 5
 Permisos funcionales activos: 40
 Relaciones rol-permiso activas: 110
-Suite completa: 460 pruebas
+Suite completa: 488 pruebas
 Migraciones pendientes: 0
 ```
 
@@ -61,7 +61,7 @@ Las tres superficies comparten usuarios, empresas, modelos, migraciones y base.
 |---|---:|---|---:|---:|
 | `apps.contabilidad` | 1 | `0001_initial` | 40 | 2 |
 | `apps.core` | 0 | `Sin migraciones` | 60 | 6 |
-| `apps.items` | 5 | `0002_catalogos_iniciales` | 67 | 5 |
+| `apps.items` | 6 | `0003_item_proveedor` | 95 | 6 |
 | `apps.nucleo` | 22 | `0015_puntos_venta` | 221 | 12 |
 | `apps.terceros` | 7 | `0003_grupos_terceros` | 72 | 7 |
 
@@ -73,6 +73,7 @@ Las tres superficies comparten usuarios, empresas, modelos, migraciones y base.
 | `items.AlicuotaIVA` | `items_alicuotaiva` | 9 | 0 | 0 |
 | `items.CategoriaItem` | `items_categoriaitem` | 8 | 1 | 1 |
 | `items.Item` | `items_item` | 18 | 4 | 2 |
+| `items.ItemProveedor` | `items_itemproveedor` | 11 | 4 | 2 |
 | `items.Marca` | `items_marca` | 7 | 1 | 1 |
 | `items.UnidadMedida` | `items_unidadmedida` | 9 | 0 | 0 |
 | `nucleo.ActividadEconomica` | `nucleo_actividadeconomica` | 9 | 1 | 1 |
@@ -109,7 +110,7 @@ Las tres superficies comparten usuarios, empresas, modelos, migraciones y base.
 
 - `apps.contabilidad`: 1 aplicadas; última `0001_initial`.
 - `apps.core`: 0 aplicadas; última `Sin migraciones`.
-- `apps.items`: 2 aplicadas; última `0002_catalogos_iniciales`.
+- `apps.items`: 3 aplicadas; última `0003_item_proveedor`.
 - `apps.nucleo`: 15 aplicadas; última `0015_puntos_venta`.
 - `apps.terceros`: 3 aplicadas; última `0003_grupos_terceros`.
 
@@ -149,7 +150,7 @@ estén implementados.
 - seguridad funcional y auditoría;
 - Plan de cuentas mínimo;
 - maestro de terceros con grupos de clientes y proveedores;
-- maestro de productos y servicios;
+- maestro de productos y servicios con relaciones de proveedores;
 - listados y filtros unificados;
 - doble entrada local Gestión/Contabilidad;
 - housekeeping visual global de cards y badges.
@@ -178,11 +179,11 @@ estén implementados.
 |---|---:|
 | `apps.contabilidad` | 40 |
 | `apps.core` | 60 |
-| `apps.items` | 67 |
+| `apps.items` | 95 |
 | `apps.nucleo` | 221 |
 | `apps.terceros` | 72 |
 
-La cifra contractual de la suite completa es `460` y se valida con el
+La cifra contractual de la suite completa es `488` y se valida con el
 runner de Django después de generar esta documentación.
 
 ## 11. Documentación vigente
@@ -201,10 +202,10 @@ Los hallazgos vigentes se mantienen en
 `docs/23_riesgos_y_deuda_tecnica.md`. La sincronización documental no corrige
 automáticamente riesgos de código ni aprueba nuevas funcionalidades.
 
-## 13. Decisión posterior al corte
+## 13. Última evolución funcional
 
-No se aprueba una próxima funcionalidad dentro de esta tarea.
+La TAREA 0025 implementa `ItemProveedor` según el contrato de
+`docs/24_relacion_items_proveedores.md`.
 
-El issue #3 sobre `ItemProveedor` continúa abierto como propuesta de diseño.
-Antes de crear modelos o migraciones debe existir un contrato funcional y
-técnico aprobado en una tarea independiente.
+La relación incluye modelo, migración, servicios, auditoría, interfaz y pruebas,
+sin adelantar precios, costos ni un circuito de compras.

@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import AlicuotaIVA, CategoriaItem, Item, Marca, UnidadMedida
+from .models import (
+    AlicuotaIVA,
+    CategoriaItem,
+    Item,
+    ItemProveedor,
+    Marca,
+    UnidadMedida,
+)
 
 
 class SoloLecturaAdmin(admin.ModelAdmin):
@@ -73,3 +80,24 @@ class ItemAdmin(SoloLecturaAdmin):
         "unidad_medida",
         "alicuota_iva",
     )
+
+@admin.register(ItemProveedor)
+class ItemProveedorAdmin(SoloLecturaAdmin):
+    list_display = (
+        "empresa",
+        "item",
+        "proveedor",
+        "codigo_proveedor",
+        "activo",
+        "fecha_alta",
+        "fecha_baja",
+    )
+    list_filter = ("activo", "empresa")
+    search_fields = (
+        "item__codigo",
+        "item__nombre",
+        "proveedor__codigo",
+        "proveedor__denominacion",
+        "codigo_proveedor",
+    )
+    list_select_related = ("empresa", "item", "proveedor")

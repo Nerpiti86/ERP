@@ -1,9 +1,18 @@
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from apps.nucleo.models import Auditoria, Empresa
+from apps.terceros.models import Tercero, TerceroRol
 
-from .models import AlicuotaIVA, CategoriaItem, Item, Marca, UnidadMedida
+from .models import (
+    AlicuotaIVA,
+    CategoriaItem,
+    Item,
+    ItemProveedor,
+    Marca,
+    UnidadMedida,
+)
 
 
 def _datos_request(request):
@@ -251,6 +260,19 @@ def actualizar_item(
     if item is None:
         raise ValidationError(
             "El ítem no pertenece a la empresa activa o está inactivo."
+        )
+
+    if (
+        item.se_compra
+        and not bool(se_compra)
+        and item.relaciones_proveedores.filter(activo=True).exists()
+    ):
+        raise ValidationError(
+            {
+                "se_compra": (
+                    "Primero inactivá las relaciones activas con proveedores."
+                )
+            }
         )
 
     categoria, marca, unidad_medida, alicuota_iva = _resolver_catalogos(
@@ -534,3 +556,255 @@ def inactivar_marca(*, empresa, marca, request=None):
         request=request,
     )
     return marca
+
+def _valor_json(valor):
+    return valor.isoformat() if hasattr(valor, "isoformat") else valor
+
+
+def datos_item_proveedor(relacion):
+    return {
+        "empresa_id": relacion.empresa_id,
+        "item_id": relacion.item_id,
+        "proveedor_id": relacion.proveedor_id,
+        "codigo_proveedor": relacion.codigo_proveedor,
+        "activo": relacion.activo,
+        "fecha_alta": _valor_json(relacion.fecha_alta),
+        "fecha_baja": _valor_json(relacion.fecha_baja),
+        "observaciones": relacion.observaciones,
+        "disponible_operativamente": relacion.disponible_operativamente,
+        "motivo_indisponibilidad": relacion.motivo_indisponibilidad,
+    }
+
+
+def _fecha_baja_relacion(fecha_alta):
+    hoy = timezone.localdate()
+    return fecha_alta if fecha_alta and hoy < fecha_alta else hoy
+
+
+def _item_comprable(*, empresa, item):
+    encontrado = (
+        Item.objects.select_for_update()
+        .filter(
+            pk=getattr(item, "pk", None),
+            empresa=empresa,
+            activo=True,
+            se_compra=True,
+        )
+        .first()
+    )
+    if encontrado is None:
+        raise ValidationError(
+            {
+                "item": (
+                    "El ítem no pertenece a la empresa activa, está inactivo "
+                    "o no está habilitado para compra."
+                )
+            }
+        )
+    return encontrado
+
+
+def _proveedor_valido(*, empresa, proveedor):
+    encontrado = (
+        Tercero.objects.select_for_update()
+        .filter(
+            pk=getattr(proveedor, "pk", None),
+            empresa=empresa,
+            activo=True,
+        )
+        .first()
+    )
+    if encontrado is None:
+        raise ValidationError(
+            {
+                "proveedor": (
+                    "El proveedor no pertenece a la empresa activa "
+                    "o está inactivo."
+                )
+            }
+        )
+
+    rol = (
+        TerceroRol.objects.select_for_update()
+        .filter(
+            tercero=encontrado,
+            rol=TerceroRol.Rol.PROVEEDOR,
+            activo=True,
+        )
+        .first()
+    )
+    if rol is None:
+        raise ValidationError(
+            {"proveedor": "El tercero no tiene un rol PROVEEDOR activo."}
+        )
+    return encontrado
+
+
+def _relacion_item_proveedor(*, empresa, relacion, activo=None):
+    consulta = (
+        ItemProveedor.objects.select_for_update()
+        .select_related("empresa", "item", "proveedor")
+        .filter(
+            pk=getattr(relacion, "pk", None),
+            empresa=empresa,
+        )
+    )
+    if activo is not None:
+        consulta = consulta.filter(activo=activo)
+
+    encontrada = consulta.first()
+    if encontrada is None:
+        estado = (
+            " o no coincide con el estado requerido"
+            if activo is not None
+            else ""
+        )
+        raise ValidationError(
+            f"La relación no pertenece a la empresa activa{estado}."
+        )
+    return encontrada
+
+
+def _guardar_relacion(relacion):
+    try:
+        relacion.full_clean()
+        relacion.save()
+    except IntegrityError as error:
+        raise ValidationError(
+            "La relación o el código del proveedor ya están registrados."
+        ) from error
+    return relacion
+
+
+@transaction.atomic
+def crear_item_proveedor(
+    *,
+    empresa,
+    item,
+    proveedor,
+    codigo_proveedor,
+    observaciones,
+    request=None,
+):
+    empresa = _empresa_activa(empresa)
+    item = _item_comprable(empresa=empresa, item=item)
+    proveedor = _proveedor_valido(empresa=empresa, proveedor=proveedor)
+
+    existente = (
+        ItemProveedor.objects.select_for_update()
+        .filter(empresa=empresa, item=item, proveedor=proveedor)
+        .first()
+    )
+    if existente is not None:
+        accion = "reactivarla" if not existente.activo else "editarla"
+        raise ValidationError(
+            {
+                "proveedor": (
+                    "Ya existe una relación histórica con este proveedor; "
+                    f"corresponde {accion}."
+                )
+            }
+        )
+
+    relacion = ItemProveedor(
+        empresa=empresa,
+        item=item,
+        proveedor=proveedor,
+        codigo_proveedor=codigo_proveedor or "",
+        observaciones=observaciones or "",
+        activo=True,
+        fecha_alta=timezone.localdate(),
+        fecha_baja=None,
+    )
+    _guardar_relacion(relacion)
+    _auditar(
+        empresa=empresa,
+        objeto=relacion,
+        accion=Auditoria.Accion.INSERT,
+        anteriores=None,
+        nuevos=datos_item_proveedor(relacion),
+        request=request,
+    )
+    return relacion
+
+
+@transaction.atomic
+def actualizar_item_proveedor(
+    *,
+    empresa,
+    relacion,
+    codigo_proveedor,
+    observaciones,
+    request=None,
+):
+    empresa = _empresa_activa(empresa)
+    relacion = _relacion_item_proveedor(
+        empresa=empresa,
+        relacion=relacion,
+        activo=True,
+    )
+    _item_comprable(empresa=empresa, item=relacion.item)
+    _proveedor_valido(empresa=empresa, proveedor=relacion.proveedor)
+
+    anteriores = datos_item_proveedor(relacion)
+    relacion.codigo_proveedor = codigo_proveedor or ""
+    relacion.observaciones = observaciones or ""
+    _guardar_relacion(relacion)
+    _auditar(
+        empresa=empresa,
+        objeto=relacion,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_item_proveedor(relacion),
+        request=request,
+    )
+    return relacion
+
+
+@transaction.atomic
+def inactivar_item_proveedor(*, empresa, relacion, request=None):
+    empresa = _empresa_activa(empresa)
+    relacion = _relacion_item_proveedor(
+        empresa=empresa,
+        relacion=relacion,
+        activo=True,
+    )
+    anteriores = datos_item_proveedor(relacion)
+    relacion.activo = False
+    relacion.fecha_baja = _fecha_baja_relacion(relacion.fecha_alta)
+    _guardar_relacion(relacion)
+    _auditar(
+        empresa=empresa,
+        objeto=relacion,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_item_proveedor(relacion),
+        request=request,
+    )
+    return relacion
+
+
+@transaction.atomic
+def reactivar_item_proveedor(*, empresa, relacion, request=None):
+    empresa = _empresa_activa(empresa)
+    relacion = _relacion_item_proveedor(
+        empresa=empresa,
+        relacion=relacion,
+        activo=False,
+    )
+    _item_comprable(empresa=empresa, item=relacion.item)
+    _proveedor_valido(empresa=empresa, proveedor=relacion.proveedor)
+
+    anteriores = datos_item_proveedor(relacion)
+    relacion.activo = True
+    relacion.fecha_baja = None
+    _guardar_relacion(relacion)
+    _auditar(
+        empresa=empresa,
+        objeto=relacion,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_item_proveedor(relacion),
+        request=request,
+    )
+    return relacion
