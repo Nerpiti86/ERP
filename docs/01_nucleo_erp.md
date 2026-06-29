@@ -1,16 +1,26 @@
 # DOCUMENTO 01 - NUCLEO ERP
 
-<!-- BEGIN CORTE_INTEGRAL_TAREA_0016 -->
-## Corte integral vigente — TAREA 0016
+<!-- BEGIN CORTE_INTEGRAL_VIGENTE -->
+## Corte integral vigente — TAREA 0023
 
-La base auditada es `0f9712ff85cb38deb2a5442bcbed5b5598f8b959`.
+```text
+Fecha: 2026-06-29
+Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
+Apps propias: 5
+Modelos propios: 35
+Tablas propias detectadas: 35
+Migraciones propias aplicadas: 21
+Roles funcionales activos: 5
+Permisos funcionales activos: 40
+Relaciones rol-permiso activas: 110
+Suite completa: 460 pruebas
+Migraciones pendientes: 0
+```
 
-El sistema posee `5` apps propias, `34` modelos propios, `40` permisos iniciales y `110` relaciones rol-permiso.
-
-La suite completa verificada por esta tarea ejecuta `425` pruebas y no detecta migraciones pendientes.
-
-El inventario técnico canónico está en `docs/22_estado_real_integral_erp.md`. Las cifras de cortes anteriores se conservan como historia.
-<!-- END CORTE_INTEGRAL_TAREA_0016 -->
+El inventario canónico está en `docs/22_estado_real_integral_erp.md`. Las
+secciones posteriores conservan decisiones e historia y no reemplazan este
+corte cuando contengan cifras o próximos pasos antiguos.
+<!-- END CORTE_INTEGRAL_VIGENTE -->
 
 
 ## 1. Objetivo del modulo

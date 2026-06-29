@@ -1,18 +1,21 @@
 # Lecciones aprendidas y estándar de implementación del ERP
 
-Estado: vigente desde el corte documental D02.
+Estado: normativo vigente; historial acumulado.
 
-Base verificada antes del corte:
+Corte integral de referencia:
 
 ```text
 Repositorio: Nerpiti86/ERP
 Rama: main
-Commit: 4842d374f43d696e625368bc625a19dfc5a3ead6
-Última tarea funcional cerrada: TAREA 0006
-Pruebas: 243 OK
-Migraciones de núcleo: hasta 0012
-Catálogo ARCA-CLAE local: 958 actividades activas
+Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
+Última tarea funcional cerrada: TAREA 0022
+Corte documental vigente: TAREA 0023
+Pruebas completas: 460 OK
+Migraciones pendientes: 0
 ```
+
+Las reglas metodológicas posteriores siguen vigentes. Las cifras y referencias
+históricas documentan el momento en que surgieron y no reemplazan este corte.
 
 ## 1. Objetivo
 

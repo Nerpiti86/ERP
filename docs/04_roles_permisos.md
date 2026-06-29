@@ -1,30 +1,33 @@
 # Estrategia de roles y permisos propios
 
-<!-- BEGIN MATRIZ_VIGENTE_TAREA_0016 -->
-## Estado vigente de la matriz funcional — TAREA 0016
+<!-- BEGIN MATRIZ_FUNCIONAL_VIGENTE -->
+## Estado vigente de la matriz funcional — TAREA 0023
 
-Fuente operativa: `apps/nucleo/roles_iniciales.py`.
+Fuente operativa: `apps/nucleo/roles_iniciales.py` y registros activos
+verificados en la base local.
 
 ```text
-Roles iniciales: 5
-Permisos iniciales: 40
-Relaciones rol-permiso: 110
-Permisos encontrados en uso operativo: 24
-Permisos definidos sin consumo directo detectado: 16
+Roles funcionales activos: 5
+Permisos funcionales activos: 40
+Relaciones rol-permiso activas: 110
 ```
 
-| Rol | Permisos en la matriz inicial |
-|---|---|
+| Rol | Permisos activos en la matriz |
+|---|---:|
 | ADMIN | 40 |
+| AUDITOR | 16 |
 | CONTADOR | 25 |
 | OPERADOR | 16 |
-| AUDITOR | 16 |
 | SOLO_LECTURA | 13 |
 
-Los permisos sin consumo directo se consideran reservados para módulos futuros o pendientes de integración. No prueban que el módulo correspondiente esté implementado.
+Los permisos reservados para ventas, compras, tesorería u otros módulos no
+prueban que esos circuitos estén implementados. La seguridad efectiva continúa
+validándose en backend y por empresa.
 
-Las secciones históricas siguientes explican la evolución de la estrategia. Ante diferencias numéricas, este corte y `apps/nucleo/roles_iniciales.py` prevalecen.
-<!-- END MATRIZ_VIGENTE_TAREA_0016 -->
+Las secciones posteriores conservan la evolución histórica. Ante diferencias
+numéricas, este bloque, `apps/nucleo/roles_iniciales.py` y la base migrada
+prevalecen.
+<!-- END MATRIZ_FUNCIONAL_VIGENTE -->
 
 
 Estado: definido documentalmente al cierre de la Tarea 40.

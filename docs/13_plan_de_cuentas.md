@@ -1,9 +1,12 @@
 # Diseño funcional y técnico mínimo del Plan de cuentas
 
 ```text
-Estado: DISEÑO MÍNIMO APROBADO
-Fecha: 2026-06-20
-Implementación: PENDIENTE
+Estado: MAESTRO MÍNIMO IMPLEMENTADO
+Fecha del último corte integral: 2026-06-29
+Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
+Implementación vigente: app, modelo, migración, restricciones, servicios,
+formularios, listado, filtros, alta, permisos y pruebas
+Operación contable: PENDIENTE
 ```
 
 Este documento consolida las decisiones aprobadas para la primera versión del
@@ -457,32 +460,31 @@ cierre contable
 Estos temas podrán agregarse mediante campos opcionales, tablas de configuración
 o módulos separados cuando exista experiencia de uso y datos reales.
 
-## 20. Pendientes de implementación
+## 20. Estado real de implementación
 
-Antes de considerar completo el Plan de cuentas deberán desarrollarse:
+Implementado:
 
-- creación de `apps.contabilidad`
-- incorporación de `django-treebeard`
-- modelo `CuentaContable`
-- migración inicial
-- restricciones de base de datos
-- servicios de creación y modificación
-- validaciones del código y del superior
-- permisos funcionales
-- auditoría y eventos
-- interfaz del árbol
-- búsqueda y filtros
-- pruebas automatizadas
-- carga inicial del plan de la primera empresa
+- aplicación `apps.contabilidad`;
+- modelo `CuentaContable`;
+- migración inicial y restricciones de base de datos;
+- servicios y validaciones para el alta;
+- permisos funcionales;
+- Django Admin como backoffice técnico;
+- listado funcional del Plan de cuentas;
+- búsqueda y filtros;
+- alta de cuentas;
+- pruebas automatizadas.
 
-## 21. Próximo paso
+Pendiente para considerar completo el maestro:
 
-El próximo trabajo será implementar exclusivamente el maestro básico:
+- edición funcional;
+- habilitación o deshabilitación desde la interfaz;
+- carga inicial asistida del Plan de cuentas de cada empresa;
+- operaciones masivas e importaciones;
+- experiencia de uso con datos reales.
 
-```text
-apps.contabilidad
-└── CuentaContable
-```
+## 21. Alcance posterior
 
-Los asientos contables se diseñarán e implementarán después de disponer del Plan
-de cuentas funcionando y cargado con datos reales.
+Los asientos, libros, saldos, centros de costo, cierres y demás procesos
+contables continúan fuera del maestro mínimo. Su diseño debe realizarse en una
+tarea separada después de validar el Plan de cuentas con datos reales.

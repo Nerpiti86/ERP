@@ -1,33 +1,42 @@
 # Estado actual y hoja de ruta del ERP
 
-<!-- BEGIN ESTADO_VIGENTE_TAREA_0016 -->
-## Estado vigente — Corte integral TAREA 0016
+<!-- BEGIN ESTADO_VIGENTE -->
+## Estado vigente — Corte integral TAREA 0023
 
-Fecha: `26/06/2026`.
+Fecha: `2026-06-29`.
 
 ```text
-Base auditada: 0f9712ff85cb38deb2a5442bcbed5b5598f8b959
+Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
 Apps propias: 5
-Modelos propios: 34
-Roles iniciales: 5
-Permisos iniciales: 40
+Modelos propios: 35
+Tablas propias: 35
+Migraciones propias aplicadas: 21
+Roles funcionales: 5
+Permisos funcionales: 40
 Relaciones rol-permiso: 110
-Suite completa: 425 pruebas
+Suite completa: 460 pruebas
 Migraciones pendientes: 0
 ```
 
 Estado funcional vigente:
 
-- núcleo empresarial, accesos, contexto de empresa y sucursal, parámetros y auditoría;
-- configuración fiscal de empresa, actividades económicas, Ingresos Brutos y puntos de venta;
-- autenticación propia y autorización funcional por empresa;
-- maestro de terceros con roles de cliente/proveedor, domicilios y contactos;
-- maestro de productos y servicios con categorías, marcas, unidades, IVA e interfaz funcional.
+- núcleo empresarial, configuración fiscal, seguridad y contexto operativo;
+- Plan de cuentas mínimo;
+- maestro de terceros con grupos independientes por rol;
+- maestro de productos y servicios;
+- doble entrada local de Gestión y Contabilidad;
+- interfaz común con listados, filtros y housekeeping visual.
 
-Los módulos transaccionales completos de ventas, compras, stock, tesorería, cuentas corrientes y contabilidad operativa continúan pendientes.
+Continúan pendientes los circuitos transaccionales completos de ventas,
+compras, stock, tesorería, cuentas corrientes y contabilidad operativa.
 
-La fotografía técnica completa se encuentra en `docs/22_estado_real_integral_erp.md`. Las secciones posteriores de este documento conservan la evolución histórica y no deben leerse como un único estado vigente.
-<!-- END ESTADO_VIGENTE_TAREA_0016 -->
+No queda aprobada automáticamente una próxima funcionalidad por este corte.
+`ItemProveedor` permanece como propuesta abierta en el issue #3 y requiere
+diseño separado antes de modelos o migraciones.
+
+La fotografía técnica canónica está en
+`docs/22_estado_real_integral_erp.md`. Las secciones posteriores son historia.
+<!-- END ESTADO_VIGENTE -->
 
 
 Fecha del corte: 20/06/2026.
@@ -779,3 +788,45 @@ Estado:
 TAREA 0021 — GRUPOS DE TERCEROS IMPLEMENTADOS
 ```
 <!-- END TAREA_0021_GRUPOS_TERCEROS -->
+
+<!-- BEGIN TAREA_0022_HOUSEKEEPING_VISUAL -->
+## Actualización: TAREA 0022 — Housekeeping visual
+
+Resultado:
+
+- encabezados directos de cards con fondo negro y texto blanco;
+- textos secundarios con blanco atenuado;
+- badges con peso tipográfico normal y mayor padding;
+- colores semánticos conservados;
+- cambio global en `static/css/erp.css`;
+- 460 pruebas completas verificadas.
+
+Estado:
+
+```text
+TAREA 0022 — HOUSEKEEPING VISUAL IMPLEMENTADO
+```
+<!-- END TAREA_0022_HOUSEKEEPING_VISUAL -->
+
+<!-- BEGIN TAREA_0023_CORTE_DOCUMENTAL -->
+## Actualización: TAREA 0023 — Sincronización documental integral
+
+Se audita el repositorio local y se sincronizan los documentos canónicos con el
+estado real verificado al 2026-06-29.
+
+Resultado:
+
+- cifras de apps, modelos, tablas, migraciones, roles y permisos actualizadas;
+- Plan de cuentas corregido de pendiente a maestro mínimo implementado;
+- grupos de clientes y proveedores incorporados al estado canónico;
+- doble entrada Gestión/Contabilidad documentada como vigente;
+- cortes históricos conservados y separados del estado actual;
+- ninguna funcionalidad nueva implementada;
+- issue #3 conservado como propuesta futura no aprobada.
+
+Estado:
+
+```text
+TAREA 0023 — DOCUMENTACIÓN SINCRONIZADA CON EL ESTADO REAL
+```
+<!-- END TAREA_0023_CORTE_DOCUMENTAL -->

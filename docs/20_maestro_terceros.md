@@ -1,7 +1,7 @@
 # Maestro base de terceros
 
-<!-- BEGIN ESTADO_VERIFICADO_TERCEROS_TAREA_0016 -->
-## Estado verificado del maestro de terceros — TAREA 0016
+<!-- BEGIN ESTADO_VERIFICADO_TERCEROS -->
+## Estado verificado del maestro de terceros — TAREA 0023
 
 ```text
 Aplicación: apps.terceros
@@ -11,12 +11,14 @@ Pruebas ejecutadas para la app: 72
 Plantillas detectadas: 7
 ```
 
-La primera versión funcional está implementada y permanece sujeta a aislamiento por empresa, permisos backend, servicios transaccionales y auditoría.
+La primera versión funcional está implementada con identidad compartida,
+roles CLIENTE/PROVEEDOR, grupos obligatorios por rol, domicilios, contactos,
+aislamiento por empresa, permisos backend, servicios y auditoría.
 
-No incorpora todavía relaciones comerciales específicas con ítems, condiciones de compra ni cuentas corrientes.
-
-El detalle de modelos, rutas, migraciones y pruebas se encuentra en `docs/22_estado_real_integral_erp.md`.
-<!-- END ESTADO_VERIFICADO_TERCEROS_TAREA_0016 -->
+No incorpora todavía relaciones comerciales con ítems, condiciones de compra
+ni cuentas corrientes. El detalle técnico vigente está en
+`docs/22_estado_real_integral_erp.md`.
+<!-- END ESTADO_VERIFICADO_TERCEROS -->
 
 
 Estado: implementado por TAREA 0009.

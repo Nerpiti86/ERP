@@ -35,36 +35,42 @@ Rama:   main
 ## Estado real verificado
 
 ```text
-Fecha del corte: 26/06/2026
-Base auditada: 0f9712ff85cb38deb2a5442bcbed5b5598f8b959
+Fecha del corte: 2026-06-29
+Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
 Aplicaciones propias: 5
-Modelos propios: 34
-Roles iniciales: 5
-Permisos iniciales: 40
-Relaciones rol-permiso: 110
-Suite completa: 425 pruebas
+Modelos propios: 35
+Tablas propias detectadas: 35
+Migraciones propias aplicadas: 21
+Roles funcionales activos: 5
+Permisos funcionales activos: 40
+Relaciones rol-permiso activas: 110
+Suite completa: 460 pruebas
 Migraciones pendientes: 0
 ```
 
 Módulos funcionales disponibles:
 
 - núcleo empresarial, accesos, contexto de empresa y sucursal, parámetros y auditoría;
-- configuración fiscal de empresa, actividades económicas, Ingresos Brutos y puntos de venta;
+- configuración fiscal, actividades económicas, Ingresos Brutos y puntos de venta;
 - autenticación propia y autorización funcional por empresa;
-- maestro de terceros con roles de cliente/proveedor, domicilios y contactos;
-- maestro de productos y servicios con categorías, marcas, unidades, IVA e interfaz funcional.
+- Plan de cuentas mínimo con listado, filtros y alta;
+- maestro de terceros con roles, grupos de clientes/proveedores, domicilios y contactos;
+- maestro de productos y servicios con categorías, marcas, unidades, IVA e interfaz funcional;
+- entradas locales especializadas `NeriSoft Gestión` y `NeriSoft Contabilidad`.
 
 Todavía no existen como circuitos operativos completos:
 
-- ventas
-- compras
-- stock
-- tesoreria
-- cuentas corrientes
-- impuestos
-- reportes
+- ventas;
+- compras;
+- stock;
+- tesorería;
+- cuentas corrientes;
+- asientos y procesos contables operativos;
+- impuestos transaccionales;
+- reportes operativos.
 
-El detalle canónico está en `docs/22_estado_real_integral_erp.md`. Los riesgos y deudas detectados están en `docs/23_riesgos_y_deuda_tecnica.md`.
+El detalle canónico está en `docs/22_estado_real_integral_erp.md`. Los riesgos y
+deudas se registran en `docs/23_riesgos_y_deuda_tecnica.md`.
 
 ## Ejecución y validaciones
 
