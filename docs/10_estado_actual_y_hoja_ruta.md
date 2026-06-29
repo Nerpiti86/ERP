@@ -30,9 +30,9 @@ Estado funcional vigente:
 Continúan pendientes los circuitos transaccionales completos de ventas,
 compras, stock, tesorería, cuentas corrientes y contabilidad operativa.
 
-No queda aprobada automáticamente una próxima funcionalidad por este corte.
-`ItemProveedor` permanece como propuesta abierta en el issue #3 y requiere
-diseño separado antes de modelos o migraciones.
+La TAREA 0024 aprueba el diseño de `ItemProveedor` en
+`docs/24_relacion_items_proveedores.md`. La implementación permanece pendiente
+y no existen todavía modelo, migración, servicios ni interfaz para esa relación.
 
 La fotografía técnica canónica está en
 `docs/22_estado_real_integral_erp.md`. Las secciones posteriores son historia.
@@ -830,3 +830,36 @@ Estado:
 TAREA 0023 — DOCUMENTACIÓN SINCRONIZADA CON EL ESTADO REAL
 ```
 <!-- END TAREA_0023_CORTE_DOCUMENTAL -->
+
+<!-- BEGIN TAREA_0024_DISENO_ITEM_PROVEEDOR -->
+## Actualización: TAREA 0024 — Diseño de ItemProveedor
+
+Se cierra el contrato funcional y técnico de la futura relación entre ítems y
+proveedores.
+
+Decisiones:
+
+- entidad en `apps.items`;
+- relación con `Tercero`, no con `TerceroRol`;
+- una fila histórica por ítem y proveedor;
+- código del proveedor opcional, normalizado y único por proveedor;
+- disponibilidad operativa calculada;
+- baja lógica y reactivación de la misma fila;
+- bloqueo de `se_compra=False` con relaciones activas;
+- permisos `items.ver` e `items.editar`;
+- administración prevista desde el detalle del ítem;
+- precios, costos, monedas y condiciones comerciales fuera de alcance.
+
+Documento rector:
+
+```text
+docs/24_relacion_items_proveedores.md
+```
+
+Estado:
+
+```text
+TAREA 0024 — DISEÑO APROBADO
+IMPLEMENTACIÓN PENDIENTE
+```
+<!-- END TAREA_0024_DISENO_ITEM_PROVEEDOR -->

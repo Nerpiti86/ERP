@@ -14,9 +14,11 @@ Plantillas detectadas: 5
 La primera versión funcional está implementada con aislamiento por empresa,
 permisos backend, servicios transaccionales, auditoría, catálogos e interfaz.
 
-No incorpora todavía proveedores por ítem, identificadores externos, códigos
-de barras ni presentaciones. Esos conceptos continúan como diseño futuro y no
-deben inferirse desde la existencia del issue #3.
+No incorpora todavía el modelo persistente de proveedores por ítem,
+identificadores externos, códigos de barras ni presentaciones.
+
+La TAREA 0024 aprueba exclusivamente el diseño de `ItemProveedor` en
+`docs/24_relacion_items_proveedores.md`. La implementación sigue pendiente.
 
 El detalle técnico vigente está en `docs/22_estado_real_integral_erp.md`.
 <!-- END ESTADO_VERIFICADO_ITEMS -->
@@ -340,3 +342,35 @@ Se habilita la operación desde la interfaz propia del ERP:
 
 El Django Admin continúa como backoffice técnico de consulta. La operación
 habitual se realiza desde `/items/`.
+
+<!-- BEGIN TAREA_0024_DISENO_ITEM_PROVEEDOR -->
+## 17. Diseño aprobado: relación entre ítems y proveedores
+
+La futura entidad `ItemProveedor`:
+
+- pertenecerá a `apps.items`;
+- vinculará `Item` con un `Tercero` proveedor;
+- exigirá que el ítem sea comprable;
+- exigirá un rol activo `PROVEEDOR` para alta y reactivación;
+- conservará una sola fila histórica por ítem y proveedor;
+- admitirá un código externo opcional;
+- calculará su disponibilidad sin duplicarla en la base;
+- se administrará desde el detalle del ítem;
+- reutilizará `items.ver` e `items.editar`.
+
+El diseño no incorpora precios, costos, monedas, presentaciones ni condiciones
+de compra.
+
+Documento rector:
+
+```text
+docs/24_relacion_items_proveedores.md
+```
+
+Estado:
+
+```text
+DISEÑO APROBADO
+IMPLEMENTACIÓN PENDIENTE
+```
+<!-- END TAREA_0024_DISENO_ITEM_PROVEEDOR -->
