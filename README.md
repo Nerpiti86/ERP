@@ -44,7 +44,7 @@ Migraciones propias aplicadas: 22
 Roles funcionales activos: 5
 Permisos funcionales activos: 40
 Relaciones rol-permiso activas: 110
-Suite completa: 488 pruebas
+Suite completa: 494 pruebas
 Migraciones pendientes: 0
 ```
 

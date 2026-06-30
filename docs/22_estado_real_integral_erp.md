@@ -1,6 +1,6 @@
 # Estado real integral del ERP
 
-> Fotografía canónica actualizada por la TAREA 0025 a partir del repositorio local,
+> Fotografía canónica actualizada por la TAREA 0026 a partir del repositorio local,
 > la base migrada y las pruebas. El historial previo permanece disponible en
 > Git y en los documentos acumulativos.
 
@@ -10,7 +10,7 @@
 Fecha: 2026-06-29
 Repositorio: Nerpiti86/ERP
 Rama: main
-Base auditada antes del commit funcional: c71ee89c22901543e7b4a2328efe3b13da30407c
+Base auditada antes del commit funcional: 35dcf3c2b725ef4dcac8cf4554919333c6108372
 Python: 3.13.9
 Django: 5.2.15
 Base de datos: django.db.backends.postgresql
@@ -21,7 +21,7 @@ Migraciones propias aplicadas: 22
 Roles funcionales activos: 5
 Permisos funcionales activos: 40
 Relaciones rol-permiso activas: 110
-Suite completa: 488 pruebas
+Suite completa: 494 pruebas
 Migraciones pendientes: 0
 ```
 
@@ -61,7 +61,7 @@ Las tres superficies comparten usuarios, empresas, modelos, migraciones y base.
 |---|---:|---|---:|---:|
 | `apps.contabilidad` | 1 | `0001_initial` | 40 | 2 |
 | `apps.core` | 0 | `Sin migraciones` | 60 | 6 |
-| `apps.items` | 6 | `0003_item_proveedor` | 95 | 6 |
+| `apps.items` | 6 | `0003_item_proveedor` | 101 | 6 |
 | `apps.nucleo` | 22 | `0015_puntos_venta` | 221 | 12 |
 | `apps.terceros` | 7 | `0003_grupos_terceros` | 72 | 7 |
 
@@ -179,11 +179,11 @@ estén implementados.
 |---|---:|
 | `apps.contabilidad` | 40 |
 | `apps.core` | 60 |
-| `apps.items` | 95 |
+| `apps.items` | 101 |
 | `apps.nucleo` | 221 |
 | `apps.terceros` | 72 |
 
-La cifra contractual de la suite completa es `488` y se valida con el
+La cifra contractual de la suite completa es `494` y se valida con el
 runner de Django después de generar esta documentación.
 
 ## 11. Documentación vigente
@@ -209,3 +209,15 @@ La TAREA 0025 implementa `ItemProveedor` según el contrato de
 
 La relación incluye modelo, migración, servicios, auditoría, interfaz y pruebas,
 sin adelantar precios, costos ni un circuito de compras.
+
+<!-- BEGIN TAREA_0026_AJUSTE -->
+## 14. Ajuste funcional TAREA 0026
+
+Se incorpora reactivación auditada de ítems y validación visible del bloqueo de
+`se_compra` con relaciones activas.
+
+```text
+Pruebas apps.items: 101
+Suite completa: 494
+```
+<!-- END TAREA_0026_AJUSTE -->

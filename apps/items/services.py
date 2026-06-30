@@ -312,6 +312,39 @@ def actualizar_item(
 
 
 @transaction.atomic
+def reactivar_item(*, empresa, item, request=None):
+    empresa = _empresa_activa(empresa)
+    item = (
+        Item.objects.select_for_update()
+        .filter(
+            pk=getattr(item, "pk", None),
+            empresa=empresa,
+            activo=False,
+        )
+        .first()
+    )
+    if item is None:
+        raise ValidationError(
+            "El ítem no pertenece a la empresa activa o ya está activo."
+        )
+
+    anteriores = datos_item(item)
+    item.activo = True
+    item.full_clean()
+    item.save(update_fields=["activo", "actualizado_en"])
+
+    _auditar(
+        empresa=empresa,
+        objeto=item,
+        accion=Auditoria.Accion.UPDATE,
+        anteriores=anteriores,
+        nuevos=datos_item(item),
+        request=request,
+    )
+    return item
+
+
+@transaction.atomic
 def inactivar_item(*, empresa, item, request=None):
     empresa = _empresa_activa(empresa)
     item = (

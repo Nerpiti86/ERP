@@ -1,12 +1,12 @@
 # Estado actual y hoja de ruta del ERP
 
 <!-- BEGIN ESTADO_VIGENTE -->
-## Estado vigente — Corte funcional TAREA 0025
+## Estado vigente — Ajuste funcional TAREA 0026
 
-Fecha: `2026-06-29`.
+Fecha: `2026-06-30`.
 
 ```text
-Base auditada antes del commit funcional: c71ee89c22901543e7b4a2328efe3b13da30407c
+Base auditada antes del commit funcional: 35dcf3c2b725ef4dcac8cf4554919333c6108372
 Apps propias: 5
 Modelos propios: 36
 Tablas propias: 36
@@ -14,25 +14,16 @@ Migraciones propias aplicadas: 22
 Roles funcionales: 5
 Permisos funcionales: 40
 Relaciones rol-permiso: 110
-Suite completa: 488 pruebas
+Suite completa: 494 pruebas
 Migraciones pendientes: 0
 ```
 
-Estado funcional vigente:
-
-- núcleo empresarial, configuración fiscal, seguridad y contexto operativo;
-- Plan de cuentas mínimo;
-- maestro de terceros con grupos independientes por rol;
-- maestro de productos y servicios con relaciones `ItemProveedor`;
-- doble entrada local de Gestión y Contabilidad;
-- interfaz común con listados, filtros y housekeeping visual.
+El maestro de productos y servicios incorpora relaciones `ItemProveedor`,
+reactivación controlada de ítems y bloqueo visible de `se_compra=False` cuando
+existen relaciones activas.
 
 Continúan pendientes los circuitos transaccionales completos de ventas,
 compras, stock, tesorería, cuentas corrientes y contabilidad operativa.
-
-`ItemProveedor` está implementado con modelo, migración, servicios, auditoría,
-interfaz, permisos reutilizados y pruebas. No incorpora precios, costos ni
-condiciones comerciales.
 
 La fotografía técnica canónica está en
 `docs/22_estado_real_integral_erp.md`. Las secciones posteriores son historia.
@@ -888,3 +879,24 @@ Estado:
 TAREA 0025 — ITEMPROVEEDOR IMPLEMENTADO
 ```
 <!-- END TAREA_0025_IMPLEMENTACION_ITEM_PROVEEDOR -->
+
+<!-- BEGIN TAREA_0026_REACTIVACION_ITEM -->
+## Actualización: TAREA 0026 — Reactivación y bloqueo visible
+
+La revisión visual detectó que el ítem podía quedar inactivo sin una acción para
+reactivarlo y que el formulario no priorizaba el mensaje específico del bloqueo
+de compra.
+
+Se incorpora:
+
+- servicio auditado `reactivar_item`;
+- ruta POST y botón **Reactivar ítem**;
+- validación específica en `ItemForm`;
+- validación defensiva conservada en `actualizar_item`;
+- 101 pruebas de `apps.items`;
+- 494 pruebas completas.
+
+```text
+TAREA 0026 — CORRECCIÓN IMPLEMENTADA
+```
+<!-- END TAREA_0026_REACTIVACION_ITEM -->

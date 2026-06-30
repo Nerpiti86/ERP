@@ -7,8 +7,8 @@ Implementación: TAREA 0025
 Fecha de implementación: 2026-06-29
 Base auditada antes del commit funcional: c71ee89c22901543e7b4a2328efe3b13da30407c
 Migración: 0003_item_proveedor
-Pruebas de apps.items: 95
-Suite completa: 488
+Pruebas de apps.items: 101
+Suite completa: 494
 Issue de origen: #3
 ```
 
@@ -557,3 +557,18 @@ Suite completa: 488
 Se implementó el contrato sin incorporar precios, costos, monedas,
 presentaciones ni condiciones comerciales.
 <!-- END TAREA_0025_IMPLEMENTACION -->
+
+<!-- BEGIN TAREA_0026_AJUSTE_VISUAL -->
+## 25. Ajuste posterior a revisión visual — TAREA 0026
+
+Una relación activa puede quedar no disponible cuando el ítem se inactiva. Se
+incorpora la acción auditada **Reactivar ítem**.
+
+El formulario también explica que primero deben inactivarse las relaciones
+activas antes de quitar `se_compra`.
+
+```text
+Pruebas apps.items: 101
+Suite completa: 494
+```
+<!-- END TAREA_0026_AJUSTE_VISUAL -->

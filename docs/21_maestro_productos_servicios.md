@@ -1,19 +1,19 @@
 # Maestro de productos y servicios
 
 <!-- BEGIN ESTADO_VERIFICADO_ITEMS -->
-## Estado verificado del maestro de productos y servicios — TAREA 0025
+## Estado verificado del maestro de productos y servicios — TAREA 0026
 
 ```text
 Aplicación: apps.items
 Modelos: 6
 Última migración: 0003_item_proveedor
-Pruebas ejecutadas para la app: 95
+Pruebas ejecutadas para la app: 101
 Plantillas detectadas: 6
 ```
 
-El maestro está implementado con aislamiento por empresa, permisos backend,
-servicios transaccionales, auditoría, catálogos, interfaz y relaciones entre
-ítems comprables y terceros proveedores.
+El maestro incorpora relaciones entre ítems y proveedores, reactivación
+controlada de ítems y validación visible al intentar quitar la capacidad de
+compra con relaciones activas.
 
 No incorpora todavía precios, costos, monedas, códigos de barras ni
 presentaciones.
@@ -392,3 +392,17 @@ Se incorpora:
 
 Precios, costos, monedas y condiciones comerciales permanecen fuera de alcance.
 <!-- END TAREA_0025_IMPLEMENTACION_ITEM_PROVEEDOR -->
+
+<!-- BEGIN TAREA_0026_REACTIVACION_ITEM -->
+## 19. Ajuste: TAREA 0026 — Reactivación de ítems
+
+Se agrega reactivación funcional y auditada de ítems inactivos.
+
+`ItemForm` informa que primero deben inactivarse las relaciones activas antes de
+quitar `se_compra`.
+
+```text
+apps.items: 101
+suite completa: 494
+```
+<!-- END TAREA_0026_REACTIVACION_ITEM -->

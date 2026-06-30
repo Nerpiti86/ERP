@@ -40,6 +40,7 @@ from .services import (
     inactivar_marca,
     crear_item_proveedor,
     actualizar_item_proveedor,
+    reactivar_item,
     reactivar_item_proveedor,
 )
 
@@ -529,6 +530,29 @@ def item_edit(request, item_id):
             "modo_creacion": False,
         },
     )
+
+
+@login_required
+@contexto_operativo_requerido(requiere_sucursal=False)
+@permiso_funcional_requerido("items.editar")
+@require_POST
+def item_reactivate(request, item_id):
+    empresa = request.empresa_activa
+    item = _obtener_item(empresa, item_id)
+    try:
+        item = reactivar_item(
+            empresa=empresa,
+            item=item,
+            request=request,
+        )
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+    else:
+        messages.success(
+            request,
+            f"Ítem {item.codigo} reactivado correctamente.",
+        )
+    return redirect("items:item_detail", item_id=item.pk)
 
 
 @login_required

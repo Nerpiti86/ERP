@@ -196,12 +196,25 @@ class ItemForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
 
+        bloqueo_relaciones = bool(
+            self.item is not None
+            and self.item.se_compra
+            and not cleaned_data.get("se_compra")
+            and self.item.relaciones_proveedores.filter(activo=True).exists()
+        )
+        if bloqueo_relaciones:
+            self.add_error(
+                "se_compra",
+                "Primero inactivá las relaciones activas con proveedores.",
+            )
+
         if (
             not cleaned_data.get("se_compra")
             and not cleaned_data.get("se_vende")
         ):
             mensaje = "Seleccioná al menos una capacidad: compra o venta."
-            self.add_error("se_compra", mensaje)
+            if not bloqueo_relaciones:
+                self.add_error("se_compra", mensaje)
             self.add_error("se_vende", mensaje)
 
         if (

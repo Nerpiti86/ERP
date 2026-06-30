@@ -13,7 +13,7 @@ from apps.terceros.tests_support import (
     crear_usuario,
 )
 
-from .forms import ItemProveedorForm
+from .forms import ItemForm, ItemProveedorForm
 from .models import AlicuotaIVA, Item, ItemProveedor, UnidadMedida
 from .services import (
     actualizar_item,
@@ -21,6 +21,7 @@ from .services import (
     crear_item_proveedor,
     inactivar_item,
     inactivar_item_proveedor,
+    reactivar_item,
     reactivar_item_proveedor,
 )
 
@@ -579,3 +580,116 @@ class ItemProveedorViewsTests(ItemProveedorBase):
             )
         )
         self.assertEqual(respuesta.status_code, 404)
+
+class ItemReactivationRegressionTests(ItemProveedorBase):
+    def datos_form_item(self, **cambios):
+        datos = {
+            "codigo": self.item.codigo,
+            "nombre": self.item.nombre,
+            "descripcion": self.item.descripcion,
+            "tipo": self.item.tipo,
+            "categoria": "",
+            "marca": "",
+            "unidad_medida": self.item.unidad_medida_id,
+            "se_compra": "",
+            "se_vende": "on",
+            "controla_stock": "",
+            "tratamiento_iva": self.item.tratamiento_iva,
+            "alicuota_iva": self.item.alicuota_iva_id,
+            "observaciones": self.item.observaciones,
+        }
+        datos.update(cambios)
+        return datos
+
+    def test_form_bloquea_quitar_compra_con_mensaje_especifico(self):
+        self.relacion_directa()
+        form = ItemForm(
+            self.datos_form_item(),
+            empresa=self.empresa,
+            item=self.item,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "Primero inactivá las relaciones activas con proveedores.",
+            form.errors["se_compra"],
+        )
+
+    def test_form_prioriza_bloqueo_aunque_ambas_capacidades_queden_vacias(self):
+        self.relacion_directa()
+        form = ItemForm(
+            self.datos_form_item(se_vende=""),
+            empresa=self.empresa,
+            item=self.item,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "Primero inactivá las relaciones activas con proveedores.",
+            form.errors["se_compra"],
+        )
+        self.assertIn(
+            "Seleccioná al menos una capacidad: compra o venta.",
+            form.errors["se_vende"],
+        )
+
+    def test_servicio_reactiva_item_y_audita(self):
+        inactivar_item(
+            empresa=self.empresa,
+            item=self.item,
+            request=self.request,
+        )
+        reactivado = reactivar_item(
+            empresa=self.empresa,
+            item=self.item,
+            request=self.request,
+        )
+        self.assertTrue(reactivado.activo)
+
+        auditoria = Auditoria.objects.filter(
+            tabla=Item._meta.db_table,
+            registro_id=str(self.item.pk),
+            accion=Auditoria.Accion.UPDATE,
+        ).latest("pk")
+        self.assertFalse(auditoria.datos_anteriores["activo"])
+        self.assertTrue(auditoria.datos_nuevos["activo"])
+
+    def test_servicio_no_reactiva_item_activo(self):
+        with self.assertRaises(ValidationError):
+            reactivar_item(
+                empresa=self.empresa,
+                item=self.item,
+                request=self.request,
+            )
+
+    def test_vista_reactivar_item_solo_post_y_funciona(self):
+        inactivar_item(
+            empresa=self.empresa,
+            item=self.item,
+            request=self.request,
+        )
+        self.login_empresa(self.operador)
+        url = reverse(
+            "items:item_reactivate",
+            kwargs={"item_id": self.item.pk},
+        )
+
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertEqual(self.client.post(url).status_code, 302)
+        self.item.refresh_from_db()
+        self.assertTrue(self.item.activo)
+
+    def test_detalle_inactivo_muestra_reactivar_item(self):
+        inactivar_item(
+            empresa=self.empresa,
+            item=self.item,
+            request=self.request,
+        )
+        self.login_empresa(self.operador)
+        respuesta = self.client.get(
+            reverse(
+                "items:item_detail",
+                kwargs={"item_id": self.item.pk},
+            )
+        )
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Reactivar ítem")
+        self.assertNotContains(respuesta, ">Editar<")

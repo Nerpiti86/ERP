@@ -1,11 +1,11 @@
 # DOCUMENTO 01 - NUCLEO ERP
 
 <!-- BEGIN CORTE_INTEGRAL_VIGENTE -->
-## Corte integral vigente — TAREA 0025
+## Corte integral vigente — TAREA 0026
 
 ```text
-Fecha: 2026-06-29
-Base auditada antes del commit funcional: c71ee89c22901543e7b4a2328efe3b13da30407c
+Fecha: 2026-06-30
+Base auditada antes del commit funcional: 35dcf3c2b725ef4dcac8cf4554919333c6108372
 Apps propias: 5
 Modelos propios: 36
 Tablas propias detectadas: 36
@@ -13,7 +13,7 @@ Migraciones propias aplicadas: 22
 Roles funcionales activos: 5
 Permisos funcionales activos: 40
 Relaciones rol-permiso activas: 110
-Suite completa: 488 pruebas
+Suite completa: 494 pruebas
 Migraciones pendientes: 0
 ```
 

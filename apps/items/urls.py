@@ -63,6 +63,11 @@ urlpatterns = [
         name="item_edit",
     ),
     path(
+        "<int:item_id>/reactivar/",
+        views.item_reactivate,
+        name="item_reactivate",
+    ),
+    path(
         "<int:item_id>/inactivar/",
         views.item_deactivate,
         name="item_deactivate",

@@ -8,9 +8,9 @@ Corte integral de referencia:
 Repositorio: Nerpiti86/ERP
 Rama: main
 Base auditada antes del commit documental: 2e6094a4e6dd5b2cf4ee0710febbcca2a9e65e2e
-Última tarea funcional cerrada: TAREA 0025
+Última tarea funcional cerrada: TAREA 0026
 Corte documental vigente: TAREA 0023
-Pruebas completas: 488 OK
+Pruebas completas: 494 OK
 Migraciones pendientes: 0
 ```
 
