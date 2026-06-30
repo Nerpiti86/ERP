@@ -296,7 +296,7 @@ Estado implementado:
 - App `nucleo` creada.
 - Home inicial creada.
 - Accesos desde la home al Django Admin.
-- Superusuario local `ADMIN` creado.
+- Superusuario local de prueba creado.
 - Datos demo locales cargados.
 - Migraciones aplicadas.
 - Tests automatizados activos.
@@ -315,14 +315,16 @@ Servicio Windows: postgresql-x64-18
 Datos demo locales:
 
 ```text
-Empresa Demo SA
-CUIT: 30712345678
-Sucursal: Casa central
+Empresa Ejemplo SA
+CUIT ficticio: CUIT_EJEMPLO_EMPRESA
+Sucursal: Casa central de prueba
 Codigo sucursal: CASA
 Ejercicio fiscal: 2026
 Periodo contable: 2026-01
-Usuario: ADMIN
+Usuario: usuario_admin_demo
 ```
+
+Estos datos son ejemplos anonimizados y no representan una instalación real.
 
 Modelos principales implementados en `apps.nucleo`:
 

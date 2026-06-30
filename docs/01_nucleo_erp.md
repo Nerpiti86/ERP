@@ -618,23 +618,24 @@ Migraciones principales aplicadas:
 Datos demo locales cargados en PostgreSQL:
 
 ```text
-Empresa Demo SA
-CUIT: 30712345678
-Sucursal: Casa central
+Empresa Ejemplo SA
+CUIT ficticio: CUIT_EJEMPLO_EMPRESA
+Sucursal: Casa central de prueba
 Codigo sucursal: CASA
 Ejercicio fiscal: 2026
 Periodo contable: 2026-01
-Usuario: ADMIN
+Usuario: usuario_admin_demo
 ```
 
 Relaciones de acceso cargadas localmente:
 
 ```text
-ADMIN -> Empresa Demo SA
-ADMIN -> Empresa Demo SA - Casa central
+usuario_admin_demo -> Empresa Ejemplo SA
+usuario_admin_demo -> Empresa Ejemplo SA - Casa central de prueba
 ```
 
-Estos datos son locales y no forman parte del repositorio.
+Estos datos son ejemplos anonimizados. Los datos reales de una instalación
+local no forman parte del repositorio.
 
 ### 10.5. ParametroSistema
 

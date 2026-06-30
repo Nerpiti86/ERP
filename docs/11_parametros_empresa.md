@@ -114,21 +114,21 @@ el acceso al Django Admin de los permisos propios del ERP.
 - todos los registros pasan `full_clean()`
 - el guardado se ejecuta dentro de una transacción
 
-## 9. Caso real de prueba
+## 9. Caso de prueba anonimizado
 
-Estado real posterior a TAREA 47:
+Estado operativo anonimizado posterior a TAREA 47:
 
 ```text
-Empresa: ESREQUIS LAURA
+Empresa: Empresa Operativa Demo SRL
 Parámetros estándar vigentes: 7
-Usuario Laura: rol OPERADOR activo
+Usuario usuario_operador_demo: rol OPERADOR activo
 ```
 
 Este escenario permite verificar que:
 
 - `ADMIN` puede administrar la configuración
-- `Laura`, como `OPERADOR`, no ve el acceso
-- una URL directa de Laura recibe HTTP 403
+- `usuario_operador_demo`, como `OPERADOR`, no ve el acceso
+- una URL directa de `usuario_operador_demo` recibe HTTP 403
 - los parámetros permanecen aislados por empresa activa
 
 ## 10. Fuera de alcance

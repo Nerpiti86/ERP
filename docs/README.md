@@ -16,6 +16,18 @@ Los riesgos y deudas se registran en:
 docs/23_riesgos_y_deuda_tecnica.md
 ```
 
+## Política de datos reales
+
+La documentación versionada no debe incluir datos reales de instalaciones,
+clientes, proveedores, usuarios, empresas, domicilios, CUIT, correos,
+teléfonos ni identificadores operativos. Los casos de prueba y ejemplos
+documentales deben usar datos ficticios consistentes y quedar identificados
+como ejemplos.
+
+Los cortes históricos pueden conservar el contexto técnico de una tarea, pero
+deben estar anonimizados cuando mencionen datos operativos cargados en una
+instalación local.
+
 ## Inventario
 
 | Documento | Categoría | Estado |

@@ -175,14 +175,16 @@ Reglas:
 
 ## 6. Estado de usuarios
 
-Estado operativo local relevado el 19/06/2026:
+Estado operativo local relevado el 19/06/2026, anonimizado para documentación
+versionada:
 
 ```text
-Usuarios reales: ADMIN y Laura
-Empresas activas: Empresa Demo SA y ESREQUIS LAURA
+Usuarios de prueba: usuario_admin_demo y usuario_operador_demo
+Empresas activas de ejemplo: Empresa Ejemplo SA y Empresa Operativa Demo SRL
 ```
 
-Laura posee acceso activo a `ESREQUIS LAURA`, a su sucursal `Consultorio Pasco` y tiene asignado el rol funcional `OPERADOR`.
+`usuario_operador_demo` posee acceso activo a `Empresa Operativa Demo SRL`, a
+su sucursal `Sucursal Demo Norte` y tiene asignado el rol funcional `OPERADOR`.
 
 ## 7. Tareas recientes cerradas
 
@@ -293,10 +295,10 @@ La pantalla:
 - no expone claves, ámbitos ni tipos técnicos
 - queda restringida temporalmente a usuarios staff
 
-Caso real previsto:
+Caso operativo anonimizado:
 
 ```text
-Empresa: ESREQUIS LAURA
+Empresa: Empresa Operativa Demo SRL
 Estado antes de la prueba: 0 parámetros
 Acción posterior al cierre: inicializar manualmente desde la interfaz
 ```
@@ -320,12 +322,12 @@ Resultado:
 - la navegación refleja permisos efectivos.
 - el acceso directo sin permiso devuelve una página 403 propia.
 
-Escenario real preparado:
+Escenario operativo anonimizado:
 
 ```text
-ADMIN: acceso técnico total
-Laura: rol OPERADOR en ESREQUIS LAURA
-ESREQUIS LAURA: ocho parámetros estándar activos
+usuario_admin_demo: acceso técnico total
+usuario_operador_demo: rol OPERADOR en Empresa Operativa Demo SRL
+Empresa Operativa Demo SRL: ocho parámetros estándar activos
 ```
 
 La próxima tarea funcional es TAREA 49: definir obligatoriedad del
