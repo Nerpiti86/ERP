@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "apps.nucleo",
     "apps.terceros",
     "apps.items",
+    "apps.ventas",
     "apps.contabilidad",
     "apps.core",
     "django.contrib.admin",

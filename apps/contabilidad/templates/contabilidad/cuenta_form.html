@@ -4,16 +4,11 @@
 
 {% block content %}
   <section class="mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-start">
+    <div class="erp-page-heading d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-start">
       <div>
-        <p class="text-uppercase text-secondary small fw-semibold mb-1">
-          Contabilidad · Plan de cuentas
-        </p>
         <h1 class="h3 mb-1">Nueva cuenta contable</h1>
         <p class="text-secondary mb-0">
-          Empresa activa:
-          <strong>{{ empresa.razon_social }}</strong>
-          · CUIT {{ empresa.cuit }}
+          CUIT {{ empresa.cuit }}
         </p>
       </div>
       <a class="btn btn-outline-secondary" href="{% url 'contabilidad:plan_cuentas' %}">
@@ -60,7 +55,7 @@
     {% endif %}
 
     <section class="card shadow-sm mb-4">
-      <div class="card-header bg-white"><h2 class="h5 mb-0">Identificación</h2></div>
+      <div class="card-header"><h2 class="h5 mb-0">Identificación</h2></div>
       <div class="card-body">
         <div class="row g-3">
           <div class="col-12 col-md-4">
@@ -90,7 +85,7 @@
     </section>
 
     <section class="card shadow-sm mb-4">
-      <div class="card-header bg-white"><h2 class="h5 mb-0">Clasificación contable</h2></div>
+      <div class="card-header"><h2 class="h5 mb-0">Clasificación contable</h2></div>
       <div class="card-body">
         <div class="row g-3">
           <div class="col-12 col-md-6">

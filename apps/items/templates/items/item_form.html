@@ -3,11 +3,8 @@
 {% block title %}{{ titulo }} · ERP{% endblock %}
 
 {% block content %}
-  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+  <div class="erp-page-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
-      <p class="text-uppercase text-secondary small fw-semibold mb-1">
-        Gestión · Productos y servicios
-      </p>
       <div class="d-flex flex-wrap align-items-center gap-2">
         <h1 class="h3 mb-0">{{ titulo }}</h1>
         {% if not modo_creacion %}
@@ -16,8 +13,6 @@
       </div>
       {% if item %}
         <p class="text-secondary mb-0 mt-1">{{ item.codigo }} · {{ item.nombre }}</p>
-      {% else %}
-        <p class="text-secondary mb-0 mt-1">{{ empresa.razon_social }}</p>
       {% endif %}
     </div>
     <a

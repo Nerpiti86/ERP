@@ -143,6 +143,7 @@
             <a
               class="erp-context-selector{% if not empresa_activa %} erp-context-selector-attention{% endif %}"
               href="{% url 'core:seleccionar_empresa' %}"
+              title="{% if empresa_activa %}{{ empresa_activa.razon_social }}{% else %}Sin seleccionar{% endif %}"
             >
               <span class="visually-hidden">Empresa:</span>
               <span
@@ -177,6 +178,7 @@
               <a
                 class="erp-context-selector{% if not sucursal_activa %} erp-context-selector-attention{% endif %}"
                 href="{% url 'core:seleccionar_sucursal' %}"
+                title="{% if sucursal_activa %}{{ sucursal_activa.codigo }} · {{ sucursal_activa.nombre }}{% else %}Sin seleccionar{% endif %}"
               >
                 <span class="visually-hidden">Sucursal:</span>
                 <span
@@ -210,6 +212,7 @@
               <span
                 class="erp-context-selector erp-context-selector-disabled"
                 aria-disabled="true"
+                title="Sin empresa"
               >
                 <span class="visually-hidden">Sucursal:</span>
                 <span

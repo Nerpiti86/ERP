@@ -1,58 +1,72 @@
-{% if permisos_erp.terceros_ver %}
+{% if permisos_erp.terceros_ver or permisos_erp.items_ver %}
   <li class="nav-item dropdown">
     <a
-      class="nav-link dropdown-toggle{% if request.resolver_match.namespace == 'terceros' %} active{% endif %}"
+      class="nav-link dropdown-toggle{% if request.resolver_match.namespace == 'terceros' or request.resolver_match.namespace == 'items' %} active{% endif %}"
       href="#"
       role="button"
       data-bs-toggle="dropdown"
       aria-expanded="false"
     >
-      Clientes y proveedores
+      ARCHIVO
     </a>
     <ul class="dropdown-menu">
-      <li>
-        <a class="dropdown-item" href="{% url 'terceros:tercero_list' %}">
-          Clientes y proveedores
-        </a>
-      </li>
-      <li><hr class="dropdown-divider"></li>
-      <li>
-        <a class="dropdown-item" href="{% url 'terceros:grupo_cliente_list' %}">
-          Grupos de clientes
-        </a>
-      </li>
-      <li>
-        <a class="dropdown-item" href="{% url 'terceros:grupo_proveedor_list' %}">
-          Grupos de proveedores
-        </a>
-      </li>
-    </ul>
-  </li>
-{% endif %}
+      {% if permisos_erp.terceros_ver %}
+        <li>
+          <a
+            class="dropdown-item{% if request.resolver_match.namespace == 'terceros' and request.resolver_match.url_name == 'tercero_list' %} active{% endif %}"
+            href="{% url 'terceros:tercero_list' %}"
+          >
+            Clientes y proveedores
+          </a>
+        </li>
+        <li>
+          <a
+            class="dropdown-item{% if request.resolver_match.url_name == 'grupo_cliente_list' %} active{% endif %}"
+            href="{% url 'terceros:grupo_cliente_list' %}"
+          >
+            Grupo de clientes
+          </a>
+        </li>
+        <li>
+          <a
+            class="dropdown-item{% if request.resolver_match.url_name == 'grupo_proveedor_list' %} active{% endif %}"
+            href="{% url 'terceros:grupo_proveedor_list' %}"
+          >
+            Grupo de proveedores
+          </a>
+        </li>
+      {% endif %}
 
-{% if permisos_erp.items_ver %}
-  <li class="nav-item">
-    <a
-      class="nav-link{% if request.resolver_match.namespace == 'items' and request.resolver_match.url_name == 'item_list' %} active{% endif %}"
-      href="{% url 'items:item_list' %}"
-    >
-      Productos y servicios
-    </a>
-  </li>
-  <li class="nav-item">
-    <a
-      class="nav-link{% if request.resolver_match.url_name == 'categoria_list' %} active{% endif %}"
-      href="{% url 'items:categoria_list' %}"
-    >
-      Categorías
-    </a>
-  </li>
-  <li class="nav-item">
-    <a
-      class="nav-link{% if request.resolver_match.url_name == 'marca_list' %} active{% endif %}"
-      href="{% url 'items:marca_list' %}"
-    >
-      Marcas
-    </a>
+      {% if permisos_erp.terceros_ver and permisos_erp.items_ver %}
+        <li><hr class="dropdown-divider"></li>
+      {% endif %}
+
+      {% if permisos_erp.items_ver %}
+        <li>
+          <a
+            class="dropdown-item{% if request.resolver_match.namespace == 'items' and request.resolver_match.url_name == 'item_list' %} active{% endif %}"
+            href="{% url 'items:item_list' %}"
+          >
+            Productos y servicios
+          </a>
+        </li>
+        <li>
+          <a
+            class="dropdown-item{% if request.resolver_match.url_name == 'categoria_list' %} active{% endif %}"
+            href="{% url 'items:categoria_list' %}"
+          >
+            Categorías
+          </a>
+        </li>
+        <li>
+          <a
+            class="dropdown-item{% if request.resolver_match.url_name == 'marca_list' %} active{% endif %}"
+            href="{% url 'items:marca_list' %}"
+          >
+            Marcas
+          </a>
+        </li>
+      {% endif %}
+    </ul>
   </li>
 {% endif %}

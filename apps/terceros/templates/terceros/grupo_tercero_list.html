@@ -3,13 +3,9 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+  <div class="erp-page-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
-      <p class="text-uppercase text-secondary small fw-semibold mb-1">
-        Gestión · Clientes y proveedores
-      </p>
       <h1 class="h3 mb-1">{{ titulo }}</h1>
-      <p class="text-secondary mb-0">{{ empresa.razon_social }}</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'terceros:tercero_list' %}">
@@ -55,9 +51,9 @@
   </section>
 
   <div class="card">
-    <div class="card-header bg-white erp-list-results-header">
-      <h2 class="h6 mb-0">{{ titulo }}</h2>
-      <span class="text-secondary small">
+    <div class="card-header erp-list-results-header">
+      <h2 class="visually-hidden">Resultados</h2>
+      <span class="text-secondary small ms-auto">
         {{ cantidad_resultados }} resultado{{ cantidad_resultados|pluralize }}
       </span>
     </div>
